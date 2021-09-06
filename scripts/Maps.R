@@ -73,21 +73,24 @@ ggsave("./figures/deploy_DOC.svg", deploy, dpi = 320, width = 250, units = 'mm')
 ggsave("./figures/deploy_DOC.png", deploy, dpi = 320, height = 150, units = 'mm')
 
 ##DUSKY
-base+
+dusky<-base+
   geom_polygon(mpa, mapping = aes(long,lat,group = group, fill = "Marine Reserve"), alpha = 1)+
   geom_path(alliso200, mapping = aes(long,lat,group = group), color = "steelblue", alpha = 0.7, size = 0.2)+
   geom_path(alliso50, mapping = aes(long,lat,group = group), color = "black", alpha = 0.9, size = 0.2)+
   scale_fill_manual(values = fiord_fill)+
-  theme(legend.position = c(0.83, 0.12),
-        legend.title = element_blank(),
-        legend.margin = margin(c(1, 1, 1, 1)),
-        legend.key.size = unit(0.2, 'cm'),
-        legend.text = element_text(size = 8),
-        legend.spacing.y = unit(-0.02, "cm"),
-        legend.box.background = element_rect(color = "white",fill = "white"),
-        legend.key = element_rect(fill = NA),
-        axis.text = element_text(size = 7),
-        axis.title = element_text(size = 7))+
+  theme(legend.position = "none",
+        #legend.title = element_blank(),
+        #legend.margin = margin(c(1, 1, 1, 1)),
+        #legend.key.size = unit(0.2, 'cm'),
+        #legend.text = element_text(size = 8),
+        #legend.spacing.y = unit(-0.02, "cm"),
+        #legend.box.background = element_rect(color = "white",fill = "white"),
+        #legend.key = element_rect(fill = NA),
+        axis.text = element_text(size = 8),
+        axis.title = element_text(size = 8))+
   coord_sf(xlim = c(166.44,166.60), ylim = c(-45.64,-45.78), crs = 4269)+
   geom_point(device, mapping = aes(x = lon, y = lat, color = type), alpha = 0.8)+
   scale_color_manual(values = type_color)
+
+ggsave("./figures/dusky.svg", dusky, dpi = 320, width = 250, units = 'mm')
+ggsave("./figures/dusky.png", dusky, dpi = 320, height = 150, units = 'mm')
