@@ -6,7 +6,7 @@ protected_areas<-sp::spTransform(protected_areas, CRS.latlon)
 natpark<-subset(protected_areas, (section == "s.4 - National Park"))
 mpa<-subset(protected_areas, (section == "s.3 - Marine Reserve"))
 
-deployments<-read.csv('./data/Deployment locations.csv', header = T, stringsAsFactors = T)
+deployments<-read.csv('./data/current deployment.csv', header = T, stringsAsFactors = F)
 deployments$Latitude<-round(deployments$Latitude,5)
 deployments$Longitude<-round(deployments$Longitude,5)
 
@@ -15,7 +15,7 @@ deploy_leaf<-leaflet(data = deployments) %>%
   addEsriBasemapLayer(esriBasemapLayers$Oceans, autoLabels=TRUE)%>%
   addPolygons(data = mpa, color = "orange", weight = 1) %>%
   addCircleMarkers(lng = ~deployments$Longitude, lat = ~deployments$Latitude, color = ~factpal(deployments$PROJECT), stroke = FALSE, fillOpacity = 2, radius = 5,
-                   popup = ~paste(sep = "<br/>",Deployment.,Date,Recorder_type,Latitude, Longitude)) %>%
+                   popup = ~paste(sep = "<br/>",Deployment_number,Date,Recorder_type,Latitude, Longitude)) %>%
   addLegend(pal = factpal, values = deployments$PROJECT, opacity = 1, title = "Project")%>%
   addLegend(colors = "orange", labels = "Marine Reserves")%>%
   fitBounds(min(deployments$Longitude), min(deployments$Latitude), max(deployments$Longitude), max(deployments$Latitude))
