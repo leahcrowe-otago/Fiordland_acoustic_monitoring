@@ -5,23 +5,23 @@ deploy<-deploy%>%filter(Fiord != "DUSKY")
 
 charles01_01<-read.delim('./data/FPOD data/Charles0101 2022 02 15 FPOD_6192 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
 charles01_02<-read.delim('./data/FPOD data/Charles0102 2022 05 06 FPOD_6192 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
-#double check this was run without the NBHF kerno filter
+
 dagg01_01<-read.delim('./data/FPOD data/Dagg0101 2022 02 16 FPOD_6194 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
-dagg01_02<-read.delim('./data/FPOD data/Dagg01_02 DPM day.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 10, row.names = NULL)
-#double check this was run without the NBHF kerno filter
+dagg01_02<-read.delim('./data/FPOD data/Dagg0102 2022 05 07 FPOD_6194 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
+
 pres01_01<-read.delim('./data/FPOD data/Preservation0101 2022 02 21 FPOD_6190 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
-pres01_02<-read.delim('./data/FPOD data/Pres01_02 DPM day.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 9, row.names = NULL)
+pres01_02<-read.delim('./data/FPOD data/Preservation0102 2022 05 08 FPOD_6190 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
 
 charles01<-charles01_01%>%
   bind_rows(charles01_02)%>%
   mutate(Fiord = "CHARLES")
 
 dagg01<-dagg01_01%>%
-  #bind_rows(dagg01_02)%>%
+  bind_rows(dagg01_02)%>%
   mutate(Fiord = "DAGG")
 
 pres01<-pres01_01%>%
-  #bind_rows(pres01_02)%>%
+  bind_rows(pres01_02)%>%
   mutate(Fiord = "PRESERVATION")
 
 all<-charles01%>%
@@ -37,12 +37,6 @@ all_Tt<-all%>%
   group_by(Date, Fiord, Qn)%>%
   mutate(DPD = n())%>% #DPD = detections per day
   distinct(Date, Fiord, SpClass, DPD, Qn)
-  # mutate(presence = case_when(
-  #   DPM > 0 ~ 1,
-  #   DPM == 0 ~ 0
-  # ))
-
-
 
 ggplot(all_Tt)+
   geom_col(aes(x = Date, y = 1, fill = Qn))+
