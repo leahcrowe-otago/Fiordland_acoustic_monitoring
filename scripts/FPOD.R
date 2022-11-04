@@ -40,7 +40,7 @@ all_Tt<-all%>%
 
 ggplot(all_Tt)+
   geom_col(aes(x = Date, y = 1, fill = Qn))+
-  facet_wrap(~Fiord, ncol = 1)+
+  facet_wrap(~factor(Fiord, , levels = c("CHARLES","NANCY","DAGG","CHALKY","PRESERVATION")), ncol = 1)+
   ylim(c(0,1))+
   theme_bw()+
   scale_fill_brewer(palette = "Paired")+
@@ -55,8 +55,11 @@ all_NBHF<-all%>%
 
 ggplot(all_NBHF)+
   geom_col(aes(x = Date, y = 1, fill = Qn))+
-  facet_wrap(~Fiord, ncol = 1)+
+  facet_wrap(~factor(Fiord, , levels = c("CHARLES","NANCY","DAGG","CHALKY","PRESERVATION")), ncol = 1)+
   ylim(c(0,1))+
   theme_bw()+
   scale_fill_brewer(palette = "Paired")+
-  geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment)))
+  geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment)))+
+  ylab("")+
+  theme(axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
