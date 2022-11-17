@@ -1,7 +1,8 @@
 library(ggplot2);library(lubridate);library(dplyr);library(readxl);library(viridis)
 
 deploy<-read_excel("./data/Fiordland deployment locations.xlsx")
-deploy<-deploy%>%filter(Fiord != "DUSKY")
+deploy<-deploy%>%filter(Fiord != "DUSKY")%>%
+  filter(Datetime_deployment < "2022-08-01 00:00:00")
 
 charles01_01<-read.delim('./data/FPOD data/Charles0101 2022 02 15 FPOD_6192 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
 charles01_02<-read.delim('./data/FPOD data/Charles0102 2022 05 06 FPOD_6192 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
@@ -32,20 +33,11 @@ all<-charles01%>%
 
 all$Qn<-factor(all$Qn, levels = c("Mod","High"))
 
-all_Tt<-all%>%  
+all_Cet<-all%>%  
   filter(SpClass == "Other cet")%>%
   group_by(Date, Fiord, Qn)%>%
   mutate(DPD = n())%>% #DPD = detections per day
   distinct(Date, Fiord, SpClass, DPD, Qn)
-
-ggplot(all_Tt)+
-  geom_col(aes(x = Date, y = 1, fill = Qn))+
-  facet_wrap(~factor(Fiord, , levels = c("CHARLES","NANCY","DAGG","CHALKY","PRESERVATION")), ncol = 1)+
-  ylim(c(0,1))+
-  theme_bw()+
-  scale_fill_brewer(palette = "Paired")+
-  geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment)))+
-  ylab("")
 
 all_NBHF<-all%>%
   filter(SpClass == "NBHF")%>%
@@ -53,13 +45,29 @@ all_NBHF<-all%>%
   mutate(DPD = n())%>% #DPD = detections per day
   distinct(Date, Fiord, SpClass, DPD, Qn)
 
-ggplot(all_NBHF)+
+
+acou_timeline<-function(x){
+  ggplot(x)+
   geom_col(aes(x = Date, y = 1, fill = Qn))+
   facet_wrap(~factor(Fiord, , levels = c("CHARLES","NANCY","DAGG","CHALKY","PRESERVATION")), ncol = 1)+
   ylim(c(0,1))+
   theme_bw()+
   scale_fill_brewer(palette = "Paired")+
-  geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment)))+
+  geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment)), linetype = "twodash", color = "red")+
   ylab("")+
-  theme(axis.text.y=element_blank(),
-        axis.ticks.y=element_blank())
+  xlim(c(min(as.Date(deploy$Datetime_deployment), na.rm = T), max(as.Date(deploy$Datetime_deployment), na.rm = T)))+
+  theme(axis.text.y=element_blank(),  #remove y axis labels
+        axis.ticks.y=element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.major.y = element_blank())
+}
+
+all_Cet_plot<-acou_timeline(all_Cet)
+ggsave('./figures/allcet.png',all_Cet_plot, dpi = 300, width = 175, height = 125, units = "mm")
+acou_timeline(all_NBHF)
+
+nbhf<-all%>%
+  filter(SpClass == "NBHF")%>%
+  arrange(dmy_hm(Time))
+  #filter(Fiord == "DAGG")%>%
+  as.data.frame()
