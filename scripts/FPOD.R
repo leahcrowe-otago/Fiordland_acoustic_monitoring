@@ -1,8 +1,8 @@
 library(ggplot2);library(lubridate);library(dplyr);library(readxl);library(viridis)
 
 deploy<-read_excel("./data/Fiordland deployment locations.xlsx")
-deploy<-deploy%>%filter(Fiord != "DUSKY")%>%
-  filter(Datetime_deployment < "2022-12-01 00:00:00")
+deploy<-deploy%>%filter(Fiord != "DUSKY")#%>%
+  #filter(Datetime_deployment < "2023-03-01 00:00:00")
 
 charles01_01<-read.delim('./data/FPOD data/Charles0101 2022 02 15 FPOD_6192 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
 charles01_02<-read.delim('./data/FPOD data/Charles0102 2022 05 06 FPOD_6192 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
@@ -11,6 +11,7 @@ charles01_03<-read.delim('./data/FPOD data/Charles0103 2022 07 13 FPOD_6192 file
 dagg01_01<-read.delim('./data/FPOD data/Dagg0101 2022 02 16 FPOD_6194 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
 dagg01_02<-read.delim('./data/FPOD data/Dagg0102 2022 05 07 FPOD_6194 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
 dagg01_03<-read.delim('./data/FPOD data/Dagg0103 2022 07 13 FPOD_6193 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
+dagg01_04<-read.delim('./data/FPOD data/Dagg0104 2022 11 27 FPOD_6194 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
 
 pres01_01<-read.delim('./data/FPOD data/Preservation0101 2022 02 21 FPOD_6190 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
 pres01_02<-read.delim('./data/FPOD data/Preservation0102 2022 05 08 FPOD_6190 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
@@ -23,6 +24,7 @@ charles01<-charles01_01%>%
 dagg01<-dagg01_01%>%
   bind_rows(dagg01_02)%>%
   bind_rows(dagg01_03)%>%
+  bind_rows(dagg01_04)%>%
   mutate(Fiord = "DAGG")
 
 pres01<-pres01_01%>%
@@ -75,7 +77,8 @@ nbhf<-all%>%
   filter(SpClass == "NBHF")%>%
   arrange(dmy_hm(Time))
   as.data.frame()
-  
+
+#soundtrap died shaded areas    
 all_Cet_plot+
   geom_rect(data = data.frame(Fiord = "NANCY"), aes(xmin = ymd("2022-10-07"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord = "DAGG"), aes(xmin = ymd("2022-11-15"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)
