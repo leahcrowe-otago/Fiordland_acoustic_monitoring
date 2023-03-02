@@ -21,4 +21,4 @@ deploy_leaf<-leaflet(data = deployments) %>%
   fitBounds(min(deployments$Longitude), min(deployments$Latitude), max(deployments$Longitude), max(deployments$Latitude))
 
 library(htmlwidgets)
-saveWidget(deploy_leaf, file="index.html")
+saveWidget(deploy_leaf, file="index.html", selfcontained = TRUE)
