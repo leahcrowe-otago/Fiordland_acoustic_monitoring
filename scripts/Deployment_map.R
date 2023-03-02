@@ -1,4 +1,4 @@
-library(leaflet);library(leaflet.esri);library(leaflet.extras);library(dplyr);library(rgdal)
+library(leaflet);library(leaflet.esri);library(leaflet.extras);library(dplyr);library(rgdal);library(readxl)
 
 protected_areas<-readOGR("./shapefiles", layer = "protected-areas")
 CRS.latlon<-CRS("+proj=longlat +datum=WGS84 +no_defs")
@@ -6,11 +6,18 @@ protected_areas<-sp::spTransform(protected_areas, CRS.latlon)
 natpark<-subset(protected_areas, (section == "s.4 - National Park"))
 mpa<-subset(protected_areas, (section == "s.3 - Marine Reserve"))
 
-deployments<-read.csv('./data/current deployment.csv', header = T, stringsAsFactors = F)
+deployments<-read_excel('./data/Fiordland deployment locations.xlsx', sheet = "Sheet1")
 deployments$Latitude<-round(deployments$Latitude,5)
 deployments$Longitude<-round(deployments$Longitude,5)
 
+deployments<-deployments%>%
+  filter(!is.na(Datetime_deployment))%>%
+  group_by(substr(Deployment_number,1, stringr::str_length(Deployment_number)-3))%>%
+  filter(Datetime_deployment == max(Datetime_deployment))%>%
+  as.data.frame()
+
 factpal <- colorFactor(palette = "Dark2", domain = deployments$PROJECT)
+
 deploy_leaf<-leaflet(data = deployments) %>% 
   addEsriBasemapLayer(esriBasemapLayers$Oceans, autoLabels=TRUE)%>%
   addPolygons(data = mpa, color = "orange", weight = 1) %>%
@@ -21,4 +28,4 @@ deploy_leaf<-leaflet(data = deployments) %>%
   fitBounds(min(deployments$Longitude), min(deployments$Latitude), max(deployments$Longitude), max(deployments$Latitude))
 
 library(htmlwidgets)
-saveWidget(deploy_leaf, file="index.html", selfcontained = TRUE)
+saveWidget(deploy_leaf, file="index.html")
