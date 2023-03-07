@@ -12,8 +12,8 @@ deployments$Longitude<-round(deployments$Longitude,5)
 
 deployments<-deployments%>%
   filter(!is.na(Datetime_deployment))%>%
+  filter(is.na(Datetime_retrieval))%>%
   group_by(substr(Deployment_number,1, stringr::str_length(Deployment_number)-3))%>%
-  filter(Datetime_deployment == max(Datetime_deployment))%>%
   as.data.frame()
 
 factpal <- colorFactor(palette = "Dark2", domain = deployments$PROJECT)
