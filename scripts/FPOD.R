@@ -71,11 +71,14 @@ acou_timeline<-function(x){
 all_Cet_plot<-acou_timeline(all_Cet)
 
 ggsave('./figures/allcet.png',all_Cet_plot, dpi = 300, width = 175, height = 125, units = "mm")
-acou_timeline(all_NBHF)
+
+all_NBHF_plot<-acou_timeline(all_NBHF)
+
+ggsave('./figures/NBHF.png', all_NBHF_plot, dpi = 300, width = 175, height = 125, units = "mm")
 
 nbhf<-all%>%
   filter(SpClass == "NBHF")%>%
-  arrange(dmy_hm(Time))
+  arrange(dmy_hm(Time))%>%
   as.data.frame()
 
 #soundtrap died shaded areas    
