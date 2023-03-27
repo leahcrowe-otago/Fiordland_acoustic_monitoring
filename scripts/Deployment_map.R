@@ -22,10 +22,11 @@ deploy_leaf<-leaflet(data = deployments) %>%
   addEsriBasemapLayer(esriBasemapLayers$Oceans, autoLabels=TRUE)%>%
   addPolygons(data = mpa, color = "orange", weight = 1) %>%
   addCircleMarkers(lng = ~deployments$Longitude, lat = ~deployments$Latitude, color = ~factpal(deployments$PROJECT), stroke = FALSE, fillOpacity = 2, radius = 5,
-                   popup = ~paste(sep = "<br/>",Deployment_number,Date,Recorder_type,Latitude, Longitude)) %>%
+                   popup = ~paste(sep = "<br/>",Deployment_number,as.Date(Datetime_deployment),Recorder_type,Latitude, Longitude)) %>%
   addLegend(pal = factpal, values = deployments$PROJECT, opacity = 1, title = "Project")%>%
   addLegend(colors = "orange", labels = "Marine Reserves")%>%
   fitBounds(min(deployments$Longitude), min(deployments$Latitude), max(deployments$Longitude), max(deployments$Latitude))
 
 library(htmlwidgets)
 saveWidget(deploy_leaf, file="index.html")
+
