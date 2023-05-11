@@ -4,55 +4,32 @@ deploy<-read_excel("./data/Fiordland deployment locations.xlsx")
 deploy<-deploy%>%filter(Fiord != "DUSKY")#%>%
   #filter(Datetime_deployment < "2023-03-01 00:00:00")
 
-charles01_01<-read.delim('./data/FPOD data/Charles0101 2022 02 15 FPOD_6192 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
-charles01_02<-read.delim('./data/FPOD data/Charles0102 2022 05 06 FPOD_6192 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
-charles01_03<-read.delim('./data/FPOD data/Charles0103 2022 07 13 FPOD_6192 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
+FPOD_data_list<-list.files("./data/FPOD data", pattern = "*.csv", full.names = T)
 
-dagg01_01<-read.delim('./data/FPOD data/Dagg0101 2022 02 16 FPOD_6194 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
-dagg01_02<-read.delim('./data/FPOD data/Dagg0102 2022 05 07 FPOD_6194 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
-dagg01_03<-read.delim('./data/FPOD data/Dagg0103 2022 07 13 FPOD_6193 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
-dagg01_04<-read.delim('./data/FPOD data/Dagg0104 2022 11 27 FPOD_6194 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
-dagg01_05<-read.delim('./data/FPOD data/Dagg0105 2023 02 20 FPOD_6194 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
+FPOD_data<-lapply(FPOD_data_list, function(x)
+  read.csv(x)
+  )
 
-pres01_01<-read.delim('./data/FPOD data/Preservation0101 2022 02 21 FPOD_6190 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
-pres01_02<-read.delim('./data/FPOD data/Preservation0102 2022 05 08 FPOD_6190 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
-pres01_03<-read.delim('./data/FPOD data/Preservation0103 2022 07 07 FPOD_6190 file0 train details.txt', header = T, sep ="\t", quote = "\"",dec = ".", skip = 40, row.names = NULL)
+all<-bind_rows(FPOD_data)%>%
+  mutate(Fiord = toupper(stringr::str_extract(File, '^[^01]+')))%>%
+  mutate(Datetime = ymd_hm("1899-12-30 00:00") + minutes(Min),
+         Date = as.Date(Datetime))
 
+unique(all$Qn)
 
-charles01<-charles01_01%>%
-  bind_rows(charles01_02)%>%
-  bind_rows(charles01_03)%>%
-  mutate(Fiord = "CHARLES")
+all$Qn<-factor(all$Qn, levels = c("?","L","M","H"))
 
-dagg01<-dagg01_01%>%
-  bind_rows(dagg01_02)%>%
-  bind_rows(dagg01_03)%>%
-  bind_rows(dagg01_04)%>%
-  bind_rows(dagg01_05)%>%
-  mutate(Fiord = "DAGG")
-
-pres01<-pres01_01%>%
-  bind_rows(pres01_02)%>%
-  bind_rows(pres01_03)%>%
-  mutate(Fiord = "PRESERVATION")
-
-all<-charles01%>%
-  bind_rows(dagg01)%>%
-  bind_rows(pres01)%>%
-  mutate(Date = as.Date(dmy_hm(Time)))%>%
-  filter(Qn == "High" | Qn == "Mod" | Qn == "Low")
-
-all$Qn<-factor(all$Qn, levels = c("Low","Mod","High"))
+unique(all$SpClass)
 
 all_Cet<-all%>%  
-  filter(SpClass == "Other cet")%>%
+  filter(SpClass == "Dol")%>%
   group_by(Date, Fiord, Qn)%>%
   mutate(DPD = n())%>% #DPD = detections per day
   distinct(Date, Fiord, SpClass, DPD, Qn)
 
 nbhf_time<-all%>%
   filter(SpClass == "NBHF")%>%
-  arrange(dmy_hm(Time))
+  arrange(Date)
 
 nbhf_day<-nbhf_time%>%
   group_by(Date, Fiord, Qn)%>%
@@ -92,12 +69,14 @@ all_NBHF_plot<-acou_timeline(nbhf_day)+
 
 ggsave('./figures/NBHF.png', all_NBHF_plot, dpi = 300, width = 175, height = 125, units = "mm")
 
-#soundtrap died shaded areas    
+   
 all_Cet_plot+
+  #soundtrap died shaded areas 
   geom_rect(data = data.frame(Fiord = "NANCY"), aes(xmin = ymd("2022-10-07"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord = "DAGG"), aes(xmin = ymd("2022-11-15"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord = "CHALKY"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)
-  
+  geom_rect(data = data.frame(Fiord = "CHALKY"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)+
+  #FPOD died
+  geom_rect(data = data.frame(Fiord = "PRESERVATION"), aes(xmin = ymd("2023-03-15"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)
 
 trunc_nbhf_othercet<-ggplot(all%>%filter(SpClass == "NBHF" | SpClass == "Other cet"))+
   geom_col(aes(x = Date, y = 1, fill = Qn))+
