@@ -62,17 +62,7 @@ all_Cet_plot<-acou_timeline(all_Cet)+
   facet_wrap(~factor(Fiord, levels = c("CHARLES","NANCY","DAGG","CHALKY","PRESERVATION")), ncol = 1)+
   geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")
 
-all_Cet_plot
-
-ggsave('./figures/allcet_v1.png',all_Cet_plot, dpi = 300, width = 175, height = 125, units = "mm")
-
-all_NBHF_plot<-acou_timeline(nbhf_day)+
-  facet_wrap(~factor(Fiord, levels = c("CHARLES","DAGG","PRESERVATION")), ncol = 1)+
-  geom_vline(deploy%>%filter(Recorder_type == 'F-POD'), mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")
-
-ggsave('./figures/NBHF_v1.png', all_NBHF_plot, dpi = 300, width = 175, height = 125, units = "mm")
-
-all_Cet_plot+
+all_Cet_plot<-all_Cet_plot+
   #soundtrap died shaded areas 
   geom_rect(data = data.frame(Fiord = "NANCY"), aes(xmin = ymd("2022-10-07"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord = "NANCY"), aes(xmin = ymd("2023-01-02"), xmax = ymd("2023-03-14"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)+
@@ -80,6 +70,18 @@ all_Cet_plot+
   geom_rect(data = data.frame(Fiord = "CHALKY"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)+
   #FPOD died
   geom_rect(data = data.frame(Fiord = "PRESERVATION"), aes(xmin = ymd("2023-03-15"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)
+
+ggsave('./figures/allcet_v1.png',all_Cet_plot, dpi = 300, width = 175, height = 125, units = "mm")
+
+###
+
+all_NBHF_plot<-acou_timeline(nbhf_day)+
+  facet_wrap(~factor(Fiord, levels = c("CHARLES","DAGG","PRESERVATION")), ncol = 1)+
+  geom_vline(deploy%>%filter(Recorder_type == 'F-POD'), mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")
+
+ggsave('./figures/NBHF_v1.png', all_NBHF_plot, dpi = 300, width = 175, height = 125, units = "mm")
+
+###
 
 trunc_nbhf_othercet<-ggplot(all%>%filter(SpClass == "NBHF" | SpClass == "Dol"))+
   geom_col(aes(x = Date, y = 1, fill = Qn))+
@@ -100,8 +102,53 @@ locations_FPOD<-deploy%>%filter(Recorder_type == 'F-POD' & !is.na(Recorder_start
 
 write.csv(locations_FPOD, paste0('./data/Fiordland_FPOD_locations_', Sys.Date(),'.csv'), row.names = F)
 
-#all things
+#all things detected
 acou_timeline(all)+
   facet_wrap(~factor(Fiord, levels = c("CHARLES","DAGG","PRESERVATION")), ncol = 1)+
   facet_wrap(~factor(Fiord, levels = c("CHARLES","NANCY","DAGG","CHALKY","PRESERVATION")), ncol = 1)+
   geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")
+
+# days listening
+listening<-deploy%>%
+  group_by(Fiord)%>%
+  dplyr::summarise(min_date = as.Date(min(Datetime_deployment_local, na.rm= T)), max_date = as.Date(max(Datetime_retrieval_local, na.rm = T)))%>%
+  mutate(days = max_date - min_date)%>%
+  mutate(dead = case_when(
+    Fiord == "NANCY" ~ (ymd("2022-11-27") - ymd("2022-10-07")) + (ymd("2023-03-14") - ymd("2023-01-02")),
+    #Fiord == "DAGG" ~ (ymd("2022-11-27") - ymd("2022-11-15")), #this is for soundtrap!
+    Fiord == "CHALKY" ~ (ymd("2023-04-28") - ymd("2022-11-16")),
+    Fiord == "PRESERVATION" ~ (ymd("2023-04-28") - ymd("2023-03-15")),
+    TRUE ~ 0
+  ))%>%
+  mutate(active = days - dead)
+
+## all together
+all_Cet%>%
+  ungroup()%>%
+  mutate(season = case_when(
+    month(Date) == 12 | month(Date) <= 2 ~ "summer",
+    month(Date) >= 3 & month(Date) <= 5 ~ "autumn",
+    month(Date) >= 6 & month(Date) <= 8 ~ "winter",
+    month(Date) >= 9 & month(Date) <= 11 ~ "spring"
+  ))%>%
+  distinct(Fiord, Date)%>%
+  group_by(Fiord)%>%
+  tally()%>%
+  left_join(listening, by = "Fiord")%>%
+  mutate(det_pres = n/as.numeric(active))
+
+## seasonally? I don't know if I really want to go down this route
+
+all_Cet%>%
+  ungroup()%>%
+  distinct(Fiord, Date)%>%
+  mutate(season = case_when(
+    month(Date) == 12 | month(Date) <= 2 ~ "summer",
+    month(Date) >= 3 & month(Date) <= 5 ~ "autumn",
+    month(Date) >= 6 & month(Date) <= 8 ~ "winter",
+    month(Date) >= 9 & month(Date) <= 11 ~ "spring"
+  ))%>%
+  group_by(Fiord, season)%>%
+  tally()%>%
+  left_join(listening, by = "Fiord")%>%
+  mutate(det_pres = n/as.numeric(active))
