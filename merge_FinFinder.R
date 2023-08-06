@@ -7,11 +7,13 @@ library(lubridate)
 # deployment and instrument
   
 #example: "FF03_01"
-  deployment<-"Nancy01_01"
+  deployment<-"FF03_01"
 #example: "6706"  
-  ST_ID<-"5870"
+  ST_ID<-"6706"
 #drive
   drive = "Z"
+# "Delphinid whistles" or "HBWs"
+  type = "HBWs"
   
 # list of file paths ----
   
@@ -28,7 +30,7 @@ library(lubridate)
   
 # merge all FinFinder output txts ----
   
- selection_table_path<-paste0(path,"/FinFinder_output/Delphinid whistles")
+ selection_table_path<-paste0(path,"/FinFinder_output/",type)
  
  selection_tables_list <- list.files(paste0(selection_table_path,"/Raven_Pro_Selection_Tables"), recursive = T, pattern = "*.txt", full.names = T)
  
@@ -38,13 +40,25 @@ library(lubridate)
 
 # toss Begin.File and add in Begin Path for use in Raven ----
 
- delph_merge<-selection_tables_merge%>%
+ if (type == "Delphinid whistles"){
+   
+merge<-selection_tables_merge%>%
    left_join(wav_df, by = c(Begin.File = "wav_list"))%>%
    dplyr::select(Selection, View, Channel, `Begin Path`, File.Offset..s., Begin.Time..s., End.Time..s., Low.Freq..Hz., High.Freq..Hz., Detection.Type, Probability.Score....)%>%
    dplyr::rename(`File Offset (s)` = File.Offset..s., `Begin Time (s)` = Begin.Time..s., `End Time (s)` = End.Time..s., `Low Freq (Hz)` = Low.Freq..Hz., `High Freq (Hz)` = High.Freq..Hz., `Detection Type` = Detection.Type, `Probability Score (%)` = Probability.Score....)%>%
    mutate(Selection = 1:n())
 
- write.table(delph_merge, paste0(selection_table_path,"/",deployment,"_",ST_ID,"-","Delphinid_whistles-Raven_selection_tables-merge_",Sys.Date(),".txt"), sep = "\t", dec = ".", quote = F,
-             row.names = F, col.names = TRUE)  
+ 
+ } else if (type == "HBWs"){
+   
+   merge<-selection_tables_merge%>%
+     left_join(wav_df, by = c(Begin.File = "wav_list"))%>%
+     dplyr::select(Selection, View, Channel, `Begin Path`, File.Offset..s., Begin.Time..s., End.Time..s., Low.Freq..Hz., High.Freq..Hz., Trigger.Probability.Score...., End.Classification, Classification.Probability.Score...., Spectrogram.File)%>%
+     dplyr::rename(`File Offset (s)` = File.Offset..s., `Begin Time (s)` = Begin.Time..s., `End Time (s)` = End.Time..s., `Low Freq (Hz)` = Low.Freq..Hz., `High Freq (Hz)` = High.Freq..Hz., `Trigger Probability Score (%)` = Trigger.Probability.Score...., `End Classification` = End.Classification, `Classification Probability Score (%)` = Classification.Probability.Score...., `Spectrogram File` = Spectrogram.File)%>%
+     mutate(Selection = 1:n())
 
+ }
+ 
+ write.table(merge, paste0(selection_table_path,"/",deployment,"_",ST_ID,"-",type,"-Raven_selection_tables-merge_",Sys.Date(),".txt"), sep = "\t", dec = ".", quote = F,
+             row.names = F, col.names = TRUE) 
  
