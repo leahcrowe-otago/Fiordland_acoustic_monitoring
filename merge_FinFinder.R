@@ -13,6 +13,7 @@ library(lubridate)
 #drive
   drive = "Z"
 # "Delphinid whistles" or "HBWs"
+  #type = "Delphinid whistles"
   type = "HBWs"
   
 # list of file paths ----
@@ -42,11 +43,11 @@ library(lubridate)
 
  if (type == "Delphinid whistles"){
    
-merge<-selection_tables_merge%>%
-   left_join(wav_df, by = c(Begin.File = "wav_list"))%>%
-   dplyr::select(Selection, View, Channel, `Begin Path`, File.Offset..s., Begin.Time..s., End.Time..s., Low.Freq..Hz., High.Freq..Hz., Detection.Type, Probability.Score....)%>%
-   dplyr::rename(`File Offset (s)` = File.Offset..s., `Begin Time (s)` = Begin.Time..s., `End Time (s)` = End.Time..s., `Low Freq (Hz)` = Low.Freq..Hz., `High Freq (Hz)` = High.Freq..Hz., `Detection Type` = Detection.Type, `Probability Score (%)` = Probability.Score....)%>%
-   mutate(Selection = 1:n())
+   merge<-selection_tables_merge%>%
+     left_join(wav_df, by = c(Begin.File = "wav_list"))%>%
+     dplyr::select(Selection, View, Channel, `Begin Path`, File.Offset..s., Begin.Time..s., End.Time..s., Low.Freq..Hz., High.Freq..Hz., Detection.Type, Probability.Score....)%>%
+     dplyr::rename(`File Offset (s)` = File.Offset..s., `Begin Time (s)` = Begin.Time..s., `End Time (s)` = End.Time..s., `Low Freq (Hz)` = Low.Freq..Hz., `High Freq (Hz)` = High.Freq..Hz., `Detection Type` = Detection.Type, `Probability Score (%)` = Probability.Score....)%>%
+     mutate(Selection = 1:n())
 
  
  } else if (type == "HBWs"){
@@ -55,7 +56,8 @@ merge<-selection_tables_merge%>%
      left_join(wav_df, by = c(Begin.File = "wav_list"))%>%
      dplyr::select(Selection, View, Channel, `Begin Path`, File.Offset..s., Begin.Time..s., End.Time..s., Low.Freq..Hz., High.Freq..Hz., Trigger.Probability.Score...., End.Classification, Classification.Probability.Score...., Spectrogram.File)%>%
      dplyr::rename(`File Offset (s)` = File.Offset..s., `Begin Time (s)` = Begin.Time..s., `End Time (s)` = End.Time..s., `Low Freq (Hz)` = Low.Freq..Hz., `High Freq (Hz)` = High.Freq..Hz., `Trigger Probability Score (%)` = Trigger.Probability.Score...., `End Classification` = End.Classification, `Classification Probability Score (%)` = Classification.Probability.Score...., `Spectrogram File` = Spectrogram.File)%>%
-     mutate(Selection = 1:n())
+     mutate(Selection = 1:n(),
+            `File Offset (s)` = `Begin Time (s)`)
 
  }
  
