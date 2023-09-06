@@ -40,12 +40,17 @@ all_ST<-bind_rows(ST_data)%>%
          Date = as.Date(Begin.Date.Time))
 
 all_ST_Cet<-all_ST%>%
-  filter(Dolphin...y.n. == "y")%>%
+  filter(Dolphin...y.n. == "y" | Dolphin...y.n. == "?")%>%
   group_by(Date, Fiord)%>%
   mutate(DPD = n())%>% #DPD = detections per day
-  mutate(Qn = "H", SpClass = "Dol")%>%
+  mutate(SpClass = "Dol",
+         Qn = case_when(
+           Dolphin...y.n. == "y" ~ "H",
+           Dolphin...y.n. == "?" ~ "?",
+         ))%>%
   distinct(Date, Fiord, DPD, SpClass, Qn)%>%
-  mutate(Fiord_recorder = paste0(Fiord,"_ST"))
+  mutate(Fiord_recorder = paste0(Fiord,"_ST"))%>%
+  filter(Qn != '?')
 
 # NBHF ----
 
@@ -78,7 +83,9 @@ acou_timeline<-function(x){
         axis.ticks.y=element_blank(),
         panel.grid.minor.y = element_blank(),
         panel.grid.major.y = element_blank(),
-        legend.position = "bottom")
+        legend.position = "bottom",
+        axis.text.x=element_text(angle=45,hjust=1))+
+  scale_x_date(date_breaks="1 month", date_labels="%b-%Y")
 }
 
 # all together
@@ -94,16 +101,16 @@ all_Cet_plot<-acou_timeline(all_Cet)+
 
 all_Cet_plot<-all_Cet_plot+
   #soundtrap died shaded areas 
-  geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2022-10-07"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-01-02"), xmax = ymd("2023-03-14"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-15"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2022-10-07"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-01-02"), xmax = ymd("2023-03-14"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-15"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   #FPOD died
-  geom_rect(data = data.frame(Fiord_recorder = "PRESERVATION_FPOD"), aes(xmin = ymd("2023-03-15"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="grey", alpha = 0.5, inherit.aes = FALSE)
+  geom_rect(data = data.frame(Fiord_recorder = "PRESERVATION_FPOD"), aes(xmin = ymd("2023-03-15"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)
 
 ggsave('./figures/allcet_v1.png',all_Cet_plot, dpi = 300, width = 175, height = 125, units = "mm")
 
-all_FPOD_Cet_plot+
+all_Cet_plot+
   xlim(c(ymd("2022-05-01"), ymd("2022-07-15")))
 
 ###
