@@ -4,6 +4,8 @@ deploy<-read_excel("./data/Fiordland deployment locations.xlsx")
 deploy<-deploy%>%filter(Fiord != "DUSKY")%>%
   mutate(Fiord_recorder = paste0(Fiord,"_",Recorder_type))
 
+deploy_tz<-deploy%>%filter(Recorder_type == "ST")%>%dplyr::select(Deployment_number, daylight_adjust)
+
 # FPOD data ----
 
 FPOD_data_list<-list.files("./data/FPOD", pattern = "*train details.csv", full.names = T, recursive = T)
@@ -25,7 +27,7 @@ all_FPOD_Cet<-all_FPOD%>%
   distinct(Date, Fiord, SpClass, DPD, Qn)%>%
   mutate(Fiord_recorder = paste0(Fiord,"_FPOD"))
 
-# FinFinder review
+# FinFinder review ----
 
 ST_data_list<-list.files("./data/ST", pattern = "*.txt", full.names = T, recursive = T)
 
@@ -37,7 +39,15 @@ all_ST<-bind_rows(ST_data)%>%
   mutate(Fiord = toupper(stringr::str_extract(Begin.Path, '^[^01]+')))%>%
   mutate(Fiord = substr(Fiord, 4, nchar(Fiord)))%>%
   mutate(Datetime = ymd_hms(Begin.Date.Time),
-         Date = as.Date(Begin.Date.Time))
+         Date = as.Date(Begin.Date.Time))%>%
+  filter(Selection != "NA")%>%
+  mutate(Deployment_number = stringr::str_extract(Begin.Path, '^([^_]*_){2}'))%>%#END BEFORE 2ND UNDERSCORE
+  mutate(Deployment_number = substr(Deployment_number, 4, nchar(Deployment_number)-1))%>%
+  left_join(deploy_tz, by = 'Deployment_number')%>%
+  mutate(Datetime = case_when( #normalize time to first deployment -- FPOD time has been adjusted in the software
+    daylight_adjust == 1 ~ Datetime + hours(1),
+    daylight_adjust == 0 ~ Datetime
+  ))
 
 all_ST_Cet<-all_ST%>%
   filter(Dolphin...y.n. == "y" | Dolphin...y.n. == "?")%>%
@@ -51,6 +61,10 @@ all_ST_Cet<-all_ST%>%
   distinct(Date, Fiord, DPD, SpClass, Qn)%>%
   mutate(Fiord_recorder = paste0(Fiord,"_ST"))%>%
   filter(Qn != '?')
+
+
+all_ST%>%
+  filter(Dolphin...y.n. == "")
 
 # NBHF ----
 
@@ -78,14 +92,14 @@ acou_timeline<-function(x){
   theme_bw()+
   scale_fill_brewer(palette = "Paired")+
   ylab("")+
-  xlim(c(min(as.Date(deploy$Datetime_deployment_local), na.rm = T), max(as.Date(deploy$Datetime_deployment_local), na.rm = T)))+
+  #xlim(c(min(as.Date(deploy$Datetime_deployment_local), na.rm = T), max(as.Date(deploy$Datetime_deployment_local), na.rm = T)))+
   theme(axis.text.y=element_blank(),  #remove y axis labels
         axis.ticks.y=element_blank(),
         panel.grid.minor.y = element_blank(),
         panel.grid.major.y = element_blank(),
         legend.position = "bottom",
         axis.text.x=element_text(angle=45,hjust=1))+
-  scale_x_date(date_breaks="1 month", date_labels="%b-%Y")
+  scale_x_date(date_breaks="1 month", date_labels="%b-%Y", limits = c(min(as.Date(deploy$Datetime_deployment_local), na.rm = T), max(as.Date(deploy$Datetime_deployment_local), na.rm = T)))
 }
 
 # all together
@@ -107,6 +121,8 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   #FPOD died
   geom_rect(data = data.frame(Fiord_recorder = "PRESERVATION_FPOD"), aes(xmin = ymd("2023-03-15"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)
+
+all_Cet_plot
 
 ggsave('./figures/allcet_v1.png',all_Cet_plot, dpi = 300, width = 175, height = 125, units = "mm")
 
