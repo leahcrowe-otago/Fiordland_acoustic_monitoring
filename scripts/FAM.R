@@ -1,11 +1,12 @@
 library(ggplot2);library(lubridate);library(dplyr);library(readxl);library(viridis)
 
 deploy<-read_excel("./data/Fiordland deployment locations.xlsx")
-deploy<-deploy%>%filter(Fiord != "DUSKY")%>%
+deploy<-deploy%>%filter(!grepl("FF",Deployment_number))%>%
   mutate(Fiord_recorder = paste0(Fiord,"_",Recorder_type))
 
 deploy_tz<-deploy%>%filter(Recorder_type == "ST")%>%dplyr::select(Deployment_number, daylight_adjust)
 
+deploy_tz%>%filter(grepl("Dagg", Deployment_number))%>%filter(daylight_adjust == 1)
 # FPOD data ----
 
 FPOD_data_list<-list.files("./data/FPOD", pattern = "*train details.csv", full.names = T, recursive = T)
@@ -20,8 +21,10 @@ all_FPOD<-bind_rows(FPOD_data)%>%
          Date = as.Date(Datetime))%>%
   filter(!(grepl("Charles0104", File) & Datetime >= ymd_hms("2023-05-13 15:44:00")))
 
-all_FPOD_Cet<-all_FPOD%>%  
-  filter(SpClass == "Dol")%>%
+all_FPOD_Dol<-all_FPOD%>%  
+  filter(SpClass == "Dol")
+
+all_FPOD_Cet<-all_FPOD_Dol%>%
   group_by(Date, Fiord, Qn)%>%
   mutate(DPD = n())%>% #DPD = detections per day
   distinct(Date, Fiord, SpClass, DPD, Qn)%>%
@@ -47,6 +50,10 @@ all_ST<-bind_rows(ST_data)%>%
   mutate(Datetime = case_when( #normalize time to first deployment -- FPOD time has been adjusted in the software
     daylight_adjust == 1 ~ Datetime + hours(1),
     daylight_adjust == 0 ~ Datetime
+  ))%>%
+  mutate(Fiord = case_when(
+    Fiord == "ANCHOR" ~ "DUSKY",
+    TRUE ~ Fiord
   ))
 
 all_ST_Cet<-all_ST%>%
@@ -66,6 +73,9 @@ all_ST_Cet<-all_ST%>%
 all_ST%>%
   filter(Dolphin...y.n. == "")
 
+all_ST%>%
+  filter(is.na(Fiord))
+
 # NBHF ----
 
 nbhf_time<-all_FPOD%>%
@@ -81,7 +91,7 @@ nbhf_day%>%
   group_by(Date)%>%
   tally()
 
-write.csv(nbhf_time, paste0('./data/Fiordland_nbhf_', Sys.Date(),'_v1.csv'), row.names = F)
+#write.csv(nbhf_time, paste0('./data/Fiordland_nbhf_', Sys.Date(),'_v1.csv'), row.names = F)
 
 # plot function ----
 
@@ -107,10 +117,12 @@ acou_timeline<-function(x){
 all_Cet<-all_FPOD_Cet%>%
   rbind(all_ST_Cet)
 
+unique(all_Cet$Fiord_recorder)
+
 all_Cet$Qn<-factor(all_Cet$Qn, levels = c("?","L","M","H"))
 
 all_Cet_plot<-acou_timeline(all_Cet)+
-  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
+  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
   geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")
 
 all_Cet_plot<-all_Cet_plot+
@@ -130,6 +142,8 @@ all_Cet_plot+
   xlim(c(ymd("2022-05-01"), ymd("2022-07-15")))
 
 ###
+
+nbhf_day$Qn<-factor(nbhf_day$Qn, levels = c("L","M","H"))
 
 all_FPOD_NBHF_plot<-acou_timeline(nbhf_day)+
   facet_wrap(~factor(Fiord, levels = c("CHARLES","DAGG","PRESERVATION")), ncol = 1)+
@@ -158,28 +172,35 @@ locations_FPOD<-deploy%>%filter(Recorder_type == 'F-POD' & !is.na(Recorder_start
 
 write.csv(locations_FPOD, paste0('./data/Fiordland_FPOD_locations_', Sys.Date(),'.csv'), row.names = F)
 
-#all things detected
+#all things detected on FPOD
 acou_timeline(all_FPOD)+
   facet_wrap(~factor(Fiord, levels = c("CHARLES","DAGG","PRESERVATION")), ncol = 1)+
-  facet_wrap(~factor(Fiord, levels = c("CHARLES","NANCY","DAGG","CHALKY","PRESERVATION")), ncol = 1)+
+  facet_wrap(~factor(Fiord, levels = c("CHARLES","NANCY","DAGG","DUSKY","CHALKY","PRESERVATION")), ncol = 1)+
   geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")
 
 # days listening
 listening<-deploy%>%
-  group_by(Fiord)%>%
+  ungroup()%>%
+  group_by(Fiord, Recorder_type)%>%
   dplyr::summarise(min_date = as.Date(min(Datetime_deployment_local, na.rm= T)), max_date = as.Date(max(Datetime_retrieval_local, na.rm = T)))%>%
+  ungroup()%>%
+  mutate(max_date = case_when(
+    Fiord == "DUSKY" ~ as.Date("2022-07-06"),
+    TRUE ~ max_date
+  ))%>%
   mutate(days = max_date - min_date)%>%
+  ungroup()%>%
   mutate(dead = case_when(
     Fiord == "NANCY" ~ (ymd("2022-11-27") - ymd("2022-10-07")) + (ymd("2023-03-14") - ymd("2023-01-02")),
-    #Fiord == "DAGG" ~ (ymd("2022-11-27") - ymd("2022-11-15")), #this is for soundtrap!
+    Fiord == "DAGG" & Recorder_type == "ST" ~ (ymd("2022-11-27") - ymd("2022-11-15")), #this is for soundtrap!
     Fiord == "CHALKY" ~ (ymd("2023-04-28") - ymd("2022-11-16")),
     Fiord == "PRESERVATION" ~ (ymd("2023-04-28") - ymd("2023-03-15")),
-    TRUE ~ 0
+    TRUE ~ (ymd("2023-08-09") - ymd("2023-08-09"))
   ))%>%
   mutate(active = days - dead)
 
 ## all together
-all_FPOD_Cet%>%
+all_Cet%>%
   ungroup()%>%
   mutate(season = case_when(
     month(Date) == 12 | month(Date) <= 2 ~ "summer",
@@ -191,13 +212,14 @@ all_FPOD_Cet%>%
   group_by(Fiord)%>%
   tally()%>%
   left_join(listening, by = "Fiord")%>%
-  mutate(det_pres = n/as.numeric(active))
+  mutate(det_pres = n/as.numeric(active))%>%
+  as.data.frame()
 
 ## seasonally? I don't know if I really want to go down this route
 
-all_FPOD_Cet%>%
+season<-all_Cet%>%
   ungroup()%>%
-  distinct(Fiord, Date)%>%
+  distinct(Fiord, Fiord_recorder, Date)%>%
   mutate(season = case_when(
     month(Date) == 12 | month(Date) <= 2 ~ "summer",
     month(Date) >= 3 & month(Date) <= 5 ~ "autumn",
@@ -207,5 +229,52 @@ all_FPOD_Cet%>%
   group_by(Fiord, season)%>%
   tally()%>%
   left_join(listening, by = "Fiord")%>%
-  mutate(det_pres = n/as.numeric(active))
+  mutate(det_pres = n/as.numeric(active))%>%
+  as.data.frame()
 
+ggplot(season)+
+  geom_col(aes(x = paste0(Fiord,"-",Recorder_type), y = det_pres, fill = season),color = "black", position = "stack", alpha = 0.7)+
+  facet_wrap(~season)
+
+## Dagg ----
+
+head(all_FPOD_Dol)
+
+FPOD_DAGG<-all_FPOD_Dol%>%
+  filter(Fiord == "DAGG")%>%
+  dplyr::select(Date,Datetime,Qn)%>%
+  mutate(type = "FPOD")
+
+head(FPOD_DAGG)
+
+ST_DAGG<-all_ST%>%
+  filter(Fiord == "DAGG")%>%
+  filter(Dolphin...y.n. == "y" | Dolphin...y.n. == "?")%>%
+  mutate(Qn = case_when(
+           Dolphin...y.n. == "y" ~ "H",
+           Dolphin...y.n. == "?" ~ "?",
+         ))%>%
+  dplyr::select(Date,Datetime,Qn)%>%
+  filter(Qn != "?")%>%
+  mutate(type = "ST")
+
+head(ST_DAGG)
+
+DAGG<-FPOD_DAGG%>%
+  bind_rows(ST_DAGG)%>%
+  arrange(Datetime)
+
+one_gear_detection<-DAGG %>%
+  distinct(Date, type)%>%
+  group_by(Date)%>%
+  tally()%>%
+  filter(n != 2)%>%
+  left_join(DAGG, by ='Date')
+
+FPOD_only<-one_gear_detection%>%
+  filter(type == "FPOD")
+
+ST_only<-one_gear_detection%>%
+  filter(type == "ST")
+
+#write.csv(one_gear_detection, paste0('./data/one_gear_detection_', Sys.Date(),'.csv'), row.names = F)
