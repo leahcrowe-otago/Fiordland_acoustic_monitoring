@@ -1,7 +1,12 @@
 library(ggplot2);library(lubridate);library(dplyr);library(readxl);library(viridis)
 
 deploy<-read_excel("./data/Fiordland deployment locations.xlsx")
-deploy<-deploy%>%filter(!grepl("FF",Deployment_number))%>%
+deploy<-deploy%>%
+  filter(!grepl("FF01",Deployment_number))%>%
+  filter(!grepl("FF02",Deployment_number))%>%
+  mutate(Fiord = case_when(
+    grepl("FF0", Deployment_number) ~ "FIVE_FINGERS",
+    TRUE ~ Fiord))%>%
   mutate(Fiord_recorder = paste0(Fiord,"_",Recorder_type))
 
 deploy_tz<-deploy%>%filter(Recorder_type == "ST")%>%dplyr::select(Deployment_number, daylight_adjust)
@@ -53,11 +58,13 @@ all_ST<-bind_rows(ST_data)%>%
   ))%>%
   mutate(Fiord = case_when(
     Fiord == "ANCHOR" ~ "DUSKY",
+    Fiord == "FF" ~ "FIVE_FINGERS",
     TRUE ~ Fiord
   ))
 
 all_ST_Cet<-all_ST%>%
   filter(Dolphin...y.n. == "y" | Dolphin...y.n. == "?")%>%
+  filter(Species == "Bottlenose")%>%
   group_by(Date, Fiord)%>%
   mutate(DPD = n())%>% #DPD = detections per day
   mutate(SpClass = "Dol",
@@ -122,7 +129,7 @@ unique(all_Cet$Fiord_recorder)
 all_Cet$Qn<-factor(all_Cet$Qn, levels = c("?","L","M","H"))
 
 all_Cet_plot<-acou_timeline(all_Cet)+
-  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
+  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","FIVE_FINGERS_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
   geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")
 
 all_Cet_plot<-all_Cet_plot+
@@ -130,6 +137,8 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2022-10-07"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-01-02"), xmax = ymd("2023-03-14"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-15"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "FIVE_FINGERS_ST"), aes(xmin = ymd("2022-12-31"), xmax = ymd("2023-06-26"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2022-07-06"), xmax = ymd("2023-02-23"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   #FPOD died
   geom_rect(data = data.frame(Fiord_recorder = "PRESERVATION_FPOD"), aes(xmin = ymd("2023-03-15"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)
@@ -184,10 +193,10 @@ listening<-deploy%>%
   group_by(Fiord, Recorder_type)%>%
   dplyr::summarise(min_date = as.Date(min(Datetime_deployment_local, na.rm= T)), max_date = as.Date(max(Datetime_retrieval_local, na.rm = T)))%>%
   ungroup()%>%
-  mutate(max_date = case_when(
-    Fiord == "DUSKY" ~ as.Date("2022-07-06"),
-    TRUE ~ max_date
-  ))%>%
+  # mutate(max_date = case_when(
+  #   Fiord == "DUSKY" ~ as.Date("2022-07-06"),
+  #   TRUE ~ max_date
+  # ))%>%
   mutate(days = max_date - min_date)%>%
   ungroup()%>%
   mutate(dead = case_when(
@@ -195,6 +204,10 @@ listening<-deploy%>%
     Fiord == "DAGG" & Recorder_type == "ST" ~ (ymd("2022-11-27") - ymd("2022-11-15")), #this is for soundtrap!
     Fiord == "CHALKY" ~ (ymd("2023-04-28") - ymd("2022-11-16")),
     Fiord == "PRESERVATION" ~ (ymd("2023-04-28") - ymd("2023-03-15")),
+    #no deployment FF03_03
+    Fiord == "FIVE_FINGERS" ~ (ymd("2023-06-23") - ymd("2022-12-31")),
+    #change when Dusky analysed
+    Fiord == "DUSKY" ~ (ymd("2023-06-23") - ymd("2022-07-06")),
     TRUE ~ (ymd("2023-08-09") - ymd("2023-08-09"))
   ))%>%
   mutate(active = days - dead)
@@ -213,7 +226,8 @@ all_Cet%>%
   tally()%>%
   left_join(listening, by = "Fiord")%>%
   mutate(det_pres = n/as.numeric(active))%>%
-  as.data.frame()
+  as.data.frame()%>%
+  arrange(det_pres)
 
 ## seasonally? I don't know if I really want to go down this route
 
@@ -233,8 +247,8 @@ season<-all_Cet%>%
   as.data.frame()
 
 ggplot(season)+
-  geom_col(aes(x = paste0(Fiord,"-",Recorder_type), y = det_pres, fill = season),color = "black", position = "stack", alpha = 0.7)+
-  facet_wrap(~season)
+  geom_col(aes(x = season, y = det_pres, fill = season),color = "black", position = "stack", alpha = 0.7)+
+  facet_wrap(~paste0(Fiord,"-",Recorder_type))
 
 ## Dagg ----
 
@@ -264,10 +278,27 @@ DAGG<-FPOD_DAGG%>%
   bind_rows(ST_DAGG)%>%
   arrange(Datetime)
 
-one_gear_detection<-DAGG %>%
+DAGG%>%
+  filter(Date <= "2023-02-20")%>%
+  filter(Date < "2022-11-15" | Date > "2022-11-27")%>%
+  distinct(Date, type)%>%
+  group_by(type)%>%
+  tally()
+
+tally_detection<-DAGG %>%
   distinct(Date, type)%>%
   group_by(Date)%>%
-  tally()%>%
+  tally()
+
+tally_detection%>%
+  filter(Date <= "2023-02-20")%>%
+  filter(Date < "2022-11-15" | Date > "2022-11-27")%>%
+  group_by(n)%>%
+  tally()
+
+23/(78)
+
+one_gear_detection<-tally_detection%>%
   filter(n != 2)%>%
   left_join(DAGG, by ='Date')
 
@@ -278,3 +309,4 @@ ST_only<-one_gear_detection%>%
   filter(type == "ST")
 
 #write.csv(one_gear_detection, paste0('./data/one_gear_detection_', Sys.Date(),'.csv'), row.names = F)
+
