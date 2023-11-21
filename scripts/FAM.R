@@ -24,7 +24,8 @@ all_FPOD<-bind_rows(FPOD_data)%>%
   mutate(Fiord = toupper(stringr::str_extract(File, '^[^01]+')))%>%
   mutate(Datetime = ymd_hm("1899-12-30 00:00") + minutes(Min),
          Date = as.Date(Datetime))%>%
-  filter(!(grepl("Charles0104", File) & Datetime >= ymd_hms("2023-05-13 15:44:00")))
+  filter(!(grepl("Charles0104", File) & Datetime >= ymd_hms("2023-05-13 15:44:00")))%>%
+  filter(!(grepl("Preservation0105", File) & Datetime >= ymd_hms("2023-11-02 07:44:00")))
 
 all_FPOD_Dol<-all_FPOD%>%  
   filter(SpClass == "Dol")
@@ -62,6 +63,9 @@ all_ST<-bind_rows(ST_data)%>%
     TRUE ~ Fiord
   ))
 
+#write.csv(all_ST, paste0('./data/all_ST_', Sys.Date(),'.csv'), row.names = F)
+
+
 all_ST_Cet<-all_ST%>%
   filter(Dolphin...y.n. == "y" | Dolphin...y.n. == "?")%>%
   filter(Species == "Bottlenose")%>%
@@ -98,7 +102,7 @@ nbhf_day%>%
   group_by(Date)%>%
   tally()
 
-#write.csv(nbhf_time, paste0('./data/Fiordland_nbhf_', Sys.Date(),'_v1.csv'), row.names = F)
+write.csv(nbhf_time, paste0('./data/Fiordland_nbhf_', Sys.Date(),'_v1.csv'), row.names = F)
 
 # plot function ----
 
@@ -116,7 +120,7 @@ acou_timeline<-function(x){
         panel.grid.major.y = element_blank(),
         legend.position = "bottom",
         axis.text.x=element_text(angle=45,hjust=1))+
-  scale_x_date(date_breaks="1 month", date_labels="%b-%Y", limits = c(min(as.Date(deploy$Datetime_deployment_local), na.rm = T), max(as.Date(deploy$Datetime_deployment_local), na.rm = T)))
+  scale_x_date(date_breaks="1 month", date_labels="%b-%Y", limits = c(min(as.Date(deploy$Datetime_deployment_local), na.rm = T), max(as.Date(deploy$Datetime_retrieval_local), na.rm = T)))
 }
 
 # all together
@@ -130,25 +134,28 @@ all_Cet$Qn<-factor(all_Cet$Qn, levels = c("?","L","M","H"))
 
 all_Cet_plot<-acou_timeline(all_Cet)+
   facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","FIVE_FINGERS_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
-  geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")
+  geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")+
+  geom_vline(deploy%>%group_by(Fiord)%>%filter(Datetime_retrieval_local == max(Datetime_retrieval_local)), mapping = aes(xintercept = as.Date(Datetime_retrieval_local)), linetype = "twodash", color = "red")
 
 all_Cet_plot<-all_Cet_plot+
   #soundtrap died shaded areas 
   geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2022-10-07"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-01-02"), xmax = ymd("2023-03-14"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-15"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-09-02"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "FIVE_FINGERS_ST"), aes(xmin = ymd("2022-12-31"), xmax = ymd("2023-06-26"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2022-07-06"), xmax = ymd("2023-02-23"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   #FPOD died
-  geom_rect(data = data.frame(Fiord_recorder = "PRESERVATION_FPOD"), aes(xmin = ymd("2023-03-15"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)
+  geom_rect(data = data.frame(Fiord_recorder = "PRESERVATION_FPOD"), aes(xmin = ymd("2023-03-15"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_FPOD"), aes(xmin = ymd("2023-05-24"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)
 
 all_Cet_plot
 
-ggsave('./figures/allcet_v1.png',all_Cet_plot, dpi = 300, width = 175, height = 125, units = "mm")
+ggsave('./figures/allcet_v1.png',all_Cet_plot, dpi = 300, width = 175, height = 175, units = "mm")
 
 all_Cet_plot+
-  xlim(c(ymd("2022-05-01"), ymd("2022-07-15")))
+  xlim(c(ymd("2022-05-01"), ymd("2023-11-15")))
 
 ###
 
@@ -156,7 +163,12 @@ nbhf_day$Qn<-factor(nbhf_day$Qn, levels = c("L","M","H"))
 
 all_FPOD_NBHF_plot<-acou_timeline(nbhf_day)+
   facet_wrap(~factor(Fiord, levels = c("CHARLES","DAGG","PRESERVATION")), ncol = 1)+
-  geom_vline(deploy%>%filter(Recorder_type == 'F-POD'), mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")
+  geom_vline(deploy%>%filter(Recorder_type == 'FPOD'), mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")+
+  geom_vline(deploy%>%filter(Recorder_type == 'FPOD')%>%group_by(Fiord)%>%filter(Datetime_retrieval_local == max(Datetime_retrieval_local)), mapping = aes(xintercept = as.Date(Datetime_retrieval_local)), linetype = "twodash", color = "red")+
+  geom_rect(data = data.frame(Fiord = "DAGG"), aes(xmin = ymd("2023-05-24"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord = "PRESERVATION"), aes(xmin = ymd("2023-03-15"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)
+
+all_FPOD_NBHF_plot
 
 ggsave('./figures/NBHF_v1.png', all_FPOD_NBHF_plot, dpi = 300, width = 175, height = 125, units = "mm")
 
@@ -202,6 +214,7 @@ listening<-deploy%>%
   mutate(dead = case_when(
     Fiord == "NANCY" ~ (ymd("2022-11-27") - ymd("2022-10-07")) + (ymd("2023-03-14") - ymd("2023-01-02")),
     Fiord == "DAGG" & Recorder_type == "ST" ~ (ymd("2022-11-27") - ymd("2022-11-15")), #this is for soundtrap!
+    Fiord == "DAGG" & Recorder_type == "FPOD" ~ + (ymd("2023-11-09") - ymd("2023-05-24")),
     Fiord == "CHALKY" ~ (ymd("2023-04-28") - ymd("2022-11-16")),
     Fiord == "PRESERVATION" ~ (ymd("2023-04-28") - ymd("2023-03-15")),
     #no deployment FF03_03
@@ -212,15 +225,11 @@ listening<-deploy%>%
   ))%>%
   mutate(active = days - dead)
 
+
+
 ## all together
 all_Cet%>%
   ungroup()%>%
-  mutate(season = case_when(
-    month(Date) == 12 | month(Date) <= 2 ~ "summer",
-    month(Date) >= 3 & month(Date) <= 5 ~ "autumn",
-    month(Date) >= 6 & month(Date) <= 8 ~ "winter",
-    month(Date) >= 9 & month(Date) <= 11 ~ "spring"
-  ))%>%
   distinct(Fiord, Date)%>%
   group_by(Fiord)%>%
   tally()%>%
@@ -310,3 +319,8 @@ ST_only<-one_gear_detection%>%
 
 #write.csv(one_gear_detection, paste0('./data/one_gear_detection_', Sys.Date(),'.csv'), row.names = F)
 
+#
+
+all_ST%>%
+  filter(Dolphin...y.n. == "?")%>%
+  distinct(Deployment_number)
