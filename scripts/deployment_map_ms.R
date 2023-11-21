@@ -126,10 +126,10 @@ bathy_FMA<-ggplot()+
                               -0.15,0.02))#,-0.09))
 
 bathy_FMA_white<-bathy_FMA+
-  geom_text_repel(data = fiord_labels_white, aes(x = lon, y = lat, label = label), size = 2.3, color = "grey", min.segment.length = 0, force_pull = 2, box.padding = 0.1,
-                  nudge_x = c(-0.51,-0.5,-0.4,
-                              -0.3,-0.30),
-                  nudge_y = c(0.07,0.06,0.0,
+  geom_text_repel(data = fiord_labels_white, aes(x = lon, y = lat, label = label), size = 2.3, color = "azure", min.segment.length = 0, force_pull = 2, box.padding = 0.1,
+                  nudge_x = c(-0.51,-0.496,-0.402,
+                              -0.302,-0.301),
+                  nudge_y = c(0.073,0.054,0.0,
                               -0.04,-0.15))
 
   ggsave("./figures/bathy_FMA.png", bathy_FMA, dpi = 320, height = 6, width = 4, units = 'in')
