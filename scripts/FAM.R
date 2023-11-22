@@ -24,8 +24,10 @@ all_FPOD<-bind_rows(FPOD_data)%>%
   mutate(Fiord = toupper(stringr::str_extract(File, '^[^01]+')))%>%
   mutate(Datetime = ymd_hm("1899-12-30 00:00") + minutes(Min),
          Date = as.Date(Datetime))%>%
-  filter(!(grepl("Charles0104", File) & Datetime >= ymd_hms("2023-05-13 15:44:00")))%>%
-  filter(!(grepl("Preservation0105", File) & Datetime >= ymd_hms("2023-11-02 07:44:00")))
+  filter(!(grepl("Charles0104", File) & Datetime >= ymd_hms("2023-05-13 15:44:00")))%>% #dead batteries
+  filter(!(grepl("Preservation0105", File) & Datetime >= ymd_hms("2023-11-02 07:44:00")))%>% #dead batteries
+  mutate(type = "FPOD")%>%
+  mutate(Deployment_number = substr(File,1,8))
 
 all_FPOD_Dol<-all_FPOD%>%  
   filter(SpClass == "Dol")
@@ -61,7 +63,8 @@ all_ST<-bind_rows(ST_data)%>%
     Fiord == "ANCHOR" ~ "DUSKY",
     Fiord == "FF" ~ "FIVE_FINGERS",
     TRUE ~ Fiord
-  ))
+  ))%>%
+  mutate(type = "ST")
 
 #write.csv(all_ST, paste0('./data/all_ST_', Sys.Date(),'.csv'), row.names = F)
 
@@ -108,7 +111,7 @@ write.csv(nbhf_time, paste0('./data/Fiordland_nbhf_', Sys.Date(),'_v1.csv'), row
 
 acou_timeline<-function(x){
   ggplot(x)+
-    geom_col(aes(x = Date, y = 1, fill = Qn))+
+    geom_col(aes(x = Date, y = 1, fill = Quality))+
     ylim(c(0,1))+
     theme_bw()+
     scale_fill_brewer(palette = "Paired")+
@@ -120,6 +123,7 @@ acou_timeline<-function(x){
           panel.grid.major.y = element_blank(),
           legend.position = "bottom",
           axis.text.x=element_text(angle=45,hjust=1))+
+          #strip.background = element_rect(aes(fill = Fiord), colour = "black", size = 1))+
     scale_x_date(date_breaks="1 month", date_labels="%b-%Y", limits = c(min(as.Date(deploy$Datetime_deployment_local), na.rm = T), max(as.Date(deploy$Datetime_retrieval_local), na.rm = T)))
 }
 
@@ -130,7 +134,7 @@ all_Cet<-all_FPOD_Cet%>%
 
 unique(all_Cet$Fiord_recorder)
 
-all_Cet$Qn<-factor(all_Cet$Qn, levels = c("?","L","M","H"))
+all_Cet$Quality<-factor(all_Cet$Qn, levels = c("?","L","M","H"))
 
 all_Cet_plot<-acou_timeline(all_Cet)+
   facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","FIVE_FINGERS_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
@@ -153,9 +157,9 @@ all_Cet_plot<-all_Cet_plot+
   #to be analysed
   geom_rect(data = data.frame(Fiord_recorder = "CHARLES_FPOD"), aes(xmin = ymd("2023-05-13"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-06-20"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-04-30"), xmax = ymd("2023-09-02"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-09-02"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "FIVE_FINGERS_ST"), aes(xmin = ymd("2023-06-26"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-06-27"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-02-23"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-06-21"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)
 
 all_Cet_plot
@@ -167,7 +171,7 @@ all_Cet_plot+
 
 ###
 
-nbhf_day$Qn<-factor(nbhf_day$Qn, levels = c("L","M","H"))
+nbhf_day$Quality<-factor(nbhf_day$Qn, levels = c("L","M","H"))
 
 all_FPOD_NBHF_plot<-acou_timeline(nbhf_day)+
   facet_wrap(~factor(Fiord, levels = c("CHARLES","DAGG","PRESERVATION")), ncol = 1)+
@@ -210,6 +214,8 @@ acou_timeline(all_FPOD)+
 # days listening
 listening<-deploy%>%
   ungroup()%>%
+  filter(Deployment_number != "Charles01_05" & Deployment_number != "Nancy01_06" & 
+       !(Deployment_number == "Dagg01_05" & Recorder_type == "ST") & !(Deployment_number == "Dagg01_06" & Recorder_type == "ST"))%>%
   group_by(Fiord, Recorder_type)%>%
   dplyr::summarise(min_date = as.Date(min(Datetime_deployment_local, na.rm= T)), max_date = as.Date(max(Datetime_retrieval_local, na.rm = T)))%>%
   ungroup()%>%
@@ -221,7 +227,7 @@ listening<-deploy%>%
   ungroup()%>%
   mutate(dead = case_when(
     Fiord == "NANCY" ~ (ymd("2022-11-27") - ymd("2022-10-07")) + (ymd("2023-03-14") - ymd("2023-01-02")),
-    Fiord == "DAGG" & Recorder_type == "ST" ~ (ymd("2022-11-27") - ymd("2022-11-15")) + (ymd("2023-11-09") - ymd("2023-09-02")), 
+    Fiord == "DAGG" & Recorder_type == "ST" ~ (ymd("2022-11-27") - ymd("2022-11-15")) + (ymd("2023-11-09") - ymd("2023-09-02")), #once analysis is done, change to "2023-09-02"
     Fiord == "DAGG" & Recorder_type == "FPOD" ~ (ymd("2023-11-09") - ymd("2023-05-24")),
     Fiord == "CHALKY" ~ (ymd("2023-04-28") - ymd("2022-11-16")) + (ymd("2023-11-09") - ymd("2023-10-19")),
     Fiord == "PRESERVATION" ~ (ymd("2023-04-28") - ymd("2023-03-15")),
@@ -272,8 +278,7 @@ head(all_FPOD_Dol)
 FPOD_DAGG<-all_FPOD_Dol%>%
   filter(Fiord == "DAGG")%>%
   dplyr::select(Date,Datetime,Qn,File)%>%
-  mutate(type = "FPOD")%>%
-  mutate(Deployment_number = substr(File,1,8))%>%
+
   dplyr::select(-File)
 
 head(FPOD_DAGG)
@@ -287,7 +292,6 @@ ST_DAGG<-all_ST%>%
   ))%>%
   dplyr::select(Date,Datetime,Qn,Deployment_number, Begin.Path)%>%
   filter(Qn != "?")%>%
-  mutate(type = "ST")%>%
   mutate(Deployment_number = gsub("_", "", Deployment_number))%>%
   mutate(begin_time = ymd_hms(paste0("20",substr(Begin.Path, 24, nchar(Begin.Path) - 4))))
 
@@ -300,26 +304,39 @@ DAGG<-FPOD_DAGG%>%
 nrow(DAGG)
 head(DAGG)
 
-########
-DAGG%>%
-  filter(Date <= "2023-02-20")%>%
-  filter(Date < "2022-11-15" | Date > "2022-11-27")%>%
-  distinct(Date, type)%>%
-  group_by(type)%>%
-  tally()
+# Daily differences in DAGG ----
 
+# 15 min ST sampling
+
+DAGG%>%
+  filter(Deployment_number != "Dagg0103" & Deployment_number != "Dagg0105")%>%
+  distinct(Date, type)%>%
+  group_by(Date)%>%
+  tally()%>%
+  group_by(n)%>%
+  mutate(count = n())%>%
+  distinct(n, count)%>%
+  ungroup()%>%
+  mutate(perc = count/sum(count))
+
+# continuous ST sampling
+
+DAGG%>%
+  filter(Deployment_number == "Dagg0103" & Datetime <= ymd_hms("2022-11-14 22:30:24"))%>%
+  distinct(Date, type)%>%
+  group_by(Date)%>%
+  tally()%>%
+  group_by(n)%>%
+  mutate(count = n())%>%
+  distinct(n, count)%>%
+  ungroup()%>%
+  mutate(perc = count/sum(count))
+
+# why might they not be getting detections on same day?
 tally_detection<-DAGG %>%
   distinct(Date, type)%>%
   group_by(Date)%>%
   tally()
-
-tally_detection%>%
-  filter(Date <= "2023-02-20")%>%
-  filter(Date < "2022-11-15" | Date > "2022-11-27")%>%
-  group_by(n)%>%
-  tally()
-
-23/(78)
 
 one_gear_detection<-tally_detection%>%
   filter(n != 2)%>%
@@ -345,24 +362,41 @@ Dagg_ST_files<-lapply(Dagg_file_list, function(x)
 
 Dagg_ST_files<-bind_rows(Dagg_ST_files)%>%
   arrange(begin_time)%>%
-  mutate(end_time = ymd_hms(begin_time) + minutes(15),
-         Deployment_number = gsub("_","",substr(Begin.Path, 4, 12)),
+  mutate(Deployment_number = gsub("_","",substr(Begin.Path, 4, 12)))%>%
+  mutate(end_time = case_when(
+    Deployment_number != "Dagg0103" ~ ymd_hms(begin_time) + minutes(15),
+    Deployment_number == "Dagg0103" ~ ymd_hms(begin_time) + minutes(60)),
          bin_num = 1:n())%>%
-  mutate(beg_time_FPOD = ymd_hms(begin_time) - minutes(1),
-         end_time_FPOD = ymd_hms(end_time) + minutes(1))
+  mutate(beg_time_FPOD = floor_date(ymd_hms(begin_time) - minutes(1), "minute"),
+         end_time_FPOD = ceiling_date(ymd_hms(end_time) + minutes(1), "minute"))
 
 head(Dagg_ST_files)
 summary(Dagg_ST_files)
+nrow(Dagg_ST_files)
 
+#percent of Dagg files with dolphins detections
+nrow(ST_DAGG%>%distinct(Begin.Path))/nrow(Dagg_ST_files)
+
+# assign bin number to detections from FinFinder
 head(ST_DAGG)
 
 ST_DAGG_bin<-ST_DAGG%>%
   mutate(Begin.Path = gsub("\\\\","/",Begin.Path))%>%
   left_join(Dagg_ST_files, by = c("Begin.Path", "Deployment_number"))
 
+head(ST_DAGG_bin)
+
+ST_DAGG_bin<-ST_DAGG_bin%>%
+  dplyr::rename("begin_time" = "begin_time.x")%>%
+  dplyr::select(-begin_time.y)
+
+# assign bin number to detections from FPOD
 head(FPOD_DAGG)
+
 library(fuzzyjoin)
+#the below takes about 20min Nov 2023
 print(Sys.time())
+# join FPOD data to bin, but give a one minute buffer
 FPOD_DAGG_bin<-FPOD_DAGG%>%
   fuzzy_left_join(Dagg_ST_files, #join badData to df
                   by = c("Datetime" = "beg_time_FPOD", #variables to join by
@@ -380,30 +414,24 @@ head(FPOD_DAGG_bin)
 
 FPOD_DAGG_bin$begin_time<-ymd_hms(FPOD_DAGG_bin$begin_time)
 
-head(ST_DAGG_bin)
+# all together now
 
-ST_DAGG_bin<-ST_DAGG_bin%>%
-  dplyr::rename("begin_time" = "begin_time.x")%>%
-  dplyr::select(-begin_time.y)
-
-head(ST_DAGG_bin)
-
-bins<-ST_DAGG_bin%>%
+both_bin<-ST_DAGG_bin%>%
   bind_rows(FPOD_DAGG_bin)%>%
+  arrange(Datetime)
+
+bins<-both_bin%>%
   distinct(Deployment_number, bin_num, type)%>%
   group_by(Deployment_number, bin_num)%>%
   tally()
   
 nrow(bins)
-bins%>%filter(n == 1)
-bins%>%filter(n == 2)
+bins%>%filter(n == 1)%>%
+  left_join(Dagg_ST_files, by = "bin_num")
+both<-bins%>%filter(n == 2)%>%
+  left_join(Dagg_ST_files, by = "bin_num")
 
-
-ST_bin%>%
-  distinct(type, bin)
-
-FPOD_bin%>%
-  distinct(type, bin)
+#######
 
 # ST deployments with ?
 all_ST%>%
