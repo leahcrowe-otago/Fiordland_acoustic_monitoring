@@ -5,7 +5,7 @@ deploy<-deploy%>%
   filter(!grepl("FF01",Deployment_number))%>%
   filter(!grepl("FF02",Deployment_number))%>%
   mutate(Fiord = case_when(
-    grepl("FF0", Deployment_number) ~ "FIVE_FINGERS",
+    grepl("FF0", Deployment_number) ~ "FIVE-FINGERS",
     TRUE ~ Fiord))%>%
   mutate(Fiord_recorder = paste0(Fiord,"_",Recorder_type))
 
@@ -27,16 +27,17 @@ all_FPOD<-bind_rows(FPOD_data)%>%
   filter(!(grepl("Charles0104", File) & Datetime >= ymd_hms("2023-05-13 15:44:00")))%>% #dead batteries
   filter(!(grepl("Preservation0105", File) & Datetime >= ymd_hms("2023-11-02 07:44:00")))%>% #dead batteries
   mutate(type = "FPOD")%>%
-  mutate(Deployment_number = substr(File,1,8))
+  mutate(Quality = Qn)
 
 all_FPOD_Dol<-all_FPOD%>%  
   filter(SpClass == "Dol")
 
 all_FPOD_Cet<-all_FPOD_Dol%>%
-  group_by(Date, Fiord, Qn)%>%
+  group_by(Date, Fiord, Quality)%>%
   mutate(DPD = n())%>% #DPD = detections per day
-  distinct(Date, Fiord, SpClass, DPD, Qn)%>%
+  distinct(Date, Fiord, SpClass, DPD, Quality)%>%
   mutate(Fiord_recorder = paste0(Fiord,"_FPOD"))
+  
 
 # FinFinder review ----
 
@@ -61,7 +62,7 @@ all_ST<-bind_rows(ST_data)%>%
   ))%>%
   mutate(Fiord = case_when(
     Fiord == "ANCHOR" ~ "DUSKY",
-    Fiord == "FF" ~ "FIVE_FINGERS",
+    Fiord == "FF" ~ "FIVE-FINGERS",
     TRUE ~ Fiord
   ))%>%
   mutate(type = "ST")
@@ -75,13 +76,13 @@ all_ST_Cet<-all_ST%>%
   group_by(Date, Fiord)%>%
   mutate(DPD = n())%>% #DPD = detections per day
   mutate(SpClass = "Dol",
-         Qn = case_when(
+         Quality = case_when(
            Dolphin...y.n. == "y" ~ "H",
            Dolphin...y.n. == "?" ~ "?",
          ))%>%
-  distinct(Date, Fiord, DPD, SpClass, Qn)%>%
+  distinct(Date, Fiord, DPD, SpClass, Quality)%>%
   mutate(Fiord_recorder = paste0(Fiord,"_ST"))%>%
-  filter(Qn != '?')
+  filter(Quality != '?')
 
 
 all_ST%>%
@@ -97,9 +98,9 @@ nbhf_time<-all_FPOD%>%
   arrange(Date)
 
 nbhf_day<-nbhf_time%>%
-  group_by(Date, Fiord, Qn)%>%
+  group_by(Date, Fiord, Quality)%>%
   mutate(DPD = n())%>% #DPD = detections per day
-  distinct(Date, Fiord, SpClass, DPD, Qn)
+  distinct(Date, Fiord, SpClass, DPD, Quality)
 
 nbhf_day%>%
   group_by(Date)%>%
@@ -134,10 +135,10 @@ all_Cet<-all_FPOD_Cet%>%
 
 unique(all_Cet$Fiord_recorder)
 
-all_Cet$Quality<-factor(all_Cet$Qn, levels = c("?","L","M","H"))
+all_Cet$Quality<-factor(all_Cet$Quality, levels = c("?","L","M","H"))
 
 all_Cet_plot<-acou_timeline(all_Cet)+
-  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","FIVE_FINGERS_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
+  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","FIVE-FINGERS_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
   geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")+
   geom_vline(deploy%>%group_by(Fiord)%>%filter(Datetime_retrieval_local == max(Datetime_retrieval_local)), mapping = aes(xintercept = as.Date(Datetime_retrieval_local)), linetype = "twodash", color = "red")
 
@@ -147,7 +148,7 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-01-02"), xmax = ymd("2023-03-14"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-15"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-09-02"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "FIVE_FINGERS_ST"), aes(xmin = ymd("2022-12-31"), xmax = ymd("2023-06-26"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "FIVE-FINGERS_ST"), aes(xmin = ymd("2022-12-31"), xmax = ymd("2023-06-26"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2022-07-06"), xmax = ymd("2023-02-23"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-10-19"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
@@ -158,12 +159,22 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "CHARLES_FPOD"), aes(xmin = ymd("2023-05-13"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-06-20"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-09-02"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "FIVE_FINGERS_ST"), aes(xmin = ymd("2023-06-26"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "FIVE-FINGERS_ST"), aes(xmin = ymd("2023-06-26"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-02-23"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-06-21"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)
+  
+all_Cet_plot$layers<-c(
+  #15/30 below everything else
+  geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2022-02-15"), xmax = ymd("2022-10-07"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE),
+  geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2022-11-27"), xmax = ymd("2023-01-02"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE),
+  geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-03-14"), xmax = ymd("2023-06-20"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE),
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-02-16"), xmax = ymd("2022-07-13"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE), 
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-27"), xmax = ymd("2023-09-02"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE), 
+  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-02-21"), xmax = ymd("2022-11-16"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE), 
+  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-04-28"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE), 
+                       all_Cet_plot$layers)
 
 all_Cet_plot
-
 ggsave('./figures/allcet_v1.png',all_Cet_plot, dpi = 300, width = 175, height = 175, units = "mm")
 
 all_Cet_plot+
@@ -171,7 +182,7 @@ all_Cet_plot+
 
 ###
 
-nbhf_day$Quality<-factor(nbhf_day$Qn, levels = c("L","M","H"))
+nbhf_day$Quality<-factor(nbhf_day$Quality, levels = c("L","M","H"))
 
 all_FPOD_NBHF_plot<-acou_timeline(nbhf_day)+
   facet_wrap(~factor(Fiord, levels = c("CHARLES","DAGG","PRESERVATION")), ncol = 1)+
@@ -187,7 +198,7 @@ ggsave('./figures/NBHF_v1.png', all_FPOD_NBHF_plot, dpi = 300, width = 175, heig
 ###
 
 trunc_nbhf_othercet<-ggplot(all_FPOD%>%filter(SpClass == "NBHF" | SpClass == "Dol"))+
-  geom_col(aes(x = Date, y = 1, fill = Qn))+
+  geom_col(aes(x = Date, y = 1, fill = Quality))+
   facet_wrap(~SpClass+Fiord, ncol = 3)+
   ylim(c(0,1))+
   xlim(c(min(nbhf_time$Date)-1, max(nbhf_time$Date)+1))+
@@ -216,7 +227,8 @@ listening<-deploy%>%
   ungroup()%>%
   filter(Deployment_number != "Charles01_05" & Deployment_number != "Nancy01_06" & 
        !(Deployment_number == "Dagg01_05" & Recorder_type == "ST") & !(Deployment_number == "Dagg01_06" & Recorder_type == "ST"))%>%
-  group_by(Fiord, Recorder_type)%>%
+  mutate(Fiord_recorder = paste0(Fiord,"_",Recorder_type))%>%
+  group_by(Fiord_recorder)%>%
   dplyr::summarise(min_date = as.Date(min(Datetime_deployment_local, na.rm= T)), max_date = as.Date(max(Datetime_retrieval_local, na.rm = T)))%>%
   ungroup()%>%
   # mutate(max_date = case_when(
@@ -226,50 +238,64 @@ listening<-deploy%>%
   mutate(days = max_date - min_date)%>%
   ungroup()%>%
   mutate(dead = case_when(
-    Fiord == "NANCY" ~ (ymd("2022-11-27") - ymd("2022-10-07")) + (ymd("2023-03-14") - ymd("2023-01-02")),
-    Fiord == "DAGG" & Recorder_type == "ST" ~ (ymd("2022-11-27") - ymd("2022-11-15")) + (ymd("2023-11-09") - ymd("2023-09-02")), #once analysis is done, change to "2023-09-02"
-    Fiord == "DAGG" & Recorder_type == "FPOD" ~ (ymd("2023-11-09") - ymd("2023-05-24")),
-    Fiord == "CHALKY" ~ (ymd("2023-04-28") - ymd("2022-11-16")) + (ymd("2023-11-09") - ymd("2023-10-19")),
-    Fiord == "PRESERVATION" ~ (ymd("2023-04-28") - ymd("2023-03-15")),
+    Fiord_recorder == "NANCY_ST" ~ (ymd("2022-11-27") - ymd("2022-10-07")) + (ymd("2023-03-14") - ymd("2023-01-02")),
+    Fiord_recorder == "DAGG_ST" ~ (ymd("2022-11-27") - ymd("2022-11-15")) + (ymd("2023-11-09") - ymd("2023-09-02")), #once analysis is done, change to "2023-09-02"
+    Fiord_recorder == "DAGG_FPOD" ~ (ymd("2023-11-09") - ymd("2023-05-24")),
+    Fiord_recorder == "CHALKY_ST" ~ (ymd("2023-04-28") - ymd("2022-11-16")) + (ymd("2023-11-09") - ymd("2023-10-19")),
+    Fiord_recorder == "PRESERVATION_FPOD" ~ (ymd("2023-04-28") - ymd("2023-03-15")),
     #no deployment FF03_03
-    Fiord == "FIVE_FINGERS" ~ (ymd("2023-06-23") - ymd("2022-12-31")),
+    Fiord_recorder == "FIVE-FINGERS_ST" ~ (ymd("2023-06-23") - ymd("2022-12-31")),
     #change when Dusky analysed
-    Fiord == "DUSKY" ~ (ymd("2023-06-23") - ymd("2022-07-06")),
+    Fiord_recorder == "DUSKY_ST" ~ (ymd("2023-06-23") - ymd("2022-07-06")),
     TRUE ~ (ymd("2023-08-09") - ymd("2023-08-09"))
   ))%>%
   mutate(active = days - dead)
 
-## all together
-all_Cet%>%
+## all together, daily detection rate
+daily_det_rate<-all_Cet%>%
   ungroup()%>%
-  distinct(Fiord, Date)%>%
-  group_by(Fiord)%>%
+  distinct(Fiord_recorder, Date)%>%
+  group_by(Fiord_recorder)%>%
   tally()%>%
-  left_join(listening, by = "Fiord")%>%
-  mutate(det_pres = n/as.numeric(active))%>%
+  left_join(listening, by = "Fiord_recorder")%>%
+  mutate(det_pres = round(n/as.numeric(active), 2))%>%
   as.data.frame()%>%
-  arrange(det_pres)
+  arrange(-det_pres)
+
+daily_det_rate_table<-daily_det_rate%>%
+  dplyr::select(Fiord_recorder, n, active, det_pres)%>%
+  mutate(active = as.numeric(active))%>%
+  dplyr::rename(`Acoustic detection days` = "n", `Recorder active days` = "active", `Detection rate (daily)` = "det_pres")
+
+library(kableExtra)
+
+daily_det_rate_table%>%
+  kbl()%>%
+  kable_classic(full_width = F, html_font = "Cambria")
 
 ## seasonally? I don't know if I really want to go down this route
-
+## this is going to need to take into consideration periods of inactivity
 season<-all_Cet%>%
   ungroup()%>%
-  distinct(Fiord, Fiord_recorder, Date)%>%
+  distinct(Fiord_recorder, Date)%>%
   mutate(season = case_when(
     month(Date) == 12 | month(Date) <= 2 ~ "summer",
     month(Date) >= 3 & month(Date) <= 5 ~ "autumn",
     month(Date) >= 6 & month(Date) <= 8 ~ "winter",
     month(Date) >= 9 & month(Date) <= 11 ~ "spring"
   ))%>%
-  group_by(Fiord, season)%>%
+  group_by(year(Date), Fiord_recorder, season)%>%
   tally()%>%
-  left_join(listening, by = "Fiord")%>%
-  mutate(det_pres = n/as.numeric(active))%>%
+  left_join(listening, by = "Fiord_recorder")%>%
+  mutate(det_pres = case_when(
+    season == "summer" ~ n/90,
+    season == "spring" ~ n/91,
+    TRUE ~ n/92))%>%
   as.data.frame()
 
 ggplot(season)+
-  geom_col(aes(x = season, y = det_pres, fill = season),color = "black", position = "stack", alpha = 0.7)+
-  facet_wrap(~paste0(Fiord,"-",Recorder_type))
+  geom_col(aes(x = paste0(`year(Date)`,"_",season), y = det_pres, fill = season),color = "black", position = "stack", alpha = 0.7)+
+  facet_wrap(~Fiord_recorder)
 
 ## Dagg ----
 
@@ -277,23 +303,25 @@ head(all_FPOD_Dol)
 
 FPOD_DAGG<-all_FPOD_Dol%>%
   filter(Fiord == "DAGG")%>%
-  dplyr::select(Date,Datetime,Qn,File)%>%
-
-  dplyr::select(-File)
+  dplyr::select(Date,Datetime,Quality,File)%>%
+  mutate(Deployment_number = substr(File,1,8))%>%
+  dplyr::select(-File)%>%
+  mutate(type = "FPOD")
 
 head(FPOD_DAGG)
 
 ST_DAGG<-all_ST%>%
   filter(Fiord == "DAGG")%>%
   filter(Dolphin...y.n. == "y" | Dolphin...y.n. == "?")%>%
-  mutate(Qn = case_when(
+  mutate(Quality = case_when(
     Dolphin...y.n. == "y" ~ "H",
     Dolphin...y.n. == "?" ~ "?",
   ))%>%
-  dplyr::select(Date,Datetime,Qn,Deployment_number, Begin.Path)%>%
-  filter(Qn != "?")%>%
+  dplyr::select(Date,Datetime,Quality,Deployment_number, Begin.Path)%>%
+  filter(Quality != "?")%>%
   mutate(Deployment_number = gsub("_", "", Deployment_number))%>%
-  mutate(begin_time = ymd_hms(paste0("20",substr(Begin.Path, 24, nchar(Begin.Path) - 4))))
+  mutate(begin_time = ymd_hms(paste0("20",substr(Begin.Path, 24, nchar(Begin.Path) - 4))))%>%
+  mutate(type = "ST")
 
 head(ST_DAGG)
 
