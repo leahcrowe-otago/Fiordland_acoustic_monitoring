@@ -6,6 +6,8 @@ NZ_coast<-sf::read_sf(shapefile_path, layer = "nz-coastlines-and-islands-polygon
 NZ_lakes<-sf::read_sf(shapefile_path, layer = "nz-lake-polygons-topo-150k")
 big_lakes<-subset(NZ_lakes, !is.na(name_ascii))
 protected_areas<-sf::read_sf(shapefile_path, layer = "protected-areas")
+MA<-sf::read_sf(shapefile_path, layer = "Marine_Protected_Areas_under_the_Marine_Management_Act")
+FMA<-subset(MA, Name == "Fiordland Marine Area")
 
 natpark<-subset(protected_areas, (section == "s.4 - National Park"))
 mpa<-subset(protected_areas, (section == "s.3 - Marine Reserve"))
@@ -24,7 +26,36 @@ base<-ggplot()+
         panel.grid.major = element_line(size = 0.1, linetype = 'solid', colour = "black"), 
         panel.border = element_rect(colour = "black", fill=NA, size=1))+
   xlab("Longitude")+
-  ylab("Latitude")
+  ylab("Latitude")+
+  geom_sf(data = mpa, aes(fill = "Marine Reserve"), alpha = 1)+
+  geom_path(alliso200, mapping = aes(X,Y,group = L2), color = "steelblue", alpha = 0.7, size = 0.2)+
+  geom_path(alliso1000, mapping = aes(X,Y,group = L2), color = "steelblue2", alpha = 0.7, size = 0.2)+
+  geom_sf(data = big_lakes, alpha = 0.6, fill = "blue")+
+  coord_sf(xlim = c(166.0,168), ylim = c(-46.2,-44.5), crs = 4269)+
+  scale_fill_manual(values = fiord_fill)+
+  theme(legend.position = c(0.83, 0.12),
+        legend.title = element_blank(),
+        legend.margin = margin(c(1, 1, 1, 1)),
+        legend.key.size = unit(0.2, 'cm'),
+        legend.text = element_text(size = 5),
+        legend.spacing.y = unit(-0.02, "cm"),
+        legend.box.background = element_rect(color = "white",fill = "white"),
+        legend.key = element_rect(fill = NA),
+        axis.text = element_text(size = 6),
+        axis.title = element_text(size = 6))+
+  geom_text_repel(data = fiord_labels, aes(x = lon, y = lat, label = label), size = 1.75, min.segment.length = 0, force_pull = 2, box.padding = 0.1,
+                  nudge_x = c(0.29,-0.3,-0.4,
+                              -0.3,-0.5,-0.4,
+                              -0.5,-0.5,-1.5,
+                              -0.3,-0.2,
+                              -0.4,-0.3,-0.3,
+                              -0.30),#0.23),
+                  nudge_y = c(-0.05,0.01,0.04,
+                              0.1,0.05,0.1,
+                              0.08,0.05,0.01,
+                              0,0,
+                              0.08,-0.02,-0.04,
+                              -0.15))#,-0.09))
 
 fiord_fill = c("Marine Reserve" = "orange")
 
@@ -97,3 +128,4 @@ dusky<-base+
 
 ggsave("./figures/dusky.svg", dusky, dpi = 320, width = 250, units = 'mm')
 ggsave("./figures/dusky.png", dusky, dpi = 320, height = 150, units = 'mm')
+
