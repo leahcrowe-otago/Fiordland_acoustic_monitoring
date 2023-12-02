@@ -336,29 +336,51 @@ head(DAGG)
 
 # 15 min ST sampling
 
-DAGG%>%
+sampling<-DAGG%>%
   filter(Deployment_number != "Dagg0103" & Deployment_number != "Dagg0105")%>%
   distinct(Date, type)%>%
   group_by(Date)%>%
-  tally()%>%
-  group_by(n)%>%
-  mutate(count = n())%>%
-  distinct(n, count)%>%
+  mutate(`Number of recorders` = n())%>%
+  group_by(`Number of recorders`)%>%
+  mutate(`Detection days` = n())%>%
+  distinct(`Number of recorders`, `Detection days`)%>%
   ungroup()%>%
-  mutate(perc = count/sum(count))
+  mutate(`Percent of detection days` = round(`Detection days`/sum(`Detection days`) * 100, 0))%>%
+  arrange(-`Number of recorders`)%>%
+  mutate(`Listening days` = as.numeric(round(ymd_hms("2023-02-20 11:30:00") - ymd_hms("2022-02-16 13:39:00"), 0)) -
+           as.numeric(round(ymd_hms("2022-11-27 16:06:00") - ymd_hms("2022-07-13 13:33:00"), 0)))%>%
+  dplyr::select(`Listening days`, everything())
+
+sampling$`Listening days`[2]<-""
+
+#600 x 125
+sampling%>%
+  kableExtra::kable(booktabs = T, align = "c") %>%
+  kable_classic(full_width = F, html_font = "Cambria")%>%
+  add_header_above(c("15/30min ST & continuous FPOD" = 4))
 
 # continuous ST sampling
 
-DAGG%>%
+cont<-DAGG%>%
   filter(Deployment_number == "Dagg0103" & Datetime <= ymd_hms("2022-11-14 22:30:24"))%>%
   distinct(Date, type)%>%
   group_by(Date)%>%
-  tally()%>%
-  group_by(n)%>%
-  mutate(count = n())%>%
-  distinct(n, count)%>%
+  mutate(`Number of recorders` = n())%>%
+  group_by(`Number of recorders`)%>%
+  mutate(`Detection days` = n())%>%
+  distinct(`Number of recorders`, `Detection days`)%>%
   ungroup()%>%
-  mutate(perc = count/sum(count))
+  mutate(`Percent of detection days` = round(`Detection days`/sum(`Detection days`) * 100, 1))%>%
+  arrange(-`Number of recorders`)%>%
+  mutate(`Listening days` = as.numeric(round(ymd_hms("2022-11-14 22:30:24") - ymd_hms("2022-07-13 17:05:00"), 0)))%>%
+  dplyr::select(`Listening days`, everything())
+
+cont$`Listening days`[2]<-""
+
+cont%>%
+  kableExtra::kable(booktabs = T, align = "c") %>%
+  kable_classic(full_width = F, html_font = "Cambria")%>%
+  add_header_above(c("continuous ST & FPOD" = 4))
 
 # why might they not be getting detections on same day?
 tally_detection<-DAGG %>%
@@ -377,6 +399,38 @@ ST_only<-one_gear_detection%>%
   filter(type == "ST")
 
 #write.csv(one_gear_detection, paste0('./data/one_gear_detection_', Sys.Date(),'.csv'), row.names = F)
+
+one_det<-read_excel("./data/one_gear_detection_2023-10-21.xlsx")
+head(one_det)
+
+one_det<-one_det%>%
+  mutate(clicks = case_when(
+    grepl("click", tolower(`Explanation?`)) ~ "Y",
+    TRUE ~ "N"
+  ),
+  duty = case_when(
+    grepl("duty", tolower(`Explanation?`)) ~ "Y",
+    TRUE ~ "N"
+  ))
+
+#dagg01_01, 02, 04 15/30 sampling period
+one_det%>%
+  filter(Datetime <= ymd_hms("2023-02-20 11:30:00"))%>%
+  filter(Datetime <= ymd_hms("2022-07-13 13:33:00") | Date >= ymd_hms("2022-11-27 16:06:00"))%>%
+  distinct(Date, clicks, duty)%>%
+  group_by(clicks, duty)%>%
+  tally()
+
+one_det%>%
+  filter(Datetime <= ymd_hms("2023-02-20 11:30:00"))%>%
+  filter(Datetime <= ymd_hms("2022-07-13 13:33:00") | Date >= ymd_hms("2022-11-27 16:06:00"))%>%
+  filter(clicks == "N" & duty == "N")%>% as.data.frame()
+
+#dagg01_03 continuous sampling period
+one_det%>%
+  distinct(Date, clicks, duty)%>%
+  filter(Date >= ymd("2022-07-13") & Date <= ymd("2022-11-14"))
+
 
 # binning into 15 min ----
 
