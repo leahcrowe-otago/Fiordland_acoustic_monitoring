@@ -41,6 +41,11 @@ doubtfulpod_venn[is.na(doubtfulpod_venn)] <-FALSE
 plot(euler(doubtfulpod_venn, shape = "ellipse"), quantities = TRUE)
 
 
+ind_area%>%
+  filter(POD == "DOUBTFUL" & SURVEY_AREA == "DUSKY")%>%
+  group_by(DATE)%>%
+  tally()
+
 # DUSKY
 duskypod<-ind_area%>%
   filter(POD == "DUSKY")%>%
@@ -65,4 +70,20 @@ duskypod_venn[is.na(duskypod_venn)] <-FALSE
 
 plot(euler(duskypod_venn, shape = "ellipse"), quantities = TRUE)
 
-## if I can ever get nVennR to work
+## sightings table
+
+sigs_nf<-read_excel("./data/SIGHTINGS_NF.xlsx")%>%
+  arrange(Year, Date)
+head(sigs_nf)
+
+color_fiord<-paletteer::paletteer_d("vapoRwave::hotlineBling")[1:length(unique(sigs_nf$Fiord))]
+
+sigs_nf$Fiord<-cell_spec(sigs_nf$Fiord, bold = T, 
+             color = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(rep("white",6),"black")),
+             background = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(color_fiord)))
+
+kbl(sigs_nf%>%dplyr::select(-Notes), escape = F, align = "c") %>%
+  kable_classic("striped", full_width = F)%>%
+  as_image()
+
+png
