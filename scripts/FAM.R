@@ -5,7 +5,7 @@ deploy<-deploy%>%
   filter(!grepl("FF01",Deployment_number))%>%
   filter(!grepl("FF02",Deployment_number))%>%
   mutate(Fiord = case_when(
-    grepl("FF0", Deployment_number) ~ "FIVE-FINGERS",
+    grepl("FF0", Deployment_number) ~ "MARINE-RESERVE",
     TRUE ~ Fiord))%>%
   mutate(Fiord_recorder = paste0(Fiord,"_",Recorder_type))
 
@@ -56,13 +56,19 @@ all_ST<-bind_rows(ST_data)%>%
   mutate(Deployment_number = stringr::str_extract(Begin.Path, '^([^_]*_){2}'))%>%#END BEFORE 2ND UNDERSCORE
   mutate(Deployment_number = substr(Deployment_number, 4, nchar(Deployment_number)-1))%>%
   left_join(deploy_tz, by = 'Deployment_number')%>%
-  mutate(Datetime = case_when( #normalize time to first deployment -- FPOD time has been adjusted in the software
-    daylight_adjust == 1 ~ Datetime + hours(1),
-    daylight_adjust == 0 ~ Datetime
+  #adjust an hour during daylight savings time since this has happened fo the ST data automatically at some stage
+  mutate(Datetime1 = case_when(
+    Datetime >= "2022-04-03 03:00:00" & Datetime <= "2022-09-25 02:00:00" ~ Datetime + hours(1),
+    Datetime >= "2023-04-02 03:00:00" & Datetime <= "2023-09-24 02:00:00" ~ Datetime + hours(1),
+    TRUE ~ Datetime
   ))%>%
+  # mutate(Datetime = case_when( #normalize time to first deployment -- FPOD time has been adjusted in the software
+  #   daylight_adjust == 1 ~ Datetime + hours(1),
+  #   daylight_adjust == 0 ~ Datetime
+  # ))%>%
   mutate(Fiord = case_when(
     Fiord == "ANCHOR" ~ "DUSKY",
-    Fiord == "FF" ~ "FIVE-FINGERS",
+    Fiord == "FF" ~ "MARINE-RESERVE",
     TRUE ~ Fiord
   ))%>%
   mutate(type = "ST")
@@ -138,7 +144,7 @@ unique(all_Cet$Fiord_recorder)
 all_Cet$Quality<-factor(all_Cet$Quality, levels = c("?","L","M","H"))
 
 all_Cet_plot<-acou_timeline(all_Cet)+
-  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","FIVE-FINGERS_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
+  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","MARINE-RESERVE_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
   geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")+
   geom_vline(deploy%>%group_by(Fiord)%>%filter(Datetime_retrieval_local == max(Datetime_retrieval_local)), mapping = aes(xintercept = as.Date(Datetime_retrieval_local)), linetype = "twodash", color = "red")
 
@@ -148,7 +154,7 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-01-02"), xmax = ymd("2023-03-14"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-15"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-09-02"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "FIVE-FINGERS_ST"), aes(xmin = ymd("2022-12-31"), xmax = ymd("2023-06-26"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE_ST"), aes(xmin = ymd("2022-12-31"), xmax = ymd("2023-06-26"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2022-07-06"), xmax = ymd("2023-02-23"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-10-19"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
@@ -159,7 +165,7 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "CHARLES_FPOD"), aes(xmin = ymd("2023-05-13"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-06-20"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-09-02"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "FIVE-FINGERS_ST"), aes(xmin = ymd("2023-06-26"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE_ST"), aes(xmin = ymd("2023-06-26"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-02-23"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-06-21"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)
   
@@ -244,7 +250,7 @@ listening<-deploy%>%
     Fiord_recorder == "CHALKY_ST" ~ (ymd("2023-04-28") - ymd("2022-11-16")) + (ymd("2023-11-09") - ymd("2023-10-19")),
     Fiord_recorder == "PRESERVATION_FPOD" ~ (ymd("2023-04-28") - ymd("2023-03-15")),
     #no deployment FF03_03
-    Fiord_recorder == "FIVE-FINGERS_ST" ~ (ymd("2023-06-23") - ymd("2022-12-31")),
+    Fiord_recorder == "MARINE-RESERVE_ST" ~ (ymd("2023-06-23") - ymd("2022-12-31")),
     #change when Dusky analysed
     Fiord_recorder == "DUSKY_ST" ~ (ymd("2023-06-23") - ymd("2022-07-06")),
     TRUE ~ (ymd("2023-08-09") - ymd("2023-08-09"))
@@ -398,7 +404,7 @@ FPOD_only<-one_gear_detection%>%
 ST_only<-one_gear_detection%>%
   filter(type == "ST")
 
-#write.csv(one_gear_detection, paste0('./data/one_gear_detection_', Sys.Date(),'.csv'), row.names = F)
+write.csv(one_gear_detection, paste0('./data/one_gear_detection_', Sys.Date(),'.csv'), row.names = F)
 
 one_det<-read_excel("./data/one_gear_detection_2023-10-21.xlsx")
 head(one_det)
@@ -456,7 +462,7 @@ head(Dagg_ST_files)
 summary(Dagg_ST_files)
 nrow(Dagg_ST_files)
 
-#percent of Dagg files with dolphins detections
+#percent of Dagg files with dolphin detections
 nrow(ST_DAGG%>%distinct(Begin.Path))/nrow(Dagg_ST_files)
 
 # assign bin number to detections from FinFinder
