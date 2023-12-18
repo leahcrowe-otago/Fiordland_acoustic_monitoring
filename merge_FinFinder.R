@@ -7,11 +7,11 @@ library(lubridate)
 # deployment and instrument
   
 #example: "FF03_01"
-  deployment<-"Dagg01_05"
+  deployment<-"Anchor01_03"
 #example: "6706"  
-  ST_ID<-"5870"
+  ST_ID<-"6705"
 #drive
-  drive = "V"
+  drive = "X"
 # "Delphinid whistles" or "HBWs"
   type = "Delphinid whistles"
   #type = "HBWs"
@@ -22,8 +22,10 @@ library(lubridate)
 
  #get full path
  wav_list_ff <- list.files(path, recursive = F, pattern = "*.wav", full.names = T)
- #grab time of file start from filename
- file_time_start<-data.frame(Begin.Path = as.character(wav_list_ff))%>%mutate(begin_time = ymd_hms(paste0("20",substr(Begin.Path, 24, 40))))
+ #grab time of file start from filename, need to adjust substr argument for different deployments
+ # Dagg = substr(Begin.Path, 24, 40)
+ # Anchor = substr(Begin.Path, 26, 42)
+ file_time_start<-data.frame(Begin.Path = as.character(wav_list_ff))%>%mutate(begin_time = ymd_hms(paste0("20",substr(Begin.Path, 26, 42))))
  write.csv(file_time_start, paste0("C:/Users/jenni/Desktop/Leah_file_list/",deployment,"_",ST_ID,".csv"), row.names = F)
  #get trunc path to link to FinFinder output
  wav_list <- list.files(path, recursive = F, pattern = "*.wav", full.names = F)
