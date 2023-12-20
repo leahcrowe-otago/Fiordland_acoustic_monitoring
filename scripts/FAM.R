@@ -57,7 +57,7 @@ all_ST<-bind_rows(ST_data)%>%
   mutate(Deployment_number = substr(Deployment_number, 4, nchar(Deployment_number)-1))%>%
   left_join(deploy_tz, by = 'Deployment_number')%>%
   #adjust an hour during daylight savings time since this has happened fo the ST data automatically at some stage
-  mutate(Datetime1 = case_when(
+  mutate(Datetime = case_when(
     Datetime >= "2022-04-03 03:00:00" & Datetime <= "2022-09-25 02:00:00" ~ Datetime + hours(1),
     Datetime >= "2023-04-02 03:00:00" & Datetime <= "2023-09-24 02:00:00" ~ Datetime + hours(1),
     TRUE ~ Datetime
@@ -71,7 +71,12 @@ all_ST<-bind_rows(ST_data)%>%
     Fiord == "FF" ~ "MARINE-RESERVE",
     TRUE ~ Fiord
   ))%>%
-  mutate(type = "ST")
+  mutate(type = "ST")%>%
+  #FPOD is synced with GPS time but with time coming from file, didn't want to mess with it. way easier to just adjust fpod
+  mutate(Datetime = case_when(
+    Deployment_number == "Dagg01_01" & type == "FPOD" ~ Datetime - minutes(4),
+    TRUE ~ Datetime
+  ))
 
 #write.csv(all_ST, paste0('./data/all_ST_', Sys.Date(),'.csv'), row.names = F)
 
@@ -156,6 +161,7 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-09-02"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE_ST"), aes(xmin = ymd("2022-12-31"), xmax = ymd("2023-06-26"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2022-07-06"), xmax = ymd("2023-02-23"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-06-02"), xmax = ymd("2023-06-27"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-10-19"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   #FPOD died
@@ -166,7 +172,6 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-06-20"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-09-02"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE_ST"), aes(xmin = ymd("2023-06-26"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-02-23"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-06-21"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)
   
 all_Cet_plot$layers<-c(
@@ -252,7 +257,7 @@ listening<-deploy%>%
     #no deployment FF03_03
     Fiord_recorder == "MARINE-RESERVE_ST" ~ (ymd("2023-06-23") - ymd("2022-12-31")),
     #change when Dusky analysed
-    Fiord_recorder == "DUSKY_ST" ~ (ymd("2023-06-23") - ymd("2022-07-06")),
+    Fiord_recorder == "DUSKY_ST" ~ (ymd("2023-06-27") - ymd("2023-06-02")) + (ymd("2023-02-23") - ymd("2022-07-06")),
     TRUE ~ (ymd("2023-08-09") - ymd("2023-08-09"))
   ))%>%
   mutate(active = days - dead)
@@ -514,11 +519,14 @@ bins<-both_bin%>%
   tally()
   
 nrow(bins)
-bins%>%filter(n == 1)%>%
+
+bins_one<-bins%>%filter(n == 1)%>%
   left_join(Dagg_ST_files, by = "bin_num")
 both<-bins%>%filter(n == 2)%>%
   left_join(Dagg_ST_files, by = "bin_num")
 
+both
+bins_one
 #######
 
 # ST deployments with ?
