@@ -12,6 +12,7 @@ deploy<-deploy%>%
 deploy_tz<-deploy%>%filter(Recorder_type == "ST")%>%dplyr::select(Deployment_number, daylight_adjust)
 
 deploy_tz%>%filter(grepl("Dagg", Deployment_number))%>%filter(daylight_adjust == 1)
+
 # FPOD data ----
 
 FPOD_data_list<-list.files("./data/FPOD", pattern = "*train details.csv", full.names = T, recursive = T)
@@ -39,7 +40,7 @@ all_FPOD_Cet<-all_FPOD_Dol%>%
   mutate(Fiord_recorder = paste0(Fiord,"_FPOD"))
   
 
-# FinFinder review ----
+# ST/FinFinder review ----
 
 ST_data_list<-list.files("./data/ST", pattern = "*.txt", full.names = T, recursive = T)
 
@@ -62,19 +63,15 @@ all_ST<-bind_rows(ST_data)%>%
     Datetime >= "2023-04-02 03:00:00" & Datetime <= "2023-09-24 02:00:00" ~ Datetime + hours(1),
     TRUE ~ Datetime
   ))%>%
-  # mutate(Datetime = case_when( #normalize time to first deployment -- FPOD time has been adjusted in the software
-  #   daylight_adjust == 1 ~ Datetime + hours(1),
-  #   daylight_adjust == 0 ~ Datetime
-  # ))%>%
   mutate(Fiord = case_when(
     Fiord == "ANCHOR" ~ "DUSKY",
     Fiord == "FF" ~ "MARINE-RESERVE",
     TRUE ~ Fiord
   ))%>%
   mutate(type = "ST")%>%
-  #FPOD is synced with GPS time but with time coming from file, didn't want to mess with it. way easier to just adjust fpod
+  #FPOD is synced with GPS time but with ST time coming from file, also adjusted for each deployment in Dagg 15 bin comparison
   mutate(Datetime = case_when(
-    Deployment_number == "Dagg01_01" & type == "FPOD" ~ Datetime - minutes(4),
+    Deployment_number == "Dagg01_01" & type == "ST" ~ Datetime + minutes(4),
     TRUE ~ Datetime
   ))
 
@@ -193,7 +190,7 @@ all_Cet_plot+
 
 ###
 
-nbhf_day$Quality<-factor(nbhf_day$Quality, levels = c("L","M","H"))
+nbhf_day$Quality<-factor(nbhf_day$Quality, levels = c("?","L","M","H"))
 
 all_FPOD_NBHF_plot<-acou_timeline(nbhf_day)+
   facet_wrap(~factor(Fiord, levels = c("CHARLES","DAGG","PRESERVATION")), ncol = 1)+
@@ -308,7 +305,7 @@ ggplot(season)+
   geom_col(aes(x = paste0(`year(Date)`,"_",season), y = det_pres, fill = season),color = "black", position = "stack", alpha = 0.7)+
   facet_wrap(~Fiord_recorder)
 
-## Dagg ----
+# Dagg ----
 
 head(all_FPOD_Dol)
 
@@ -332,7 +329,11 @@ ST_DAGG<-all_ST%>%
   filter(Quality != "?")%>%
   mutate(Deployment_number = gsub("_", "", Deployment_number))%>%
   mutate(begin_time = ymd_hms(paste0("20",substr(Begin.Path, 24, nchar(Begin.Path) - 4))))%>%
-  mutate(type = "ST")
+  mutate(type = "ST")%>%
+  mutate(begin_time = case_when(
+    Deployment_number == "Dagg0101" & type == "ST" ~ begin_time + minutes(4),
+    TRUE ~ begin_time
+  ))
 
 head(ST_DAGG)
 
@@ -364,7 +365,6 @@ sampling<-DAGG%>%
 
 sampling$`Listening days`[2]<-""
 
-#600 x 125
 sampling%>%
   kableExtra::kable(booktabs = T, align = "c") %>%
   kable_classic(full_width = F, html_font = "Cambria")%>%
@@ -456,12 +456,23 @@ Dagg_ST_files<-lapply(Dagg_file_list, function(x)
 Dagg_ST_files<-bind_rows(Dagg_ST_files)%>%
   arrange(begin_time)%>%
   mutate(Deployment_number = gsub("_","",substr(Begin.Path, 4, 12)))%>%
+  mutate(begin_time = case_when(
+    ymd_hms(begin_time) >= "2022-04-03 03:00:00" & ymd_hms(begin_time) <= "2022-09-25 02:00:00" ~ ymd_hms(begin_time) + hours(1),
+    ymd_hms(begin_time) >= "2023-04-02 03:00:00" & ymd_hms(begin_time) <= "2023-09-24 02:00:00" ~ ymd_hms(begin_time) + hours(1),
+    TRUE ~ ymd_hms(begin_time)
+  ))%>%
+  mutate( # adjust for time difference between FPOD and ST -- FPOD is synced with GPS time on deployment, ST may not have been when paramaterized with computers used primarily offline
+    begin_time = case_when(
+      Deployment_number == "Dagg0101" ~ ymd_hms(begin_time) + minutes(4),
+      TRUE ~ ymd_hms(begin_time)))%>%
   mutate(end_time = case_when(
     Deployment_number != "Dagg0103" ~ ymd_hms(begin_time) + minutes(15),
     Deployment_number == "Dagg0103" ~ ymd_hms(begin_time) + minutes(60)),
          bin_num = 1:n())%>%
-  mutate(beg_time_FPOD = floor_date(ymd_hms(begin_time) - minutes(1), "minute"),
-         end_time_FPOD = ceiling_date(ymd_hms(end_time) + minutes(1), "minute"))
+  #give wiggle room for binning FPOD data
+  mutate(beg_time_FPOD = floor_date(ymd_hms(begin_time) - minutes(1), "minute"), #floor the minute because of the one minute binning? subtract a minute because can only really adjust FPOD time in software to within one minute
+         end_time_FPOD = ceiling_date(ymd_hms(end_time) + minutes(1), "minute")) #cieling the minute because of the one minute binning? subtract a minute because can only really adjust FPOD time in software to within one minute
+
 
 head(Dagg_ST_files)
 summary(Dagg_ST_files)
@@ -533,3 +544,16 @@ bins_one
 all_ST%>%
   filter(Dolphin...y.n. == "?")%>%
   distinct(Deployment_number)
+
+ggplot()+
+  geom_point(both_bin, mapping = aes(x = Datetime, y = type))+
+  #xlim(c(ymd_hms("2022-03-21 00:00:01"),ymd_hms("2022-03-24 00:00:01")))+
+  geom_rect(Dagg_ST_files, mapping = aes(xmin = beg_time_FPOD, xmax = end_time_FPOD, ymin = "Bin", ymax = "ST"), fill = "blue", alpha = 0.5)+
+  #geom_label(Dagg_ST_files, mapping = aes(x = begin_time, y = "Bin"),label = Dagg_ST_files$bin_num)+
+  geom_point(both, mapping = aes(x = begin_time + minutes(10), y = "Bin"), color = "red", size = 3)
+  
+
+both_bin%>%
+  filter(bin_num == 7773)
+
+both%>%filter(bin_num == 7773)
