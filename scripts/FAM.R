@@ -17,16 +17,20 @@ deploy_tz%>%filter(grepl("Dagg", Deployment_number))%>%filter(daylight_adjust ==
 
 FPOD_data_list<-list.files("./data/FPOD", pattern = "*train details.csv", full.names = T, recursive = T)
 
-FPOD_data<-lapply(FPOD_data_list, function(x)
-  read.csv(x)
+FPOD_data<-lapply(FPOD_data_list, function(x){
+  y<-read.csv(x)
+  colnames(y)[3]<-"Min" #Nick renamed this "Minutes" in a later v1
+  y}
 )
+head(FPOD_data[7])
+head(FPOD_data[6])
 
 all_FPOD<-bind_rows(FPOD_data)%>%
   mutate(Fiord = toupper(stringr::str_extract(File, '^[^01]+')))%>%
   mutate(Datetime = ymd_hm("1899-12-30 00:00") + minutes(Min),
          Date = as.Date(Datetime))%>%
-  filter(!(grepl("Charles0104", File) & Datetime >= ymd_hms("2023-05-13 15:44:00")))%>% #dead batteries
-  filter(!(grepl("Preservation0105", File) & Datetime >= ymd_hms("2023-11-02 07:44:00")))%>% #dead batteries
+  filter(!(grepl("Charles0104", File) & Datetime >= ymd_hms("2023-05-13 15:44:00")))%>% #deployment end, cut out time transiting back to me
+  filter(!(grepl("Preservation0105", File) & Datetime >= ymd_hms("2023-11-02 07:44:00")))%>% #eployment end, cut out time transiting back to me
   mutate(type = "FPOD")%>%
   mutate(Quality = Qn)
 
@@ -101,11 +105,16 @@ all_ST%>%
 
 # NBHF ----
 
+#add in UNx as potential NBHF
+
+unique(all_FPOD$SpClass)
+
 nbhf_time<-all_FPOD%>%
-  filter(SpClass == "NBHF")%>%
+  filter(SpClass == "NBHF" | SpClass == "UNx")%>%
   arrange(Date)
 
 nbhf_day<-nbhf_time%>%
+  filter(SpClass == "NBHF")%>%
   group_by(Date, Fiord, Quality)%>%
   mutate(DPD = n())%>% #DPD = detections per day
   distinct(Date, Fiord, SpClass, DPD, Quality)
@@ -114,7 +123,16 @@ nbhf_day%>%
   group_by(Date)%>%
   tally()
 
-write.csv(nbhf_time, paste0('./data/Fiordland_nbhf_', Sys.Date(),'_v1.csv'), row.names = F)
+#includes nbhf and unx for raw output from KERNO before manually validating
+write.csv(nbhf_time, paste0('./data/Fiordland_nbhf_unx_', Sys.Date(),'_v1.csv'), row.names = F)
+
+
+nrow(nbhf_time)
+nrow(nbhf_time%>%filter(SpClass == "NBHF"))
+nrow(nbhf_time%>%filter(SpClass == "UNx" & Fiord == "PRESERVATION"))
+
+acou_timeline(all_FPOD%>%filter(SpClass == "UNx"))+
+  facet_wrap(~Fiord)
 
 # plot function ----
 
@@ -205,11 +223,11 @@ ggsave('./figures/NBHF_v1.png', all_FPOD_NBHF_plot, dpi = 300, width = 175, heig
 
 ###
 
-trunc_nbhf_othercet<-ggplot(all_FPOD%>%filter(SpClass == "NBHF" | SpClass == "Dol"))+
+trunc_nbhf_othercet<-ggplot(all_FPOD%>%filter(SpClass == "NBHF" | SpClass == "Dol" | SpClass == "UNx"))+
   geom_col(aes(x = Date, y = 1, fill = Quality))+
   facet_wrap(~SpClass+Fiord, ncol = 3)+
   ylim(c(0,1))+
-  xlim(c(min(nbhf_time$Date)-1, max(nbhf_time$Date)+1))+
+  #xlim(c(min(nbhf_time$Date)-1, max(nbhf_time$Date)+1))+
   ylab("")+
   theme_bw()+
   scale_fill_brewer(palette = "Paired")+
@@ -218,9 +236,10 @@ trunc_nbhf_othercet<-ggplot(all_FPOD%>%filter(SpClass == "NBHF" | SpClass == "Do
         panel.grid.minor.y = element_blank(),
         panel.grid.major.y = element_blank())
 
+trunc_nbhf_othercet
 ggsave('./figures/trunc_nbhf_othercet_v1.png', trunc_nbhf_othercet, dpi = 300, width = 300, height = 80, units = "mm")
 
-locations_FPOD<-deploy%>%filter(Recorder_type == 'F-POD' & !is.na(Recorder_start_local))
+locations_FPOD<-deploy%>%filter(Recorder_type == 'FPOD' & !is.na(Recorder_start_local))%>%arrange(Fiord, Recorder_start_local)
 
 write.csv(locations_FPOD, paste0('./data/Fiordland_FPOD_locations_', Sys.Date(),'.csv'), row.names = F)
 
