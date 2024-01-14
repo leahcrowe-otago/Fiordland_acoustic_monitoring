@@ -76,6 +76,10 @@ all_ST<-bind_rows(ST_data)%>%
   #FPOD is synced with GPS time but with ST time coming from file, also adjusted for each deployment in Dagg 15 bin comparison
   mutate(Datetime = case_when(
     Deployment_number == "Dagg01_01" & type == "ST" ~ Datetime + minutes(4),
+    Deployment_number == "Dagg01_02" & type == "ST" ~ Datetime - minutes(3),
+    Deployment_number == "Dagg01_03" & type == "ST" ~ Datetime - minutes(0),
+    Deployment_number == "Dagg01_04" & type == "ST" ~ Datetime - minutes(0),
+    Deployment_number == "Dagg01_05" & type == "ST" ~ Datetime - minutes(0),
     TRUE ~ Datetime
   ))
 
@@ -131,8 +135,43 @@ nrow(nbhf_time)
 nrow(nbhf_time%>%filter(SpClass == "NBHF"))
 nrow(nbhf_time%>%filter(SpClass == "UNx" & Fiord == "PRESERVATION"))
 
-acou_timeline(all_FPOD%>%filter(SpClass == "UNx"))+
-  facet_wrap(~Fiord)
+# acou_timeline(all_FPOD%>%filter(SpClass == "UNx"))+
+#   facet_wrap(~Fiord)
+
+# ADW validation
+
+FPOD_data_list_ADW<-list.files("./data/FPOD ADW", pattern = "*train details.csv", full.names = T, recursive = T)
+
+FPOD_data_ADW<-lapply(FPOD_data_list_ADW, function(x){
+  y<-read.csv(x)
+  colnames(y)[3]<-"Min" #Nick renamed this "Minutes" in a later v1
+  y}
+)
+
+all_ADW<-bind_rows(FPOD_data_ADW)%>%
+  mutate(Fiord = toupper(stringr::str_extract(File, '^[^01]+')))%>%
+  mutate(Datetime = ymd_hm("1899-12-30 00:00") + minutes(Min),
+         Date = as.Date(Datetime))%>%
+  filter(!(grepl("Charles0104", File) & Datetime >= ymd_hms("2023-05-13 15:44:00")))%>% #deployment end, cut out time transiting back to me
+  filter(!(grepl("Preservation0105", File) & Datetime >= ymd_hms("2023-11-02 07:44:00")))%>% #eployment end, cut out time transiting back to me
+  mutate(type = "FPOD")%>%
+  mutate(Quality = Qn)
+
+unique(all_ADW$SpClass)
+
+nbhf_time_ADW<-all_ADW%>%
+  filter(SpClass == "NBHF")%>%
+  arrange(Date)
+
+nbhf_day_ADW<-nbhf_time_ADW%>%
+  filter(SpClass == "NBHF")%>%
+  group_by(Date, Fiord, Quality)%>%
+  mutate(DPD = n())%>% #DPD = detections per day
+  distinct(Date, Fiord, SpClass, DPD, Quality)
+
+nbhf_day_ADW%>%
+  group_by(Date)%>%
+  tally()
 
 # plot function ----
 
@@ -220,6 +259,15 @@ all_FPOD_NBHF_plot<-acou_timeline(nbhf_day)+
 all_FPOD_NBHF_plot
 
 ggsave('./figures/NBHF_v1.png', all_FPOD_NBHF_plot, dpi = 300, width = 175, height = 125, units = "mm")
+
+
+ADW_nbhf<-acou_timeline(nbhf_day_ADW)+
+  xlim(c(min(nbhf_day_ADW$Date),max(nbhf_day_ADW$Date)))
+
+kerno_nbhf<-acou_timeline(all_FPOD%>%filter(SpClass == "NBHF" & Fiord == "DAGG"))+
+  xlim(c(min(nbhf_day_ADW$Date),max(nbhf_day_ADW$Date)))
+
+ggpubr::ggarrange(ADW_nbhf, kerno_nbhf, nrow = 2)
 
 ###
 
