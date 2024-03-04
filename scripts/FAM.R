@@ -159,7 +159,7 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "CHARLES_FPOD"), aes(xmin = ymd("2023-10-21"), xmax = ymd("2024-01-25"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   #to be analysed
   geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-06-20"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-04-30"), xmax = ymd("2023-09-02"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-07-23"), xmax = ymd("2023-09-02"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE_ST"), aes(xmin = ymd("2023-06-26"), xmax = ymd("2024-02-16"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2022-07-06"), xmax = ymd("2022-11-23"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-06-27"), xmax = ymd("2024-02-14"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
@@ -176,7 +176,7 @@ all_Cet_plot$layers<-c(
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-02-21"), xmax = ymd("2022-11-16"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE), 
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-04-28"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE),
   #handbrowse
-  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-04-30"), ymin = 0, ymax = 1), fill="orange", alpha = 0.3, inherit.aes = FALSE),
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-04-30"), ymin = 0, ymax = 1), fill="blue", alpha = 0.2, inherit.aes = FALSE),
                        all_Cet_plot$layers)
 
 all_Cet_plot
@@ -219,7 +219,7 @@ listening<-deploy%>%
     #no deployment FF03_03
     Fiord_recorder == "MARINE-RESERVE_ST" ~ (ymd("2023-06-23") - ymd("2022-12-31")),
     #change when Dusky analysed
-    Fiord_recorder == "DUSKY_ST" ~ (ymd("2023-06-27") - ymd("2023-06-02")) + (ymd("2023-02-23") - ymd("2022-07-06")),
+    Fiord_recorder == "DUSKY_ST" ~ (ymd("2023-06-27") - ymd("2023-06-02")) + (ymd("2023-02-23") - ymd("2022-07-06")) + (ymd("2024-02-14") - ymd("2023-06-27")),
     TRUE ~ (ymd("2023-08-09") - ymd("2023-08-09"))
   ))%>%
   mutate(active = days - dead)
