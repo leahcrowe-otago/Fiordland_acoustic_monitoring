@@ -159,7 +159,6 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "CHARLES_FPOD"), aes(xmin = ymd("2023-10-21"), xmax = ymd("2024-01-25"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   #to be analysed
   geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-06-20"), xmax = ymd("2023-11-20"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-07-23"), xmax = ymd("2023-09-02"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE_ST"), aes(xmin = ymd("2023-06-26"), xmax = ymd("2024-02-16"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2022-07-06"), xmax = ymd("2022-11-23"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-06-27"), xmax = ymd("2024-02-14"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
@@ -196,9 +195,9 @@ acou_timeline(all_FPOD)+
 # days listening
 listening<-deploy%>%
   ungroup()%>%
-  filter(Deployment_number != "Charles01_05" & Deployment_number != "Nancy01_06" & 
+  filter(Deployment_number != "Nancy01_06")%>%
        #!(Deployment_number == "Dagg01_05" & Recorder_type == "ST") & 
-         !(Deployment_number == "Dagg01_06" & Recorder_type == "ST"))%>%
+         #!(Deployment_number == "Dagg01_06" & Recorder_type == "ST"))%>%
   mutate(Fiord_recorder = paste0(Fiord,"_",Recorder_type))%>%
   group_by(Fiord_recorder)%>%
   dplyr::summarise(min_date = as.Date(min(Datetime_deployment_local, na.rm= T)), max_date = as.Date(max(Datetime_retrieval_local, na.rm = T)))%>%
@@ -217,7 +216,7 @@ listening<-deploy%>%
     Fiord_recorder == "CHARLES_FPOD" ~ (ymd("2024-01-25") - ymd("2023-10-21")),
     Fiord_recorder == "PRESERVATION_FPOD" ~ (ymd("2023-04-28") - ymd("2023-03-15")),
     #no deployment FF03_03
-    Fiord_recorder == "MARINE-RESERVE_ST" ~ (ymd("2023-06-23") - ymd("2022-12-31")),
+    Fiord_recorder == "MARINE-RESERVE_ST" ~ (ymd("2024-02-16") - ymd("2022-12-31")),
     #change when Dusky analysed
     Fiord_recorder == "DUSKY_ST" ~ (ymd("2023-06-27") - ymd("2023-06-02")) + (ymd("2023-02-23") - ymd("2022-07-06")) + (ymd("2024-02-14") - ymd("2023-06-27")),
     TRUE ~ (ymd("2023-08-09") - ymd("2023-08-09"))
