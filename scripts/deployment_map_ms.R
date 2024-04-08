@@ -4,8 +4,8 @@ library(marmap);library(dplyr);library(readxl);library(sf);library(ggrepel)
 deploy<-read_excel("./data/Fiordland deployment locations.xlsx")
 deploy<-deploy%>%
   filter(grepl("_01",Deployment_number))%>%
-  #filter(!grepl("FF01", Deployment_number))%>%
-  filter(!grepl("FF02", Deployment_number))%>%
+  filter(!grepl("FF01", Deployment_number))%>%
+  #filter(!grepl("FF02", Deployment_number))%>%
   mutate(`Recorder type` = case_when(
     Fiord == "DAGG" ~ "ST + FPOD",
     TRUE ~ Recorder_type))%>%
@@ -97,6 +97,7 @@ bathy_FMA<-ggplot()+
   geom_sf(data = mpa, alpha = 1, fill = "orange", lwd = 0.1)+
   geom_sf(data = big_lakes, alpha = 0.6, fill = "steelblue2", lwd = 0.1)+
   geom_point(data = deploy, aes(x = Longitude, y = Latitude, shape = `Recorder type`), fill = "red", size = 1)+
+  geom_text_repel(data=deploy%>%filter(grepl("FF",Deployment_number)), aes(x = Longitude, y = Latitude, label=c('2','1')), size = 2.3, min.segment.length = 0, nudge_y = c(0.05,0.05), nudge_x = c(-0.05,0.05))+
   scale_shape_manual(values = c(21:23))+
   coord_sf(xlim = c(165.8,168.35), ylim = c(-46.6,-44.25), crs = 4269)+
   #scale_fill_manual(values = fiord_fill)+
