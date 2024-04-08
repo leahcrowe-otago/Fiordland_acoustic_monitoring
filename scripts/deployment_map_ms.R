@@ -98,7 +98,8 @@ bathy_FMA<-ggplot()+
   #geom_sf(data = mpa, aes(fill = "Marine Reserve"), alpha = 1)+
   geom_sf(data = mpa, alpha = 1, fill = "orange")+
   geom_sf(data = big_lakes, alpha = 0.6, fill = "steelblue2")+
-  geom_point(data = deploy, aes(x = Longitude, y = Latitude, shape = `Recorder type`), color = "red")+
+  geom_point(data = deploy, aes(x = Longitude, y = Latitude, shape = `Recorder type`), fill = "red", size = 1)+
+  scale_shape_manual(values = c(21:23))+
   coord_sf(xlim = c(165.9,168.35), ylim = c(-46.6,-44.25), crs = 4269)+
   #scale_fill_manual(values = fiord_fill)+
   theme(legend.position = c(0.90, 0.28),
