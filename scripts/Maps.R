@@ -20,6 +20,25 @@ alliso200<-as.data.frame(st_coordinates(alliso200))
 alliso1000<-subset(bathy, ELEVATION == -1000)
 alliso1000<-as.data.frame(st_coordinates(alliso1000))
 
+fiord_labels<-data.frame(label = c("Lake\nManapouri","Piopiotahi-Milford Sound","Te H\u101pua-Sutherland Sound",
+                                   "H\u101wea-Bligh Sound","Te Houhou-George Sound","Taitetimu-Caswell Sound",
+                                   "Taiporoporo-Charles Sound","Hinenui-Nancy Sound","Te Awa-o-T\u16b-Thompson Sound",
+                                   "Patea-Doubtful Sound","Te R\u101-Dagg Sound",
+                                   "Te Puaitaha-Breaksea\nSound","Tamatea-Dusky\nSound","Taiari-Chalky Inlet",
+                                   "Rakituma-Preservation Inlet"),# "Vancouver\nArm"),
+                         lat = c(-45.51, -44.58, -44.72,
+                                 -44.77, -44.85, -45.02,
+                                 -45.05, -45.1, -45.15,
+                                 -45.25, -45.38,
+                                 -45.59, -45.75, -46.02,
+                                 -46.1),# -45.5),
+                         lon = c(167.55, 167.8, 167.55,
+                                 167.5, 167.36, 167.15,
+                                 167.08, 167.02, 166.97,
+                                 166.9, 166.8,
+                                 166.67, 166.47, 166.51,
+                                 166.6))#, 166.98))
+
 base<-ggplot()+
   geom_sf(data = NZ_coast, alpha = 0.9, fill = "white")+
   theme(panel.background = element_rect(fill = "lightblue"),
@@ -28,8 +47,8 @@ base<-ggplot()+
   xlab("Longitude")+
   ylab("Latitude")+
   geom_sf(data = mpa, aes(fill = "Marine Reserve"), alpha = 1)+
-  geom_path(alliso200, mapping = aes(X,Y,group = L2), color = "steelblue", alpha = 0.7, size = 0.2)+
-  geom_path(alliso1000, mapping = aes(X,Y,group = L2), color = "steelblue2", alpha = 0.7, size = 0.2)+
+  geom_path(alliso200, mapping = aes(X,Y,group = L2), color = "steelblue", alpha = 0.7, linewidth = 0.2)+
+  geom_path(alliso1000, mapping = aes(X,Y,group = L2), color = "steelblue2", alpha = 0.7, linewidth = 0.2)+
   geom_sf(data = big_lakes, alpha = 0.6, fill = "blue")+
   coord_sf(xlim = c(166.0,168), ylim = c(-46.2,-44.5), crs = 4269)+
   scale_fill_manual(values = fiord_fill)+
