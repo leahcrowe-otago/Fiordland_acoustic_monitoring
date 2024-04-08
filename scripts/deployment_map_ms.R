@@ -17,8 +17,6 @@ shapefile_path<-"C:/Users/leahm/OneDrive - University of Otago/Documents/git-ota
 
 fiordland_base <- marmap::getNOAA.bathy(lon1 = 165, lon2 = 169,
                         lat1 = -43.5, lat2 = -47.5, resolution = 0.5)
-#plot(fiordland_base, image = TRUE)
-#marmap::scaleBathy(fiordland_base, deg = 2, x = "bottomleft", inset = 5)
 
 fiordland_base_raster<-marmap::as.raster(fiordland_base)
 #mapview::mapview(fiordland_base_raster)
@@ -58,27 +56,27 @@ fiord_labels<-data.frame(label = c("Lake\nManapouri","Piopiotahi-Milford Sound",
                                    "H\u101wea-Bligh Sound","Te Houhou-George Sound","Taitetimu-Caswell Sound",
                                    "Taiporoporo-Charles Sound","Hinenui-Nancy Sound","Te Awa-o-T\u16b-\nThompson Sound",
                                    "Patea-Doubtful Sound","Te R\u101-Dagg Sound",
-                                   "Te Puaitaha-Breaksea\nSound","Tamatea-Dusky\nSound","Taiari-Chalky Inlet",
-                                   "Rakituma-Preservation Inlet", "Motup\u14dhue-Bluff"),# "Vancouver\nArm"),
-                         lat = c(-45.51, -44.58, -44.72,
-                                 -44.77, -44.85, -45.02,
+                                   "Te Puaitaha-\nBreaksea Sound","Tamatea-Dusky\nSound","Taiari-Chalky Inlet",
+                                   "Rakituma-Preservation Inlet", "Motup\u14dhue-Bluff", "Rakiura-Stewart Island"),# "Vancouver\nArm"),
+                         lat = c(-45.51, -44.55, -44.72,
+                                 -44.77, -44.85, -45.01,
                                  -45.05, -45.1, -45.15,
-                                 -45.25, -45.38,
+                                 -45.27, -45.39,
                                  -45.59, -45.75, -46.02,
-                                 -46.1, -46.597),# -45.5),
+                                 -46.1, -46.597, -47),# -45.5),
                          lon = c(167.55, 167.8, 167.55,
-                                 167.5, 167.36, 167.15,
-                                 167.08, 167.02, 166.97,
-                                 166.87, 166.72,
+                                 167.48, 167.35, 167.14,
+                                 167.09, 167.03, 166.97,
+                                 166.88, 166.78,
                                  166.67, 166.47, 166.51,
-                                 166.6, 168.330))#, 166.98))
+                                 166.6, 168.33, 167.75))#, 166.98))
 
 fiord_labels_white<-data.frame(label = c("Taiporoporo-Charles Sound","Hinenui-Nancy Sound",
                                    "Te R\u101-Dagg Sound","Taiari-Chalky Inlet","Rakituma-Preservation Inlet"),
                          lat = c(-45.05,-45.1,
-                                 -45.38,-46.02,-46.1),
-                         lon = c(167.08, 167.02,
-                                 166.72,166.51,166.6))
+                                 -45.39,-46.02,-46.1),
+                         lon = c(167.09, 167.03,
+                                 166.78,166.51,166.6))
 
 # map ----
 
@@ -100,7 +98,7 @@ bathy_FMA<-ggplot()+
   geom_sf(data = big_lakes, alpha = 0.6, fill = "steelblue2")+
   geom_point(data = deploy, aes(x = Longitude, y = Latitude, shape = `Recorder type`), fill = "red", size = 1)+
   scale_shape_manual(values = c(21:23))+
-  coord_sf(xlim = c(165.9,168.35), ylim = c(-46.6,-44.25), crs = 4269)+
+  coord_sf(xlim = c(165.8,168.35), ylim = c(-46.6,-44.25), crs = 4269)+
   #scale_fill_manual(values = fiord_fill)+
   theme(legend.position = c(0.90, 0.28),
         legend.title =  element_text(size = 6),
@@ -113,31 +111,65 @@ bathy_FMA<-ggplot()+
         axis.text = element_text(size = 8),
         axis.title = element_text(size = 8))+
   geom_text_repel(data = fiord_labels, aes(x = lon, y = lat, label = label), size = 2.3, min.segment.length = 0, force_pull = 2, box.padding = 0.1,
-                  nudge_x = c(0.29,-0.5,-0.4,
-                              -0.3,-0.5,-0.4,
-                              -0.5,-0.5,-1.5,
-                              -0.8,-0.4,
-                              -0.5,-0.3,-0.3,
-                              -0.30, -0.5),#0.23),
-                  nudge_y = c(-0.05,0.01,0.04,
-                              0.1,0.05,0.1,
-                              0.08,0.05,0.01,
-                              -0.05,0.0,
-                              0.08,-0.02,-0.04,
-                              -0.15,0.02))#,-0.09))
+                  nudge_x = c(0.29,-0.6,-0.6,
+                              -0.6,-0.6,-0.6,
+                              -0.7,-0.6,-0.8,
+                              -0.8,-0.6,
+                              -0.6,-0.6,-0.6,
+                              -0.6,-0.6,-0.6),#0.23),
+                  nudge_y = c(-0.05,0.1,0.15,
+                              0.1,0.1,0.15,
+                              0.1,0.07,0.01,
+                              0,0,
+                              0.08,-0.01,-0.1,
+                              -0.15,0.02,0))#,-0.09))
 
 bathy_FMA_white<-bathy_FMA+
   geom_text_repel(data = fiord_labels_white, aes(x = lon, y = lat, label = label), size = 2.3, color = "azure", min.segment.length = 0, force_pull = 2, box.padding = 0.1,
-                  nudge_x = c(-0.51,-0.496,-0.402,
-                              -0.302,-0.301),
-                  nudge_y = c(0.073,0.054,0.0,
-                              -0.04,-0.15))
+                  nudge_x = c(-0.7,-0.6,-0.6,
+                              -0.6,-0.6),
+                  nudge_y = c(0.1,0.07,0,
+                              -0.1,-0.15))
 
-  ggsave("./figures/bathy_FMA.png", bathy_FMA, dpi = 320, height = 6, width = 4, units = 'in')
-  ggsave("./figures/bathy_FMA.svg", bathy_FMA, dpi = 320, height = 6, width = 4, units = 'in')
+###small NZ with box ----
+
+dunedin<-data.frame(label = c("\u14ctepoti-Dunedin"),
+                         lat = c(-45.880),
+                         lon = c(170.501))
+
+base<-ggplot()+
+  geom_sf(data = NZ_coast, alpha = 0.9, fill = "white", lwd = 0.1)+
+  theme(panel.background = element_rect(fill = "lightblue"),
+        panel.grid.major = element_line(linewidth = 0.1, linetype = 'solid', colour = "black"),
+        panel.border = element_rect(colour = "black", fill=NA, linewidth=1))+
+  xlab("Longitude")+
+  ylab("Latitude")
+
+NZ<-base+
+  coord_sf(crs = 4269)+
+  theme(panel.grid.major = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  xlab("")+
+  ylab("")+
+  geom_rect(mapping = aes(xmin = 165.2, xmax = 168.7, ymin = -47.5, ymax = -44), fill = NA, color = "gold2")+
+  theme_void()+
+  geom_point(data = dunedin, aes(x = lon, y = lat), size = 0.8, color = "gold2")
+
+NZ
+
+#### map a all together ----
+
+map_bathy_FMA_white<-cowplot::ggdraw() +
+  cowplot::draw_plot(bathy_FMA_white) +
+  cowplot::draw_plot(NZ, x = 0.18, y = 0.65, width = 0.2, height = 0.3)
+
+
+  ggsave("./figures/bathy_FMA.png", bathy_FMA, dpi = 700, height = 6, width = 4, units = 'in')
+  ggsave("./figures/bathy_FMA.svg", bathy_FMA, dpi = 700, height = 6, width = 4, units = 'in')
   
-  ggsave("./figures/bathy_FMA_white.png", bathy_FMA_white, dpi = 320, height = 6, width = 4, units = 'in')
-  ggsave("./figures/bathy_FMA_white.svg", bathy_FMA_white, dpi = 320, height = 6, width = 4, units = 'in')
+  ggsave("./figures/bathy_FMA_white.png", map_bathy_FMA_white, dpi = 700, height = 6, width = 4, units = 'in')
+  ggsave("./figures/bathy_FMA_white.svg", map_bathy_FMA_white, dpi = 700, height = 6, width = 4, units = 'in')
   
   
   ###
