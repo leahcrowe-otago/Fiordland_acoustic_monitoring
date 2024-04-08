@@ -1,10 +1,10 @@
-library(marmap);library(dplyr);library(readxl)
+library(marmap);library(dplyr);library(readxl);library(sf);library(ggrepel)
 
 # deployments ----
 deploy<-read_excel("./data/Fiordland deployment locations.xlsx")
 deploy<-deploy%>%
   filter(grepl("_01",Deployment_number))%>%
-  filter(!grepl("FF01", Deployment_number))%>%
+  #filter(!grepl("FF01", Deployment_number))%>%
   filter(!grepl("FF02", Deployment_number))%>%
   mutate(`Recorder type` = case_when(
     Fiord == "DAGG" ~ "ST + FPOD",
@@ -16,7 +16,7 @@ shapefile_path<-"C:/Users/leahm/OneDrive - University of Otago/Documents/git-ota
 # depth ----
 
 fiordland_base <- marmap::getNOAA.bathy(lon1 = 165, lon2 = 169,
-                        lat1 = -43.5, lat2 = -47.5, resolution = 0.25)
+                        lat1 = -43.5, lat2 = -47.5, resolution = 0.5)
 #plot(fiordland_base, image = TRUE)
 #marmap::scaleBathy(fiordland_base, deg = 2, x = "bottomleft", inset = 5)
 
@@ -141,12 +141,3 @@ bathy_FMA_white<-bathy_FMA+
   
   ###
   
-  library(ggmap)
-
-
-get_stamenmap(bbox = c(139, -48, 180, -29), zoom = 1, maptype = 'watercolor')
-
-
-bbox <- c(left = 139, bottom = -48, right = 180, top = -29)
-
-ggmap(get_stadiamap(bbox, zoom = 7))
