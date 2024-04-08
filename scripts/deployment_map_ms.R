@@ -16,7 +16,7 @@ shapefile_path<-"C:/Users/leahm/OneDrive - University of Otago/Documents/git-ota
 # depth ----
 
 fiordland_base <- marmap::getNOAA.bathy(lon1 = 165, lon2 = 169,
-                        lat1 = -43.5, lat2 = -47.5, resolution = 0.5)
+                        lat1 = -43.5, lat2 = -47.5, resolution = 0.5, keep = TRUE)
 
 fiordland_base_raster<-marmap::as.raster(fiordland_base)
 #mapview::mapview(fiordland_base_raster)
@@ -85,17 +85,17 @@ fiord_labels_white<-data.frame(label = c("Taiporoporo-Charles Sound","Hinenui-Na
 bathy_FMA<-ggplot()+
   geom_tile(data=test_df, aes(x=x, y=y, fill=`Depth (m)`), alpha=0.8)+
   geom_sf(data = FMA, alpha = 0.05, color = "aquamarine", lwd = 0.4)+
-  geom_sf(data = NZ_coast, alpha = 0.9, fill = "white")+
-  geom_path(alliso200, mapping = aes(X,Y,group = L2), color = "steelblue4", alpha = 0.7, linewidth = 0.2)+
-  #geom_path(alliso50, mapping = aes(X,Y,group = L2), color = "black", alpha = 0.7, linewidth = 0.2)+
+  geom_sf(data = NZ_coast, alpha = 0.9, fill = "white", lwd = 0.1)+
+  geom_path(alliso200, mapping = aes(X,Y,group = L2), color = "steelblue4", alpha = 0.7, linewidth = 0.1)+
+  geom_path(alliso50, mapping = aes(X,Y,group = L2), color = "antiquewhite4", alpha = 0.7, linewidth = 0.1)+
   theme(panel.background = element_rect(fill = "lightblue"),
         panel.grid.major = element_line(size = 0.1, linetype = 'solid', colour = "black"), 
         panel.border = element_rect(colour = "black", fill=NA, size=1))+
   xlab("Longitude")+
   ylab("Latitude")+
   #geom_sf(data = mpa, aes(fill = "Marine Reserve"), alpha = 1)+
-  geom_sf(data = mpa, alpha = 1, fill = "orange")+
-  geom_sf(data = big_lakes, alpha = 0.6, fill = "steelblue2")+
+  geom_sf(data = mpa, alpha = 1, fill = "orange", lwd = 0.1)+
+  geom_sf(data = big_lakes, alpha = 0.6, fill = "steelblue2", lwd = 0.1)+
   geom_point(data = deploy, aes(x = Longitude, y = Latitude, shape = `Recorder type`), fill = "red", size = 1)+
   scale_shape_manual(values = c(21:23))+
   coord_sf(xlim = c(165.8,168.35), ylim = c(-46.6,-44.25), crs = 4269)+
@@ -164,9 +164,8 @@ map_bathy_FMA_white<-cowplot::ggdraw() +
   cowplot::draw_plot(bathy_FMA_white) +
   cowplot::draw_plot(NZ, x = 0.18, y = 0.65, width = 0.2, height = 0.3)
 
-
-  ggsave("./figures/bathy_FMA.png", bathy_FMA, dpi = 700, height = 6, width = 4, units = 'in')
-  ggsave("./figures/bathy_FMA.svg", bathy_FMA, dpi = 700, height = 6, width = 4, units = 'in')
+ # ggsave("./figures/bathy_FMA.png", bathy_FMA, dpi = 700, height = 6, width = 4, units = 'in')
+ # ggsave("./figures/bathy_FMA.svg", bathy_FMA, dpi = 700, height = 6, width = 4, units = 'in')
   
   ggsave("./figures/bathy_FMA_white.png", map_bathy_FMA_white, dpi = 700, height = 6, width = 4, units = 'in')
   ggsave("./figures/bathy_FMA_white.svg", map_bathy_FMA_white, dpi = 700, height = 6, width = 4, units = 'in')
