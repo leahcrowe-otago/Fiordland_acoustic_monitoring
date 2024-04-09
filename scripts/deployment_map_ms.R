@@ -153,24 +153,17 @@ NZ<-base+
         axis.ticks = element_blank())+
   xlab("")+
   ylab("")+
-  geom_rect(mapping = aes(xmin = 165.2, xmax = 168.7, ymin = -47.5, ymax = -44), fill = NA, color = "gold2")+
+  geom_rect(mapping = aes(xmin = 165.8, xmax = 168.35, ymin = -46.6, ymax = -44.5), fill = NA, color = "gold2")+
   theme_void()+
   geom_point(data = dunedin, aes(x = lon, y = lat), size = 0.8, color = "gold2")
 
-NZ
 
 #### map a all together ----
 
 map_bathy_FMA_white<-cowplot::ggdraw() +
   cowplot::draw_plot(bathy_FMA_white) +
   cowplot::draw_plot(NZ, x = 0.18, y = 0.65, width = 0.2, height = 0.3)
-
- # ggsave("./figures/bathy_FMA.png", bathy_FMA, dpi = 700, height = 6, width = 4, units = 'in')
- # ggsave("./figures/bathy_FMA.svg", bathy_FMA, dpi = 700, height = 6, width = 4, units = 'in')
   
   ggsave("./figures/bathy_FMA_white.png", map_bathy_FMA_white, dpi = 700, height = 6, width = 4, units = 'in')
   ggsave("./figures/bathy_FMA_white.svg", map_bathy_FMA_white, dpi = 700, height = 6, width = 4, units = 'in')
-  
-  
-  ###
   
