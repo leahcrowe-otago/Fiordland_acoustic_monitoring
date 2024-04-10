@@ -323,8 +323,9 @@ head(DAGG)
 
 # 15 min ST sampling
 
+#remove continuous and remove handbrowse
 sampling_15ST<-DAGG%>%
-  filter(Deployment_number != "Dagg01_03")%>%
+  filter(Deployment_number != "Dagg01_03" & Deployment_number != "Dagg01_05")%>%
   distinct(Date, type, Deployment_number, Recorder_dur_day)%>%
   filter(Date < "2023-05-24")%>%
   #keep detection on 2022-05-07 for Dagg01_01 only
