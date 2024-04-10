@@ -197,7 +197,7 @@ all_Cet_plot+
 
 ###
 
-#all things detected on FPOD
+#all things detected on FPOD, need to adjust palette if you want to look at this
 acou_timeline(all_FPOD)+
   facet_wrap(~factor(Fiord, levels = c("CHARLES","DAGG","PRESERVATION")), ncol = 1)+
   facet_wrap(~factor(Fiord, levels = c("CHARLES","NANCY","DAGG","DUSKY","CHALKY","PRESERVATION")), ncol = 1)+
@@ -284,8 +284,10 @@ FPOD_DAGG<-all_FPOD_Dol%>%
   filter(Fiord == "DAGG")%>%
   dplyr::select(Date,Datetime,Quality,File)%>%
   mutate(Deployment_number = substr(File,1,8))%>%
+  mutate(Deployment_number = paste0(substr(Deployment_number,1,6),"_",substr(Deployment_number,7,8)))%>%
   dplyr::select(-File)%>%
-  mutate(type = "FPOD")
+  mutate(type = "FPOD")%>%
+  filter(Quality == "H" | Quality == "M")
 
 head(FPOD_DAGG)
 
@@ -298,7 +300,7 @@ ST_DAGG<-all_ST%>%
   ))%>%
   dplyr::select(Date,Datetime,Quality,Deployment_number, Begin.Path)%>%
   filter(Quality != "?")%>%
-  mutate(Deployment_number = gsub("_", "", Deployment_number))%>%
+  #mutate(Deployment_number = gsub("_", "", Deployment_number))%>%
   mutate(begin_time = ymd_hms(paste0("20",substr(Begin.Path, 24, nchar(Begin.Path) - 4))))%>%
   mutate(type = "ST")%>%
   mutate(begin_time = case_when(
@@ -310,7 +312,9 @@ head(ST_DAGG)
 
 DAGG<-FPOD_DAGG%>%
   bind_rows(ST_DAGG)%>%
-  arrange(Datetime)
+  arrange(Datetime)%>%
+  left_join(deploy, by = c("Deployment_number","type" = "Recorder_type"))%>%
+  dplyr::select("Date" = "Date.x", Datetime, Quality, Deployment_number, type, Recorder_dur_day)
 
 nrow(DAGG)
 head(DAGG)
@@ -319,19 +323,33 @@ head(DAGG)
 
 # 15 min ST sampling
 
-sampling<-DAGG%>%
-  filter(Deployment_number != "Dagg0103" & Deployment_number != "Dagg0105")%>%
-  distinct(Date, type)%>%
+sampling_15ST<-DAGG%>%
+  filter(Deployment_number != "Dagg01_03")%>%
+  distinct(Date, type, Deployment_number, Recorder_dur_day)%>%
+  filter(Date < "2023-05-24")%>%
+  #keep detection on 2022-05-07 for Dagg01_01 only
+  filter(!(Date == "2022-05-07" & Deployment_number == "Dagg01_02"))%>%
   group_by(Date)%>%
-  mutate(`Number of recorders` = n())%>%
+  mutate(`Number of recorders` = n())
+ 
+total_compare_days<-sampling_15ST%>%
+  ungroup()%>%
+  distinct(Deployment_number, day_whole = round(Recorder_dur_day,0))%>%
+  group_by(Deployment_number)%>%
+  filter(day_whole == min(day_whole))%>%
+  ungroup()%>%
+  mutate(tot_dur = sum(day_whole))
+
+sampling<-sampling_15ST%>%
+  distinct(Date, `Number of recorders`)%>%
   group_by(`Number of recorders`)%>%
-  mutate(`Detection days` = n())%>%
+  tally()%>%
+  mutate(`Detection days` = n)%>%
   distinct(`Number of recorders`, `Detection days`)%>%
   ungroup()%>%
   mutate(`Percent of detection days` = round(`Detection days`/sum(`Detection days`) * 100, 0))%>%
   arrange(-`Number of recorders`)%>%
-  mutate(`Listening days` = as.numeric(round(ymd_hms("2023-02-20 11:30:00") - ymd_hms("2022-02-16 13:39:00"), 0)) -
-           as.numeric(round(ymd_hms("2022-11-27 16:06:00") - ymd_hms("2022-07-13 13:33:00"), 0)))%>%
+  mutate(`Listening days` = unique(total_compare_days$tot_dur))%>%
   dplyr::select(`Listening days`, everything())
 
 sampling$`Listening days`[2]<-""
@@ -344,17 +362,17 @@ sampling%>%
 # continuous ST sampling
 
 cont<-DAGG%>%
-  filter(Deployment_number == "Dagg0103" & Datetime <= ymd_hms("2022-11-14 22:30:24"))%>%
-  distinct(Date, type)%>%
+  filter(Deployment_number == "Dagg01_03" & Datetime <= ymd_hms("2022-11-14 22:30:24"))%>%
+  distinct(Date, type, Deployment_number, Recorder_dur_day)%>%
   group_by(Date)%>%
   mutate(`Number of recorders` = n())%>%
   group_by(`Number of recorders`)%>%
-  mutate(`Detection days` = n())%>%
-  distinct(`Number of recorders`, `Detection days`)%>%
+  mutate(`Detection days` = n(),
+         `Listening days` = round(min(Recorder_dur_day), 0))%>%
+  distinct(`Number of recorders`, `Detection days`, `Listening days`)%>%
   ungroup()%>%
   mutate(`Percent of detection days` = round(`Detection days`/sum(`Detection days`) * 100, 1))%>%
   arrange(-`Number of recorders`)%>%
-  mutate(`Listening days` = as.numeric(round(ymd_hms("2022-11-14 22:30:24") - ymd_hms("2022-07-13 17:05:00"), 0)))%>%
   dplyr::select(`Listening days`, everything())
 
 cont$`Listening days`[2]<-""
@@ -397,7 +415,7 @@ one_det<-one_det%>%
 
 #dagg01_01, 02, 04 15/30 sampling period
 one_det%>%
-  filter(Datetime <= ymd_hms("2023-02-20 11:30:00"))%>%
+  filter(Datetime <= ymd_hms("2023-05-24 09:10:00"))%>%
   filter(Datetime <= ymd_hms("2022-07-13 13:33:00") | Date >= ymd_hms("2022-11-27 16:06:00"))%>%
   distinct(Date, clicks, duty)%>%
   group_by(clicks, duty)%>%
