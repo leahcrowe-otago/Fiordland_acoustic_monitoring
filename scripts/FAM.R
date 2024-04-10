@@ -42,12 +42,19 @@ all_FPOD_Cet<-all_FPOD_Dol%>%
   group_by(Date, Fiord, Quality)%>%
   mutate(DPD = n())%>% #DPD = detections per day
   distinct(Date, Fiord, SpClass, DPD, Quality)%>%
-  mutate(Fiord_recorder = paste0(Fiord,"_FPOD"))
-  
+  mutate(Fiord_recorder = paste0(Fiord,"_FPOD"))%>%
+  filter(Quality != '?' & Quality != "L")
+
+all_FPOD_Cet%>%
+  ungroup()%>%
+  distinct(Fiord, Date)%>%
+  tally()
+
+
 
 # ST/FinFinder review ----
 
-ST_data_list<-list.files("./data/ST", pattern = "*.txt", full.names = T, recursive = T)
+ST_data_list<-list.files("./data/ST", pattern = "*.txt", full.names = T, recursive = F)
 
 ST_data<-lapply(ST_data_list, function(x)
   read.delim(x, header = T)
@@ -116,7 +123,7 @@ acou_timeline<-function(x){
     geom_col(aes(x = Date, y = 1, fill = Quality))+
     ylim(c(0,1))+
     theme_bw()+
-    scale_fill_brewer(palette = "Paired")+
+    scale_fill_manual(values = c("#B2DF8A","#33A02C"))+
     ylab("")+
     #xlim(c(min(as.Date(deploy$Datetime_deployment_local), na.rm = T), max(as.Date(deploy$Datetime_deployment_local), na.rm = T)))+
     theme(axis.text.y=element_blank(),  #remove y axis labels
@@ -136,7 +143,8 @@ all_Cet<-all_FPOD_Cet%>%
 
 unique(all_Cet$Fiord_recorder)
 
-all_Cet$Quality<-factor(all_Cet$Quality, levels = c("?","L","M","H"))
+#all_Cet$Quality<-factor(all_Cet$Quality, levels = c("?","L","M","H"))
+all_Cet$Quality<-factor(all_Cet$Quality, levels = c("M","H"))
 
 all_Cet_plot<-acou_timeline(all_Cet)+
   facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","MARINE-RESERVE_1_ST","MARINE-RESERVE_2_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
@@ -198,17 +206,10 @@ acou_timeline(all_FPOD)+
 # days listening
 listening<-deploy%>%
   ungroup()%>%
-  #filter(Deployment_number != "Nancy01_06")%>%
-       #!(Deployment_number == "Dagg01_05" & Recorder_type == "ST") & 
-         #!(Deployment_number == "Dagg01_06" & Recorder_type == "ST"))%>%
   mutate(Fiord_recorder = paste0(Fiord,"_",Recorder_type))%>%
   group_by(Fiord_recorder)%>%
   dplyr::summarise(min_date = as.Date(min(Datetime_deployment_local, na.rm= T)), max_date = as.Date(max(Datetime_retrieval_local, na.rm = T)))%>%
   ungroup()%>%
-  # mutate(max_date = case_when(
-  #   Fiord == "DUSKY" ~ as.Date("2022-07-06"),
-  #   TRUE ~ max_date
-  # ))%>%
   mutate(days = max_date - min_date)%>%
   ungroup()%>%
   mutate(dead = case_when(
@@ -250,29 +251,30 @@ daily_det_rate_table%>%
   kbl()%>%
   kable_classic(full_width = F, html_font = "Cambria")
 
-## seasonally? I don't know if I really want to go down this route
-## this is going to need to take into consideration periods of inactivity
-season<-all_Cet%>%
-  ungroup()%>%
-  distinct(Fiord_recorder, Date)%>%
-  mutate(season = case_when(
-    month(Date) == 12 | month(Date) <= 2 ~ "summer",
-    month(Date) >= 3 & month(Date) <= 5 ~ "autumn",
-    month(Date) >= 6 & month(Date) <= 8 ~ "winter",
-    month(Date) >= 9 & month(Date) <= 11 ~ "spring"
-  ))%>%
-  group_by(year(Date), Fiord_recorder, season)%>%
-  tally()%>%
-  left_join(listening, by = "Fiord_recorder")%>%
-  mutate(det_pres = case_when(
-    season == "summer" ~ n/90,
-    season == "spring" ~ n/91,
-    TRUE ~ n/92))%>%
-  as.data.frame()
+# Dagg and/or Nancy
 
-ggplot(season)+
-  geom_col(aes(x = paste0(`year(Date)`,"_",season), y = det_pres, fill = season),color = "black", position = "stack", alpha = 0.7)+
-  facet_wrap(~Fiord_recorder)
+Nancy_Dagg<-all_Cet%>%
+  filter(Fiord == "NANCY" | Fiord == "DAGG")%>%
+  ungroup()%>%
+  distinct(Date)
+
+num_Nancy_Dagg_Feb<-Nancy_Dagg%>%
+  filter(Date >= "2022-02-16" & Date < "2023-02-16")%>%
+  tally()
+
+num_Nancy_Dagg_Feb/365
+
+num_Nancy_Dagg_Sep<-Nancy_Dagg%>%
+  filter(Date <= "2023-09-02" & Date > "2022-09-02")%>%
+  tally()
+
+num_Nancy_Dagg_Sep/365
+
+num_Nancy_Dagg_Nov<-Nancy_Dagg%>%
+  filter(Date <= "2023-11-20" & Date > "2022-11-20")%>%
+  tally()
+
+num_Nancy_Dagg_Nov/365
 
 # Dagg ----
 
