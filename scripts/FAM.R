@@ -360,14 +360,35 @@ sampling%>%
   kable_classic(full_width = F, html_font = "Cambria")%>%
   add_header_above(c("15/30min ST & continuous FPOD" = 4))
 
+capture_15ST<-sampling_15ST%>%
+  dplyr::select(Date, type, `Number of recorders`)%>%
+  ungroup()%>%
+  tidyr::pivot_wider(names_from = type, values_from = `Number of recorders`)
+  
+
+capture_15ST[capture_15ST == 2] <- 1
+capture_15ST[is.na(capture_15ST)] <- 0
+
+capture_15ST<-capture_15ST%>%
+  mutate(type = "samp",
+         cum = 1: n(),
+         FPOD_cum = cumsum(FPOD),
+         ST_cum = cumsum(ST))
+
+ggplot()+
+  geom_line(capture_15ST, mapping = aes(x = cum, y = FPOD_cum), color = "red")+
+  geom_line(capture_15ST, mapping = aes(x = cum, y = ST_cum), color = "blue")
+
 # continuous ST sampling
 
-cont<-DAGG%>%
+sampling_cont<-DAGG%>%
   filter(Deployment_number == "Dagg01_03" & Datetime <= ymd_hms("2022-11-14 22:30:24"))%>%
   distinct(Date, type, Deployment_number, Recorder_dur_day)%>%
   group_by(Date)%>%
   mutate(`Number of recorders` = n())%>%
-  group_by(`Number of recorders`)%>%
+  group_by(`Number of recorders`)
+
+cont<-sampling_cont%>%
   mutate(`Detection days` = n(),
          `Listening days` = round(min(Recorder_dur_day), 0))%>%
   distinct(`Number of recorders`, `Detection days`, `Listening days`)%>%
@@ -382,6 +403,45 @@ cont%>%
   kableExtra::kable(booktabs = T, align = "c") %>%
   kable_classic(full_width = F, html_font = "Cambria")%>%
   add_header_above(c("continuous ST & FPOD" = 4))
+
+capture_cont<-sampling_cont%>%
+  dplyr::select(Date, type, `Number of recorders`)%>%
+  ungroup()%>%
+  tidyr::pivot_wider(names_from = type, values_from = `Number of recorders`)
+
+
+capture_cont[capture_cont == 2] <- 1
+capture_cont[is.na(capture_cont)] <- 0
+
+capture_cont<-capture_cont%>%
+  mutate(type = "cont",
+         cum = 1:n(),
+         FPOD_cum = cumsum(FPOD),
+         ST_cum = cumsum(ST))
+
+cap<-capture_15ST%>%
+  bind_rows(capture_cont)%>%
+  arrange(Date)%>%
+  mutate(FPOD_totcum = cumsum(FPOD),
+         ST_totcum = cumsum(ST),
+         tot_totcum = 1:n())
+
+
+ggplot(cap)+
+  geom_point(mapping = aes(x = cum, y = FPOD_cum, color = "FPOD"))+
+  geom_smooth(mapping = aes(x = cum, y = FPOD_cum, color = "FPOD"), method="lm")+
+  geom_point(mapping = aes(x = cum, y = ST_cum, color = "ST"))+
+  geom_smooth(mapping = aes(x = cum, y = ST_cum, color = "ST"), method="lm")+
+  facet_wrap(~type)+
+  theme_bw()
+
+summary(lm(FPOD_cum ~ cum + FPOD + ST + cum:FPOD:ST, data = cap%>%filter(type == "samp")))
+
+#  geom_path(cap%>%filter(type == "cont"), mapping = aes(x = Date, y = ST_cum), color = "black", linetype = "dashed")+
+#  geom_path(cap%>%filter(type == "cont"), mapping = aes(x = Date, y = FPOD_cum), color = "black", linetype = "dashed")+
+
+
+summary(lm(FPOD_cum ~ cum + ))
 
 # why might they not be getting detections on same day?
 tally_detection<-DAGG %>%
