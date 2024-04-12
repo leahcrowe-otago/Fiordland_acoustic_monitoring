@@ -38,7 +38,7 @@ doubtfulpod_venn<-doubtfulpod%>%
   
 doubtfulpod_venn[is.na(doubtfulpod_venn)] <-FALSE
 
-plot(euler(doubtfulpod_venn, shape = "ellipse"), quantities = TRUE)
+doubtful_venn<-plot(euler(doubtfulpod_venn, shape = "ellipse"), quantities = TRUE)
 
 
 ind_area%>%
@@ -68,22 +68,9 @@ duskypod_venn<-duskypod%>%
 
 duskypod_venn[is.na(duskypod_venn)] <-FALSE
 
-plot(euler(duskypod_venn, shape = "ellipse"), quantities = TRUE)
+dusky_venn<-plot(euler(duskypod_venn, shape = "ellipse"), quantities = TRUE, cex = 0.25)
 
-## sightings table
+venn<-ggpubr::ggarrange(doubtful_venn, dusky_venn, labels = "auto")
 
-sigs_nf<-read_excel("./data/SIGHTINGS_NF.xlsx")%>%
-  arrange(Year, Date)
-head(sigs_nf)
+ggsave('./figures/venn.png', venn, dpi = 700, height = 100, width = 250, units = "mm")
 
-color_fiord<-paletteer::paletteer_d("vapoRwave::hotlineBling")[1:length(unique(sigs_nf$Fiord))]
-
-sigs_nf$Fiord<-cell_spec(sigs_nf$Fiord, bold = T, 
-             color = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(rep("white",6),"black")),
-             background = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(color_fiord)))
-
-kbl(sigs_nf%>%dplyr::select(-Notes), escape = F, align = "c") %>%
-  kable_classic("striped", full_width = F)%>%
-  as_image()
-
-png
