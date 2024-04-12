@@ -1,0 +1,77 @@
+---
+title: "Crowe et al. acoustic monitoring"
+format: pdf
+editor: visual
+---
+
+#Tables
+
+```{r sig_tab, echo = F}
+library(dplyr);library(readxl);library(knitr);library(kableExtra)
+
+## sightings table
+
+sigs_nf<-read_excel("./data/SIGHTINGS_NF.xlsx")%>%
+  arrange(Year, Date)
+head(sigs_nf)
+
+color_fiord<-paletteer::paletteer_d("vapoRwave::hotlineBling")[1:length(unique(sigs_nf$Fiord))]
+
+sigs_nf$Fiord<-cell_spec(sigs_nf$Fiord, bold = T, 
+             color = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(rep("white",6),"black")),
+             background = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(color_fiord)))
+
+kbl(sigs_nf%>%dplyr::select(-Notes), escape = F, align = "c") %>%
+  kable_classic("striped", full_width = F)
+```
+
+\newpage
+
+# Figures
+
+```{r, map, echo = F, out.width='75%'}
+#source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/deployment_map_ms.R', local = TRUE, verbose = F)$value
+
+knitr::include_graphics(c('./figures/bathy_FMA_white.png'))
+
+```
+
+Fig. 1. Map of the study area including the acoustic recorders deployment locations within the Te Moana o Atawhenua-Fiordland Marine Area (all areas of the sea inshore of the teal line including all fiords). The neighbouring fiords are labeled in white text, all FMA marine reserves are in orange, and the two acoustic recorder sites within the Taumoana-Five Fingers Marine Reserve are numbered where 1. is the Cormorant Cove site, and 2. is the peninsula site. The 50m (grey) and 200m (dark blue) isobaths are provided on both maps. \u14ctepoti-Dunedin is marked as the yellow dot on the small inset map.
+
+```{r, Fig_daily_detections, echo = F, out.width = '100%'}
+knitr::include_graphics('./figures/allcet_v1.png')
+```
+
+Fig. 2.
+
+```{r, Fig_venn_ID, echo = F, out.width = '100%'}
+#source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/sightings_venn.R', local = TRUE, verbose = F)$value
+
+knitr::include_graphics('./Figures/venn.png')
+```
+
+Fig. 3.
+
+```{r, Fig_hist, echo = F, out.height='80%'}
+#knitr::include_graphics('./Figures/hist_fig.png')
+```
+
+Fig. 4.
+
+```{r, Fig_vbgc, echo = F, out.width='110%'}
+#knitr::include_graphics('./Figures/vbgcplot.png')
+```
+
+Fig. 5.
+
+```{r, Fig_Ly_CI, echo = F, out.width='110%'}
+#knitr::include_graphics('./Figures/Ly_CI.png')
+```
+
+Fig. 6.
+
+```{r, Fig_box, echo = F, out.height='80%'}
+#knitr::include_graphics('./Figures/box.png')
+```
+
+Fig. 7.
