@@ -1,0 +1,36 @@
+---
+title: "Crowe et al. acoustic monitoring - Supplementary"
+format: pdf
+editor: visual
+---
+
+```{=tex}
+\begin{center}
+
+Leah M. Crowe$^{*1,2}$, William Rayment$^{1}$, Jenni A. Stanley$^{3}$
+
+*leah.crowe\@postgrad.otago.ac.nz
+
+$^{1}$Department of Marine Science $^{2}$Department of Mathematics and Statistics
+
+University of Otago, Dunedin, New Zealand
+
+$^{3}$Coastal Marine Field Station, University of Waikato, Tauranga, New Zealand
+\end{center}
+```
+
+# Figures
+
+```{r, S1, echo = F}
+knitr::include_graphics(c('./figures/Supplement/FF03_01_common dolphins.png'))
+```
+Fig. S1. Example of whistles excluded from this study as they are suspected common (*Delphinus delphus*) or dusky (*Lagenorhynchus obscurus*) dolphins. 
+
+```{r, S2_map, echo = F, out.width='80%'}
+
+#source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/suppmat_map_s2.R', local = TRUE, verbose = F)$value
+
+knitr::include_graphics(c('./figures/Supplement/nf_effort.png'))
+```
+
+Fig. S2. Effort maps and delphinid sightings that occurred in the neighbouring fiords during dedicated effort that co-occurred with the servicing of acoustic devices between February 2022 and February 2023.
