@@ -21,8 +21,13 @@ sigs_nf$Fiord<-cell_spec(sigs_nf$Fiord, bold = T,
              color = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(rep("white",6),"black")),
              background = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(color_fiord)))
 
-kbl(sigs_nf%>%dplyr::select(-Notes), escape = F, align = "c") %>%
+kbl(sigs_nf%>%dplyr::select(-Notes), escape = F, align = "c", "latex") %>%
   kable_classic("striped", full_width = F)
+
+sigs_nf%>%
+  kableExtra::kable(booktabs = T, align = "c") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
 ```
 
 \newpage
