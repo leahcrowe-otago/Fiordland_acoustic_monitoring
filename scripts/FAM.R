@@ -133,7 +133,8 @@ acou_timeline<-function(x){
           legend.position = "bottom",
           axis.text.x=element_text(angle=45,hjust=1))+
           #strip.background = element_rect(aes(fill = Fiord), colour = "black", size = 1))+
-    scale_x_date(date_breaks="1 month", date_labels="%b-%Y", limits = c(min(as.Date(deploy$Datetime_deployment_local), na.rm = T), max(as.Date(deploy$Datetime_retrieval_local), na.rm = T)))
+    scale_x_date(date_breaks="1 month", date_labels="%b-%Y")+
+    coord_cartesian(xlim = c(ymd("2022-02-15"), ymd("2023-11-20")))
 }
 
 # all together
@@ -192,17 +193,6 @@ all_Cet_plot$layers<-c(
 all_Cet_plot
 ggsave('./figures/allcet_v1.png',all_Cet_plot, dpi = 300, width = 175, height = 175, units = "mm")
 
-all_Cet_plot+
-  xlim(c(ymd("2022-05-01"), ymd("2023-11-15")))
-
-###
-
-#all things detected on FPOD, need to adjust palette if you want to look at this
-acou_timeline(all_FPOD)+
-  facet_wrap(~factor(Fiord, levels = c("CHARLES","DAGG","PRESERVATION")), ncol = 1)+
-  facet_wrap(~factor(Fiord, levels = c("CHARLES","NANCY","DAGG","DUSKY","CHALKY","PRESERVATION")), ncol = 1)+
-  geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")
-
 # days listening
 listening<-deploy%>%
   ungroup()%>%
@@ -230,12 +220,22 @@ listening<-deploy%>%
   mutate(active = days - dead)
 
 ## all together, daily detection rate
+dagg_both<-all_Cet%>%
+  filter(Fiord == 'DAGG')%>%
+  mutate(Fiord_recorder = "DAGG_BOTH")
+  
 daily_det_rate<-all_Cet%>%
+  bind_rows(dagg_both)%>%
   ungroup()%>%
   distinct(Fiord_recorder, Date)%>%
   group_by(Fiord_recorder)%>%
   tally()%>%
   left_join(listening, by = "Fiord_recorder")%>%
+  mutate(min_date = tidyr::replace_na(min_date, ymd("2022-02-16")),
+         max_date = tidyr::replace_na(max_date, ymd("2023-11-09")),
+         days = tidyr::replace_na(days, ymd("2023-11-09") - ymd("2022-02-16")),
+         dead = tidyr::replace_na(dead, ymd("2023-11-09") - ymd("2023-09-02")),
+         active = days - dead)%>%
   mutate(det_pres = round(n/as.numeric(active), 2))%>%
   as.data.frame()%>%
   arrange(-det_pres)
@@ -245,11 +245,7 @@ daily_det_rate_table<-daily_det_rate%>%
   mutate(active = as.numeric(active))%>%
   dplyr::rename(`Acoustic detection days` = "n", `Recorder active days` = "active", `Detection rate (daily)` = "det_pres")
 
-library(kableExtra)
-
-daily_det_rate_table%>%
-  kbl()%>%
-  kable_classic(full_width = F, html_font = "Cambria")
+write.csv(daily_det_rate_table, paste0('./data/daily_det_rate_table.csv'), row.names = F)
 
 # Dagg and/or Nancy
 
