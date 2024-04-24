@@ -4,29 +4,51 @@ format: pdf
 editor: visual
 ---
 
-#Tables
+# Tables
 
-```{r sig_tab, echo = F}
-library(dplyr);library(readxl);library(knitr);library(kableExtra)
+```{r echo=FALSE, results='asis'}
+    options(knitr.kable.NA = '-')
+
+```
+
+
+```{r, det_table, echo = F, message = F, warning = F, out.width = '100%'}
+library(dplyr);library(knitr);library(kableExtra);
+
+daily_det_rate_table = readRDS(file = './tables/daily_det_rate_table.rds')
+
+daily_det_rate_table%>%
+  kableExtra::kable(booktabs = T, align = "c") %>%
+  kableExtra::kable_classic(full_width = F, html_font = "Cambria")
+
+```
+
+Table 1. Deployment and dolphin detection details for all sites included in this study. For each 'Fiord_recorder', ST = SoundTrap deployment, FPOD = FPOD deployment, and BOTH = dual deployment of a SoundTrap and an FPOD on the same line. 
+
+\newpage
+
+```{r sig_tab, echo = F, warning = F, message=F}
+library(readxl)
 
 ## sightings table
 
 sigs_nf<-read_excel("./data/SIGHTINGS_NF.xlsx")%>%
-  arrange(Year, Date)
-head(sigs_nf)
+  arrange(Year, Date)%>%
+  dplyr::select(-Source, -Notes)
+#head(sigs_nf)
 
-color_fiord<-paletteer::paletteer_d("vapoRwave::hotlineBling")[1:length(unique(sigs_nf$Fiord))]
-
-sigs_nf$Fiord<-cell_spec(sigs_nf$Fiord, bold = T, 
-             color = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(rep("white",6),"black")),
-             background = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(color_fiord)))
-
-kbl(sigs_nf%>%dplyr::select(-Notes), escape = F, align = "c", "latex") %>%
-  kable_classic("striped", full_width = F)
+# color_fiord<-paletteer::paletteer_d("vapoRwave::hotlineBling")[1:length(unique(sigs_nf$Fiord))]
+# 
+# sigs_nf$Fiord<-cell_spec(sigs_nf$Fiord, bold = T, 
+#              color = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(rep("white",6),"black")),
+#              background = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(color_fiord)))
+# 
+# kbl(sigs_nf%>%dplyr::select(-Notes), escape = F, align = "c", "latex") %>%
+#   kable_classic("striped", full_width = F)
 
 sigs_nf%>%
   kableExtra::kable(booktabs = T, align = "c") %>%
-  kable_classic(full_width = F, html_font = "Cambria")
+  kableExtra::kable_classic(full_width = F, html_font = "Cambria")
 
 ```
 
