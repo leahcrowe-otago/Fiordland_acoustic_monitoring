@@ -4,8 +4,8 @@ deploy<-read_excel("./data/Fiordland deployment locations.xlsx")
 deploy<-deploy%>%
   filter(!grepl("FF01",Deployment_number))%>%
   mutate(Fiord = case_when(
-    grepl("FF02", Deployment_number) ~ "MARINE-RESERVE_1",
-    grepl("FF03", Deployment_number) ~ "MARINE-RESERVE_2",
+    grepl("FF02", Deployment_number) ~ "MARINE-RESERVE-1",
+    grepl("FF03", Deployment_number) ~ "MARINE-RESERVE-2",
     TRUE ~ Fiord))%>%
   mutate(Fiord_recorder = paste0(Fiord,"_",Recorder_type))
 
@@ -77,8 +77,8 @@ all_ST<-bind_rows(ST_data)%>%
   ))%>%
   mutate(Fiord = case_when(
     Fiord == "ANCHOR" ~ "DUSKY",
-    grepl("FF02", Deployment_number) == TRUE ~ "MARINE-RESERVE_1",
-    grepl("FF03", Deployment_number) == TRUE ~ "MARINE-RESERVE_2",
+    grepl("FF02", Deployment_number) == TRUE ~ "MARINE-RESERVE-1",
+    grepl("FF03", Deployment_number) == TRUE ~ "MARINE-RESERVE-2",
     TRUE ~ Fiord
   ))%>%
   mutate(type = "ST")%>%
@@ -148,7 +148,7 @@ unique(all_Cet$Fiord_recorder)
 all_Cet$Quality<-factor(all_Cet$Quality, levels = c("M","H"))
 
 all_Cet_plot<-acou_timeline(all_Cet)+
-  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","MARINE-RESERVE_1_ST","MARINE-RESERVE_2_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
+  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","MARINE-RESERVE-1_ST","MARINE-RESERVE-2_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
   geom_vline(deploy, mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")+
   geom_vline(deploy%>%group_by(Fiord)%>%filter(Datetime_retrieval_local == max(Datetime_retrieval_local)), mapping = aes(xintercept = as.Date(Datetime_retrieval_local)), linetype = "twodash", color = "red")
 
@@ -159,9 +159,9 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-15"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-09-02"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
     #MR_1 = FF02
-  geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE_2_ST"), aes(xmin = ymd("2022-12-31"), xmax = ymd("2023-06-26"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-2_ST"), aes(xmin = ymd("2022-12-31"), xmax = ymd("2023-06-26"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
     #MR_2 = FF03
-  geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE_1_ST"), aes(xmin = ymd("2022-12-29"), xmax = ymd("2023-02-23"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-1_ST"), aes(xmin = ymd("2022-12-29"), xmax = ymd("2023-02-23"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2022-11-23"), xmax = ymd("2023-02-23"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-06-02"), xmax = ymd("2023-06-27"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
@@ -171,7 +171,7 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_FPOD"), aes(xmin = ymd("2023-05-24"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHARLES_FPOD"), aes(xmin = ymd("2023-10-21"), xmax = ymd("2024-01-25"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   #to be analysed
-  geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE_2_ST"), aes(xmin = ymd("2023-06-26"), xmax = ymd("2024-02-16"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-2_ST"), aes(xmin = ymd("2023-06-26"), xmax = ymd("2024-02-16"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-06-27"), xmax = ymd("2024-02-14"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-06-21"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)
 
@@ -208,9 +208,9 @@ listening<-deploy%>%
     Fiord_recorder == "DAGG_FPOD" ~ (ymd("2023-11-09") - ymd("2023-05-24")),
     Fiord_recorder == "DAGG_ST" ~ (ymd("2022-11-27") - ymd("2022-11-15")) + (ymd("2023-11-09") - ymd("2023-09-02")), 
     # MR_1 = FF02
-    Fiord_recorder == "MARINE-RESERVE_1_ST" ~ (ymd("2023-02-23") - ymd("2022-12-29")),
+    Fiord_recorder == "MARINE-RESERVE-1_ST" ~ (ymd("2023-02-23") - ymd("2022-12-29")),
     #no deployment FF03_03
-    Fiord_recorder == "MARINE-RESERVE_2_ST" ~ (ymd("2024-02-16") - ymd("2022-12-31")),
+    Fiord_recorder == "MARINE-RESERVE-2_ST" ~ (ymd("2024-02-16") - ymd("2022-12-31")),
     #change when Dusky analysed
     Fiord_recorder == "DUSKY_ST" ~ (ymd("2023-02-23") - ymd("2022-11-23")) + (ymd("2023-06-27") - ymd("2023-06-02")) + (ymd("2024-02-14") - ymd("2023-06-27")),
     Fiord_recorder == "CHALKY_ST" ~ (ymd("2023-04-28") - ymd("2022-11-16")) + (ymd("2023-11-09") - ymd("2023-10-19")),
@@ -240,12 +240,16 @@ daily_det_rate<-all_Cet%>%
   as.data.frame()%>%
   arrange(-det_pres)
 
+library(webshot2);library(magick)
+
 daily_det_rate_table<-daily_det_rate%>%
   dplyr::select(Fiord_recorder, n, active, det_pres)%>%
   mutate(active = as.numeric(active))%>%
   dplyr::rename(`Acoustic detection days` = "n", `Recorder active days` = "active", `Detection rate (daily)` = "det_pres")
 
-write.csv(daily_det_rate_table, paste0('./data/daily_det_rate_table.csv'), row.names = F)
+saveRDS(daily_det_rate_table, file = paste0("./tables/daily_det_rate_table.rds"))
+
+#NEED TO MANUALLY SAVE, CAN'T GET THE SAVE_IMAGE COMMAND TO WORK
 
 # Dagg and/or Nancy
 
