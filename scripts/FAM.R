@@ -158,12 +158,14 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-01-02"), xmax = ymd("2023-03-14"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-15"), xmax = ymd("2022-11-27"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-09-02"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
-    #MR_1 = FF02
+  #MR_2 = FF03
   geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-2_ST"), aes(xmin = ymd("2022-12-31"), xmax = ymd("2023-06-26"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
-    #MR_2 = FF03
+  geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-2_ST"), aes(xmin = ymd("2023-11-29"), xmax = ymd("2024-02-16"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  #MR_1 = FF02
   geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-1_ST"), aes(xmin = ymd("2022-12-29"), xmax = ymd("2023-02-23"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2022-11-23"), xmax = ymd("2023-02-23"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-06-02"), xmax = ymd("2023-06-27"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-11-25"), xmax = ymd("2024-02-14"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-10-19"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   #FPOD died
@@ -171,9 +173,9 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_FPOD"), aes(xmin = ymd("2023-05-24"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHARLES_FPOD"), aes(xmin = ymd("2023-10-21"), xmax = ymd("2024-01-25"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   #to be analysed
-  geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-2_ST"), aes(xmin = ymd("2023-06-26"), xmax = ymd("2024-02-16"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-06-27"), xmax = ymd("2024-02-14"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-06-21"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)
+  #geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-2_ST"), aes(xmin = ymd("2023-06-26"), xmax = ymd("2024-02-16"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
+  #geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-06-27"), xmax = ymd("2024-02-14"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-08-14"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)
 
   
 all_Cet_plot$layers<-c(
@@ -210,9 +212,9 @@ listening<-deploy%>%
     # MR_1 = FF02
     Fiord_recorder == "MARINE-RESERVE-1_ST" ~ (ymd("2023-02-23") - ymd("2022-12-29")),
     #no deployment FF03_03
-    Fiord_recorder == "MARINE-RESERVE-2_ST" ~ (ymd("2024-02-16") - ymd("2022-12-31")),
+    Fiord_recorder == "MARINE-RESERVE-2_ST" ~ (ymd("2024-02-16") - ymd("2023-11-29")) + (ymd("2023-06-26") - ymd("2022-12-31")),
     #change when Dusky analysed
-    Fiord_recorder == "DUSKY_ST" ~ (ymd("2023-02-23") - ymd("2022-11-23")) + (ymd("2023-06-27") - ymd("2023-06-02")) + (ymd("2024-02-14") - ymd("2023-06-27")),
+    Fiord_recorder == "DUSKY_ST" ~ (ymd("2023-02-23") - ymd("2022-11-23")) + (ymd("2023-06-27") - ymd("2023-06-02")) + (ymd("2024-02-14") - ymd("2023-11-25")),
     Fiord_recorder == "CHALKY_ST" ~ (ymd("2023-04-28") - ymd("2022-11-16")) + (ymd("2023-11-09") - ymd("2023-10-19")),
     Fiord_recorder == "PRESERVATION_FPOD" ~ (ymd("2023-04-28") - ymd("2023-03-15")),
     TRUE ~ (ymd("2023-08-09") - ymd("2023-08-09"))
@@ -375,10 +377,54 @@ capture_15ST<-capture_15ST%>%
          FPOD_cum = cumsum(FPOD),
          ST_cum = cumsum(ST))
 
-ggplot()+
-  geom_line(capture_15ST, mapping = aes(x = cum, y = FPOD_cum), color = "red")+
-  geom_line(capture_15ST, mapping = aes(x = cum, y = ST_cum), color = "blue")
+dagg_summ<-DAGG%>%
+  filter(Date < "2022-11-15" | Date > "2022-11-27")%>%
+  filter(Date < "2023-05-24")%>%
+  #keep detection on 2022-05-07 for Dagg01_01 only
+  filter(!(Date == "2022-05-07" & Deployment_number == "Dagg01_02"))%>%
+  ungroup()%>%
+  distinct(Date, type, Deployment_number, Recorder_dur_day)%>%
+  group_by(Date)%>%
+  mutate(`Number of recorders` = n())%>%
+  dplyr::select(Date, type, `Number of recorders`)%>%
+  ungroup()%>%
+  tidyr::pivot_wider(names_from = type, values_from = `Number of recorders`)
 
+dagg_summ[dagg_summ == 2] <- 1
+dagg_summ[is.na(dagg_summ)] <- 0
+
+dagg_summ_perc<-dagg_summ%>%
+  mutate(type = "samp",
+         cum = 1: n(),
+         FPOD_cum = cumsum(FPOD),
+         ST_cum = cumsum(ST))%>%
+  mutate(days_listening = as.numeric(Date - Date[1])+1)%>%
+  mutate(FPOD_perc = FPOD_cum/days_listening,
+         ST_perc = ST_cum/days_listening)%>%
+  mutate(perc_diff=FPOD_perc-ST_perc)
+
+summary(dagg_summ_perc)
+
+dagg_plot<-ggplot(dagg_summ_perc)+
+  geom_line(aes(x = Date, y = FPOD_perc), size = 2)+
+  geom_errorbar(aes(ymin=FPOD_perc-0.04, ymax=FPOD_perc, x = Date))+
+  geom_line(aes(x = Date, y = ST_perc), size = 1, color = "red")+
+  geom_vline(xintercept = ymd("2022-03-01"))+ # march 1st, autumn
+  geom_vline(xintercept = ymd("2022-06-01"))+ # june 1st, winter
+  geom_vline(xintercept = ymd("2022-09-01"))+ #sep 1st, spring
+  geom_vline(xintercept = ymd("2022-12-01"))+ #dec 1st, summer
+  geom_vline(xintercept = ymd("2023-03-01"))+ #mar 1st
+  geom_vline(xintercept = ymd("2023-06-01"))+ #june 1
+  geom_vline(xintercept = ymd("2023-09-01"))+
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-15"), xmax = ymd("2022-11-27"), ymin = 0.13, ymax = 0.2), fill="white", alpha = 1, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-02-16"), xmax = ymd("2022-07-13"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE)+ 
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-27"), xmax = ymd("2023-05-24"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-04-30"), ymin = 0, ymax = 1), fill="blue", alpha = 0.2, inherit.aes = FALSE)+
+  theme_bw()+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y", date_minor_breaks="1 month")+
+  ylab("Running percentage of days with acoustic detections")
+  
+ggsave('./figures/dagg_plot.png',dagg_plot, dpi = 300, width = 275, height = 125, units = "mm")
 # continuous ST sampling
 
 sampling_cont<-DAGG%>%
@@ -417,7 +463,10 @@ capture_cont<-capture_cont%>%
   mutate(type = "cont",
          cum = 1:n(),
          FPOD_cum = cumsum(FPOD),
-         ST_cum = cumsum(ST))
+         ST_cum = cumsum(ST))%>%
+  mutate(days_listening = as.numeric(Date - Date[1])+1)%>%
+  mutate(FPOD_perc = FPOD_cum/days_listening,
+         ST_perc = ST_cum/days_listening)
 
 cap<-capture_15ST%>%
   bind_rows(capture_cont)%>%
@@ -426,6 +475,34 @@ cap<-capture_15ST%>%
          ST_totcum = cumsum(ST),
          tot_totcum = 1:n())
 
+cap%>%
+  dplyr::select(Date, FPOD, ST)%>%
+  tidyr::pivot_wider(Date)
+
+#### capture histories ----
+sampling_dates<-data.frame(date = as.Date(c(ymd("2022-02-16"):ymd("2022-07-12"),ymd("2022-11-28"):ymd("2023-02-19"))))
+cont_dates<-data.frame(date = as.Date(c(ymd("2022-07-14"):ymd("2022-11-12"))))
+
+samp_ch<-sampling_dates%>%left_join(cap, by = c("date" = "Date"))%>%
+  dplyr::select(date, FPOD, ST)%>%
+  mutate(samp = 1)
+
+samp_ch[is.na(samp_ch)] <- 0
+saveRDS(samp_ch, file = paste0("./data/Dagg_samp_ch.rds"))
+
+cont_ch<-cont_dates%>%left_join(capture_cont, by = c("date" = "Date"))%>%
+  dplyr::select(date, FPOD, ST)%>%
+  mutate(samp = 0)
+
+cont_ch[is.na(cont_ch)] <- 0
+saveRDS(cont_ch, file = paste0("./data/Dagg_cont_ch.rds"))
+
+ch<-samp_ch%>%
+  bind_rows(cont_ch)%>%
+  arrange(date)
+saveRDS(ch, file = paste0("./data/ch.rds"))
+
+#####
 
 ggplot(cap)+
   geom_point(mapping = aes(x = cum, y = FPOD_cum, color = "FPOD"))+
@@ -439,9 +516,6 @@ summary(lm(FPOD_cum ~ cum + FPOD + ST + cum:FPOD:ST, data = cap%>%filter(type ==
 
 #  geom_path(cap%>%filter(type == "cont"), mapping = aes(x = Date, y = ST_cum), color = "black", linetype = "dashed")+
 #  geom_path(cap%>%filter(type == "cont"), mapping = aes(x = Date, y = FPOD_cum), color = "black", linetype = "dashed")+
-
-
-summary(lm(FPOD_cum ~ cum + ))
 
 # why might they not be getting detections on same day?
 tally_detection<-DAGG %>%
