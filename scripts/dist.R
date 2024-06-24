@@ -8,7 +8,6 @@ library(dplyr)
 library(fasterize)
 library(raster)
 library(dplyr)
-library(sf)
 library(terra)
 library(tidyterra)
 library(ggplot2)
@@ -180,3 +179,5 @@ ggplot2::ggsave(paste0("./figures/Fig4b.png"), Fig4b, device = "png", dpi = 700,
 
 Fig4ab<-ggpubr::ggarrange(Fig4a,Fig4b, labels = "auto", ncol = 1)
 ggplot2::ggsave(paste0("./figures/Fig4ab.png"), Fig4ab, device = "png", dpi = 700, width = 150, height = 300, units = 'mm')
+
+###
