@@ -1,4 +1,10 @@
-library(odbc);library(dplyr);library(DBI);library(lubridate);library(ggplot2);library(viridis);library(eulerr)
+library(odbc)
+library(dplyr)
+library(DBI)
+library(lubridate)
+library(ggplot2)
+library(viridis)
+library(eulerr)
 
 source('~/git-otago/Fiordland_reporting/scripts/life_history_ageclass update.R', local = TRUE)$value
 
