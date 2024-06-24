@@ -1,4 +1,4 @@
-library(readxl);library(odbc);library(dplyr);library(DBI);library(lubridate)
+library(readxl);library(odbc);library(dplyr);library(DBI);library(lubridate);library(ggplot2)
 
 data_log<-read_excel('./data/Data_Log_12Apr2024.xlsx')
 
@@ -18,7 +18,7 @@ survey_data$DATE<-ymd(survey_data$DATE)
 survey_data[survey_data == '']<-NA
 
 survey_2022<-survey_data%>%
-  filter(year(DATE) >= 2022)%>%
+  filter(year(DATE) >= 2022 & year(DATE) <= 2023)%>%
   filter(LONGITUDE < 168.5)
 
 species = c("Bottlenose","Common","Dusky","Hector's")
@@ -85,3 +85,52 @@ south<-nf_effort_base+
 ggpubr::ggarrange(north, middle, south, common.legend = TRUE, labels = "auto", ncol = 1, legend = "right")
 
 ggplot2::ggsave(paste0("./figures/Supplement/nf_effort.png"), device = "png", dpi = 700, width = 200, height = 400, units = 'mm')
+
+### Taumoana ----
+
+survey<-survey_2022%>%
+  filter(DATE < ymd("2022-11-30") & DATE > ymd("2022-02-20")) #after all Dusky are deployed
+
+surv_dates<-survey%>%
+  mutate(year_mo = format(parse_date_time(as.character(DATE), "ymd"), "%Y_%m"))%>%
+  #filter(LONGITUDE < 166.6)%>%
+  filter(year_mo != "2022_05" & year_mo != "2022_10")%>%#did not survey in Dusky, but did in Dagg, Doubtul, and southern fiords
+  filter(LATITUDE < -45.20 & LATITUDE > -45.835)%>%
+  distinct(DATE)
+
+survey_plot<-surv_dates%>%
+  mutate(year_mo = format(parse_date_time(as.character(DATE), "ymd"), "%Y_%m"))%>%
+  left_join(survey_2022, by = 'DATE')
+
+species = c("Bottlenose","Common","Dusky","Hector's")
+
+sig_plot<-survey_plot%>%
+  filter(ENCOUNTER_TYPE != "")%>%
+  tidyr::fill(SIGHTING_NUMBER, SPECIES)%>%
+  filter(SPECIES %in% species)
+
+sig_plot%>%
+  filter(LONGITUDE < 166.6)%>%
+  distinct(DATE)
+
+acoustic_dusky<-all_Cet%>%
+  filter(Fiord == "DUSKY" | grepl("MAR",Fiord))%>%
+  left_join(deploy%>%filter(grepl("_01", Deployment_number))%>%dplyr::select(-Date), by = "Fiord_recorder")%>%
+  inner_join(surv_dates, by = c("Date" = "DATE"))%>%
+  dplyr::rename("DATE" = "Date")%>%
+  arrange(DATE)
+
+head(acoustic_dusky)
+
+sig_acou<-ggplot()+
+  geom_sf(data = NZ_coast, alpha = 0.9, fill = "antiquewhite3", lwd = 0.1)+
+  geom_path(survey_plot, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,EVENT), color = year_mo))+
+  geom_path(sig_plot, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,SIGHTING_NUMBER), color = year_mo), linewidth = 3, alpha = 0.4)+
+  coord_sf(xlim = c(166.45, 166.6), ylim = c(-45.79, -45.67))+
+  geom_point(deploy%>%filter(grepl("_01", Deployment_number)), mapping = aes(x = Longitude, y = Latitude), color = "red", size = 2)+
+  geom_point(acoustic_dusky, mapping = aes(x = Longitude, y = Latitude), color = "yellow", size = 1)+
+  theme_bw()+
+  facet_wrap(~DATE)+
+  theme(legend.position = "inside", legend.position.inside =  c(.9, .05))
+
+ggplot2::ggsave(paste0("./figures/Supplement/sig_acou.png"), sig_acou, device = "png", dpi = 700, width = 200, height = 200, units = 'mm')
