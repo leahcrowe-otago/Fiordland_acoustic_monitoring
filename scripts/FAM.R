@@ -400,15 +400,20 @@ dagg_summ_perc<-dagg_summ%>%
          ST_cum = cumsum(ST))%>%
   mutate(days_listening = as.numeric(Date - Date[1])+1)%>%
   mutate(FPOD_perc = FPOD_cum/days_listening,
-         ST_perc = ST_cum/days_listening)%>%
+         ST_perc = ST_cum/days_listening,
+         all = cum/days_listening)%>%
   mutate(perc_diff=FPOD_perc-ST_perc)
+  # mutate(type = case_when(
+  #   Date >= ymd("2023-02-20") & Date <= ymd("2023-04-30") ~ "samp + browse",
+  #   TRUE ~ type))
 
 summary(dagg_summ_perc)
 
 dagg_plot<-ggplot(dagg_summ_perc)+
-  geom_line(aes(x = Date, y = FPOD_perc), size = 2)+
+  geom_line(aes(x = Date, y = all, color = "Both (FPOD+ST)"), size = 1)+
+  geom_line(aes(x = Date, y = FPOD_perc, color = "FPOD"), size = 1)+
   geom_errorbar(aes(ymin=FPOD_perc-0.04, ymax=FPOD_perc, x = Date))+
-  geom_line(aes(x = Date, y = ST_perc), size = 1, color = "red")+
+  geom_line(aes(x = Date, y = ST_perc, color = "ST"), size = 1)+
   geom_vline(xintercept = ymd("2022-03-01"))+ # march 1st, autumn
   geom_vline(xintercept = ymd("2022-06-01"))+ # june 1st, winter
   geom_vline(xintercept = ymd("2022-09-01"))+ #sep 1st, spring
@@ -416,15 +421,51 @@ dagg_plot<-ggplot(dagg_summ_perc)+
   geom_vline(xintercept = ymd("2023-03-01"))+ #mar 1st
   geom_vline(xintercept = ymd("2023-06-01"))+ #june 1
   geom_vline(xintercept = ymd("2023-09-01"))+
+  geom_hline(yintercept = 0.21, linetype = "dashed")+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-15"), xmax = ymd("2022-11-27"), ymin = 0.13, ymax = 0.2), fill="white", alpha = 1, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-02-16"), xmax = ymd("2022-07-13"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE)+ 
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-27"), xmax = ymd("2023-05-24"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-04-30"), ymin = 0, ymax = 1), fill="blue", alpha = 0.2, inherit.aes = FALSE)+
   theme_bw()+
   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y", date_minor_breaks="1 month")+
-  ylab("Running percentage of days with acoustic detections")
+  ylab("Running proportion of days with acoustic detections")+
+  annotate("text",label = c("autumn","winter","spring","summer","autumn"), 
+           x = c(ymd("2022-04-15"),ymd("2022-07-15"),ymd("2022-10-15"),ymd("2023-01-15"),ymd("2023-04-15")), y = 1.02)+
+  theme(legend.position = c(0.88,0.82),
+        legend.title = element_text( size=8), 
+        legend.text=element_text(size=8))+
+  scale_color_brewer("Recorder type", palette = "Dark2")+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   
-ggsave('./figures/dagg_plot.png',dagg_plot, dpi = 300, width = 275, height = 125, units = "mm")
+dagg_plot
+hist(dagg_summ_perc$all)
+
+ggsave('./figures/dagg_plot.png',dagg_plot, dpi = 300, width = 220, height = 150, units = "mm")
+
+treatment<-dagg_summ_perc%>%
+  dplyr::select(Date, perc_diff)%>%
+  mutate(ST_approach = case_when(
+    Date >= ymd("2023-02-20") & Date <= ymd("2023-04-30") ~ "samp_browse",
+    Date <= ymd("2022-07-13") | Date > ymd("2022-11-27") ~ "samp",
+    TRUE ~ "cont"
+  ))%>%
+  mutate(season = case_when(
+    month(Date) <= 2 | month(Date) == 12 ~ "summer",
+    month(Date) >= 3 & month(Date) <= 5 ~ "autumn",
+    month(Date) >= 6 & month(Date) <= 8 ~ "winter",
+    month(Date) >= 9 & month(Date) <= 11 ~ "spring"
+    
+  ))
+
+ggplot(treatment)+
+  geom_point(aes(x = Date, y = perc_diff))+
+  geom_smooth(aes(x = Date, y = perc_diff), method = "lm")+
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-02-16"), xmax = ymd("2022-07-13"), ymin = 0, ymax = 0.1), fill="red", alpha = 0.2, inherit.aes = FALSE)+ 
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-27"), xmax = ymd("2023-05-24"), ymin = 0, ymax = 0.1), fill="red", alpha = 0.2, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-04-30"), ymin = 0, ymax = 0.1), fill="blue", alpha = 0.2, inherit.aes = FALSE)
+
+#library(rstanarm)
+#rstanarm::stan_lmer(perc_diff ~ ST_approach * season + (1|ST_approach), data = treatment)
+
 # continuous ST sampling
 
 sampling_cont<-DAGG%>%
