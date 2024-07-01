@@ -36,14 +36,14 @@ all_FPOD<-bind_rows(FPOD_data)%>%
   mutate(Quality = Qn)
 
 all_FPOD_Dol<-all_FPOD%>%  
-  filter(SpClass == "Dol")
+  filter(SpClass == "Dol")%>%
+  filter(Quality != '?' & Quality != "L")
 
 all_FPOD_Cet<-all_FPOD_Dol%>%
   group_by(Date, Fiord, Quality)%>%
   mutate(DPD = n())%>% #DPD = detections per day
   distinct(Date, Fiord, SpClass, DPD, Quality)%>%
-  mutate(Fiord_recorder = paste0(Fiord,"_FPOD"))%>%
-  filter(Quality != '?' & Quality != "L")
+  mutate(Fiord_recorder = paste0(Fiord,"_FPOD"))
 
 all_FPOD_Cet%>%
   ungroup()%>%
@@ -94,8 +94,7 @@ all_ST<-bind_rows(ST_data)%>%
 
 #write.csv(all_ST, paste0('./data/all_ST_', Sys.Date(),'.csv'), row.names = F)
 
-
-all_ST_Cet<-all_ST%>%
+ST_dol<-all_ST%>%
   filter(Dolphin...y.n. == "y" | Dolphin...y.n. == "?")%>%
   filter(Species == "Bottlenose")%>%
   group_by(Date, Fiord)%>%
@@ -105,8 +104,10 @@ all_ST_Cet<-all_ST%>%
            Dolphin...y.n. == "y" ~ "H",
            Dolphin...y.n. == "?" ~ "?",
          ))%>%
+  mutate(Fiord_recorder = paste0(Fiord,"_ST"))
+
+all_ST_Cet<-ST_dol%>%
   distinct(Date, Fiord, DPD, SpClass, Quality)%>%
-  mutate(Fiord_recorder = paste0(Fiord,"_ST"))%>%
   filter(Quality != '?')
 
 
@@ -120,19 +121,17 @@ all_ST%>%
 
 acou_timeline<-function(x){
   ggplot(x)+
-    geom_col(aes(x = Date, y = 1, fill = Quality))+
+    geom_col(aes(x = Date, y = 1), fill = "#33A02C")+
     ylim(c(0,1))+
     theme_bw()+
-    scale_fill_manual(values = c("#B2DF8A","#33A02C"))+
     ylab("")+
-    #xlim(c(min(as.Date(deploy$Datetime_deployment_local), na.rm = T), max(as.Date(deploy$Datetime_deployment_local), na.rm = T)))+
     theme(axis.text.y=element_blank(),  #remove y axis labels
           axis.ticks.y=element_blank(),
           panel.grid.minor.y = element_blank(),
           panel.grid.major.y = element_blank(),
           legend.position = "bottom",
           axis.text.x=element_text(angle=45,hjust=1))+
-          #strip.background = element_rect(aes(fill = Fiord), colour = "black", size = 1))+
+
     scale_x_date(date_breaks="1 month", date_labels="%b-%Y")+
     coord_cartesian(xlim = c(ymd("2022-02-15"), ymd("2023-11-20")))
 }
@@ -143,9 +142,6 @@ all_Cet<-all_FPOD_Cet%>%
   rbind(all_ST_Cet)
 
 unique(all_Cet$Fiord_recorder)
-
-#all_Cet$Quality<-factor(all_Cet$Quality, levels = c("?","L","M","H"))
-all_Cet$Quality<-factor(all_Cet$Quality, levels = c("M","H"))
 
 all_Cet_plot<-acou_timeline(all_Cet)+
   facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","MARINE-RESERVE-1_ST","MARINE-RESERVE-2_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 1)+
@@ -173,8 +169,6 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_FPOD"), aes(xmin = ymd("2023-05-24"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHARLES_FPOD"), aes(xmin = ymd("2023-10-21"), xmax = ymd("2024-01-25"), ymin = 0, ymax = 1), fill="black", alpha = 0.5, inherit.aes = FALSE)+
   #to be analysed
-  #geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-2_ST"), aes(xmin = ymd("2023-06-26"), xmax = ymd("2024-02-16"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
-  #geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-06-27"), xmax = ymd("2024-02-14"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-08-14"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="yellow", alpha = 0.5, inherit.aes = FALSE)
 
   
@@ -359,8 +353,8 @@ sampling$`Listening days`[2]<-""
 
 sampling%>%
   kableExtra::kable(booktabs = T, align = "c") %>%
-  kable_classic(full_width = F, html_font = "Cambria")%>%
-  add_header_above(c("15/30min ST & continuous FPOD" = 4))
+  kableExtra::kable_classic(full_width = F, html_font = "Cambria")%>%
+  kableExtra::add_header_above(c("15/30min ST & continuous FPOD" = 4))
 
 capture_15ST<-sampling_15ST%>%
   dplyr::select(Date, type, `Number of recorders`)%>%
@@ -402,12 +396,20 @@ dagg_summ_perc<-dagg_summ%>%
   mutate(FPOD_perc = FPOD_cum/days_listening,
          ST_perc = ST_cum/days_listening,
          all = cum/days_listening)%>%
-  mutate(perc_diff=FPOD_perc-ST_perc)
-  # mutate(type = case_when(
-  #   Date >= ymd("2023-02-20") & Date <= ymd("2023-04-30") ~ "samp + browse",
-  #   TRUE ~ type))
+  mutate(perc_diff=FPOD_perc-ST_perc)%>%
+  mutate(type = case_when(
+    Date < ymd("2022-07-13") ~ 1,
+    Date >= ymd("2022-07-13") & Date < ymd("2022-11-27") ~ 2,
+    Date >= ymd("2022-11-27") & Date < ymd("2023-02-20") ~ 3,
+    Date >= ymd("2023-02-20") & Date <= ymd("2023-04-30") ~ 4,
+    TRUE ~ 5))
 
 summary(dagg_summ_perc)
+
+dagg_summ_perc%>%
+  group_by(type)%>%
+  mutate(mean = mean(perc_diff))%>%
+  distinct(type, mean)
 
 dagg_plot<-ggplot(dagg_summ_perc)+
   geom_line(aes(x = Date, y = all, color = "Both (FPOD+ST)"), size = 1)+
@@ -431,7 +433,7 @@ dagg_plot<-ggplot(dagg_summ_perc)+
   ylab("Running proportion of days with acoustic detections")+
   annotate("text",label = c("autumn","winter","spring","summer","autumn"), 
            x = c(ymd("2022-04-15"),ymd("2022-07-15"),ymd("2022-10-15"),ymd("2023-01-15"),ymd("2023-04-15")), y = 1.02)+
-  theme(legend.position = c(0.88,0.82),
+  theme(legend.position = "inside", legend.position.inside = c(0.88,0.82),
         legend.title = element_text( size=8), 
         legend.text=element_text(size=8))+
   scale_color_brewer("Recorder type", palette = "Dark2")+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
@@ -488,14 +490,13 @@ cont$`Listening days`[2]<-""
 
 cont%>%
   kableExtra::kable(booktabs = T, align = "c") %>%
-  kable_classic(full_width = F, html_font = "Cambria")%>%
-  add_header_above(c("continuous ST & FPOD" = 4))
+  kableExtra::kable_classic(full_width = F, html_font = "Cambria")%>%
+  kableExtra::add_header_above(c("continuous ST & FPOD" = 4))
 
 capture_cont<-sampling_cont%>%
   dplyr::select(Date, type, `Number of recorders`)%>%
   ungroup()%>%
   tidyr::pivot_wider(names_from = type, values_from = `Number of recorders`)
-
 
 capture_cont[capture_cont == 2] <- 1
 capture_cont[is.na(capture_cont)] <- 0

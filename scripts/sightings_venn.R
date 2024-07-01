@@ -44,8 +44,11 @@ doubtfulpod_venn<-doubtfulpod%>%
   
 doubtfulpod_venn[is.na(doubtfulpod_venn)] <-FALSE
 
-doubtful_venn<-plot(euler(doubtfulpod_venn, shape = "ellipse"), quantities = TRUE)
+library(wesanderson)
+wesanderson::wes_palettes$Zissou1
 
+doubtful_venn<-plot(euler(doubtfulpod_venn, shape = "ellipse"), quantities = list(col = "black"), label = list(col = c("black")), edge = list(col = "black"), fill = c("#3B9AB2", "lightgrey", "#E1AF00", "#F21A00"), alpha = 0.5)
+doubtful_venn
 
 ind_area%>%
   filter(POD == "DOUBTFUL" & SURVEY_AREA == "DUSKY")%>%
@@ -74,9 +77,9 @@ duskypod_venn<-duskypod%>%
 
 duskypod_venn[is.na(duskypod_venn)] <-FALSE
 
-dusky_venn<-plot(euler(duskypod_venn, shape = "ellipse"), quantities = TRUE, cex = 0.25)
+dusky_venn<-plot(euler(duskypod_venn, shape = "ellipse"), quantities = list(col = "black"), label = list(col = c("black")), edge = list(col = "black"), fill = c("purple", "lightgrey", "#E1AF00", "#5B1A18"), alpha = 0.5, cex = 0.25)
 
 venn<-ggpubr::ggarrange(doubtful_venn, dusky_venn, labels = "auto")
 
-ggsave('./figures/venn.png', venn, dpi = 700, height = 100, width = 250, units = "mm")
+ggsave('./figures/venn.png', venn, dpi = 700, height = 100, width = 250, units = "mm", bg="white")
 

@@ -11,7 +11,7 @@ editor: visual
 
 ```
 
-Table 1. Deployment and dolphin detection details for all sites included in this study. For each 'Fiord_recorder', ST = SoundTrap deployment, FPOD = FPOD deployment, and BOTH = dual deployment of a SoundTrap and an FPOD on the same line. 
+Table 1. Deployment and dolphin detection details for all sites included in this study. For each 'Fiord_recorder', ST = SoundTrap deployment, FPOD = FPOD deployment, and BOTH = dual deployment of a SoundTrap and an FPOD at the same location.
 
 ```{r, det_table, echo = F, message = F, warning = F, out.width = '100%'}
 library(dplyr);library(knitr);library(kableExtra);
@@ -54,34 +54,50 @@ sigs_nf%>%
 \newpage
 
 # Figures
-\vspace{-10ex}
-```{r, map, echo = F, out.width='75%'}
+
+\vspace{-15ex}
+
+```{r, map, echo = F, out.width='90%'}
 #source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/deployment_map_ms.R', local = TRUE, verbose = F)$value
 
 knitr::include_graphics(c('./figures/bathy_FMA_white.png'))
 
 ```
-\vspace{-10ex}
 
-Fig. 1. Map of the study area including the acoustic recorders deployment locations within the Te Moana o Atawhenua-Fiordland Marine Area (all areas of the sea inshore of the teal line including all fiords). The neighbouring fiords are labeled in white text, all FMA marine reserves are in orange, and the two acoustic recorder sites within the Taumoana-Five Fingers Marine Reserve are numbered where 1. is the Cormorant Cove site, and 2. is the peninsula site. The 50m (grey) and 200m (dark blue) isobaths are provided on both maps. \u14ctepoti-Dunedin is marked as the yellow dot on the small inset map.
+\vspace{-15ex}
+
+Fig. 1. Map of the study area including the acoustic recorders deployment locations within the Te Moana o Atawhenua-Fiordland Marine Area (all areas of the sea inshore of the teal line including all fiords). The neighbouring fiords are labeled in white text, all FMA marine reserves are in orange, and the two acoustic recorder sites within the Taumoana-Five Fingers Marine Reserve are numbered where 1. is the Cormorant Cove site, and 2. is the peninsula site. The 50m (grey) and 200m (dark blue) isobaths are provided on both maps. Ōtepoti-Dunedin is marked as the yellow dot on the small inset map.
 
 ```{r, Fig_example_whistles, echo = F, out.width = '100%'}
 knitr::include_graphics('./figures/FF01_01 example Tt.png')
 ```
 
-Fig. 2. Example bottlenose dolphin mid-frequency (1–24 kHz), frequency-modulated sounds which are characteristic components of whistles, contact calls, social calls, and burst-pulses.
+Fig. 2. Example bottlenose dolphin mid-frequency (1--24 kHz), frequency-modulated sounds which are characteristic components of whistles, contact calls, social calls, and burst-pulses.
 
 ```{r, Fig_daily_detections, echo = F, out.width = '100%'}
 knitr::include_graphics('./figures/allcet_v1.png')
 ```
 
-Fig. 3.
+Fig. 3. Daily detected acoustic presence (green vertical lines) at each deployment site organized from north to south. Quality is only relevant to FPOD detections. The red shaded areas are times when the SoundTrap (ST) was duty sampled to record 15 out of every 30 min, and the blue shaded areas are times when the ST data were manually browsed due to sensitivity issues with the hydrophone (this looks purple if both were true). The grey shaded areas are times when the recorder was not active. The vertical red lines indicate when the gear was deployed/retrieved.
+
+```{r, acou_sunglight, echo = F, out.width = '100%'}
+knitr::include_graphics('./figures/Supplement/acou_sunlight.png')
+```
+
+Fig. 4. The time of day when dolphin acoustic detections (black dots) occurred at each site and device (either an F-POD or a SoundTrap, 'ST'). The shaded dark blue areas represent the time between dusk and dawn. The dark shade rectangles are times when the device was not actively recording. The lighter blue rectangles are the periods where the acoustic files were browsed manually for daily presence and were not comprehensively analysed. 
 
 ```{r, dagg, echo = F, out.width = '100%'}
 knitr::include_graphics('./figures/dagg_plot.png')
 ```
 
-Fig. 4. 
+Fig. 5. The running proportion of daily detected acoustic presence of dolphins in Te Rā-Dagg Sound when the two different passive acoustic monitoring devices (FPODs and SoundTraps, 'ST') were deployed and active simultaneously at the same location. The red shaded areas are when the ST was duty sampled to record 15 out of every 30 min, and the blue shaded areas are when the ST data were manually browsed due to sensitivity issues with the hydrophone (this looks purple if both are true). The horizontal dotted line marks the overall daily detection rate from the FPOD alone as well as the combined FPOD + ST detection rate over the entire course of the study (see Table 1). The vertical error bars off the FPOD line represent the overall 4% difference in the daily detection rate between the FPOD/FPOD + ST and the ST.
+
+\newpage
+
+```{r, sig_acou, echo = F, out.width = '100%'}
+knitr::include_graphics('./figures/sig_acou.png')
+```
+Fig. 6. Days when visual survey effort occurred in the outer Tamatea-Dusky Sound during the period all three acoustic devices were active simultaneously (20-Feb-2022 through 30-Nov-2022). The lines reflect the survey effort that day, the shaded areas around the lines are times with bottlenose dolphins, the red dots represent the deployment sites and the yellow dots indicate acoustic presence of dolphins at the site on the survey day.
 
 ```{r, Fig_venn_ID, echo = F, out.width = '100%'}
 #source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/sightings_venn.R', local = TRUE, verbose = F)$value
@@ -89,11 +105,12 @@ Fig. 4.
 knitr::include_graphics('./figures/venn.png')
 ```
 
-Fig. 5. Fiords where individuals alive since 2009 from the two Fiordland resident bottlenose dolphin sub-populations have been sighted. 'DOUBTFUL' = Patea-Doubtful complex, 'DUSKY' = Tamatea-Dusky complex, 'NANCY' = Hinenui-Nancy Sound, 'DAGG' = Te R$\mathrm{\bar{a}}$-Dagg Sound, 'PRESERVATION' = Rakitimu-Preservation Inlet, and 'BLUFF' refers to the stranding event at Motup$\mathrm{\bar{o}}$hue-Bluff. a) Individuals from the Doubtful pod ($n$ = 106). b) Individuals from the Dusky pod ($n$ = 178). 
+Fig. 7. Fiords where individuals alive since 2009 from the two Fiordland resident bottlenose dolphin sub-populations have been sighted. 'DOUBTFUL' = Patea-Doubtful complex, 'DUSKY' = Tamatea-Dusky complex, 'NANCY' = Hinenui-Nancy Sound, 'DAGG' = Te Rā-Dagg Sound, 'PRESERVATION' = Rakitimu-Preservation Inlet, and 'BLUFF' refers to the stranding event at Motupōhue-Bluff. a) Individuals from the Doubtful pod ($n$ = 106). b) Individuals from the Dusky pod ($n$ = 178).
 
-```{r, Fig_dist, echo = F, out.height='100%'}
+\newpage
+```{r, Fig_dist, echo = F, out.width='100%'}
 knitr::include_graphics('./figures/Fig4ab.png')
 ```
-\vspace{-10ex}
-Fig. 6. The distance as the dolphin swims between two example re-sightings of individuals. a) At location #1 within the Patea-Doubtful complex, 37 individuals from the Doubtful pod were sighted on 2022-May-06 at 09:35 (NZST). At location #2 in Te R$\mathrm{\bar{a}}$-Dagg Sound, 40 Doubtful pod individuals were sighted on 2022-May-07 08:59 (NZST). The two locations are 41 km apart, and 27 individuals were sighting in both locations. b) At location #1, a group of 30 Dusky pod individuals were sighted on 2022-Jul-12, including a mother/calf pairs ('Ray'/'Sunshine'). This was the last sighting before they were observed stranded near Motup$\mathrm{\bar{o}}$hue-Bluff, location #2, on 2022-Sep-15. the two locations are approximately 255 km apart. Note the different color scales between plots a and b.
+
+Fig. 8. The distance as the dolphin swims between two example re-sightings of individuals. a) At location #1 within the Patea-Doubtful complex, 37 individuals from the Doubtful pod were sighted on 2022-May-06 at 09:35 (NZST). At location #2 in Te Rā-Dagg Sound, 40 Doubtful pod individuals were sighted on 2022-May-07 08:59 (NZST). The two locations are 41 km apart, and 27 individuals were sighting in both locations. b) At location #1, a group of 30 Dusky pod individuals were sighted on 2022-Jul-12, including a mother/calf pairs ('Ray'/'Sunshine'). This was the last sighting before they were observed stranded near Motupōhue-Bluff, location #2, on 2022-Sep-15. The two locations are 255 km apart. Note the different color scales for distance between plots a and b.
 

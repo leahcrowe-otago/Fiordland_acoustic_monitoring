@@ -93,7 +93,7 @@ Fig4a<-ggplot2::ggplot() + tidyterra::geom_spatraster(data = d_rast)+
   geom_text(doubtfuldagg, mapping = aes(x = Longitude, y = Latitude, label = label), color = "white", hjust=-0.5, vjust=-0.5)+
   theme(legend.position = c(0.82,0.2))
 
-ggplot2::ggsave(paste0("./figures/Fig4a.png"), Fig4a, device = "png", dpi = 700, width = 150, height = 220, units = 'mm')
+ggplot2::ggsave(paste0("./figures/Fig4a.png"), Fig4a, device = "png", dpi = 700, width = 100, height = 150, units = 'mm')
 
 ## Bluff ----
 ### sightings ----
@@ -177,7 +177,7 @@ Fig4b<-ggplot2::ggplot() + tidyterra::geom_spatraster(data = b_rast)+
   
 ggplot2::ggsave(paste0("./figures/Fig4b.png"), Fig4b, device = "png", dpi = 700, width = 150, height = 150, units = 'mm')
 
-Fig4ab<-ggpubr::ggarrange(Fig4a,Fig4b, labels = "auto", ncol = 1)
-ggplot2::ggsave(paste0("./figures/Fig4ab.png"), Fig4ab, device = "png", dpi = 700, width = 150, height = 300, units = 'mm')
+Fig4ab<-ggpubr::ggarrange(Fig4a,Fig4b, labels = "auto", ncol = 2, widths = c(1,1.5))
+ggplot2::ggsave(paste0("./figures/Fig4ab.png"), Fig4ab, device = "png", dpi = 700, width = 300, height = 150, units = 'mm')
 
 ###
