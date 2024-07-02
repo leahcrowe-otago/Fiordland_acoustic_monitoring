@@ -297,14 +297,16 @@ ST_DAGG<-all_ST%>%
   dplyr::select(Date,Datetime,Quality,Deployment_number, Begin.Path)%>%
   filter(Quality != "?")%>%
   #mutate(Deployment_number = gsub("_", "", Deployment_number))%>%
-  mutate(begin_time = ymd_hms(paste0("20",substr(Begin.Path, 24, nchar(Begin.Path) - 4))))%>%
+  mutate(begin_time = case_when(
+    Deployment_number == "Dagg01_06" ~ ymd_hms(paste0("20",substr(Begin.Path, 34, nchar(Begin.Path) - 4))),
+    TRUE ~ ymd_hms(paste0("20",substr(Begin.Path, 24, nchar(Begin.Path) - 4)))))%>%
   mutate(type = "ST")%>%
   mutate(begin_time = case_when(
     Deployment_number == "Dagg0101" & type == "ST" ~ begin_time + minutes(4),
     TRUE ~ begin_time
   ))
 
-head(ST_DAGG)
+summary(ST_DAGG)
 
 DAGG<-FPOD_DAGG%>%
   bind_rows(ST_DAGG)%>%
@@ -416,13 +418,13 @@ dagg_plot<-ggplot(dagg_summ_perc)+
   geom_line(aes(x = Date, y = FPOD_perc, color = "FPOD"), size = 1)+
   geom_errorbar(aes(ymin=FPOD_perc-0.04, ymax=FPOD_perc, x = Date))+
   geom_line(aes(x = Date, y = ST_perc, color = "ST"), size = 1)+
-  geom_vline(xintercept = ymd("2022-03-01"))+ # march 1st, autumn
-  geom_vline(xintercept = ymd("2022-06-01"))+ # june 1st, winter
-  geom_vline(xintercept = ymd("2022-09-01"))+ #sep 1st, spring
-  geom_vline(xintercept = ymd("2022-12-01"))+ #dec 1st, summer
-  geom_vline(xintercept = ymd("2023-03-01"))+ #mar 1st
-  geom_vline(xintercept = ymd("2023-06-01"))+ #june 1
-  geom_vline(xintercept = ymd("2023-09-01"))+
+  # geom_vline(xintercept = ymd("2022-03-01"))+ # march 1st, autumn
+  # geom_vline(xintercept = ymd("2022-06-01"))+ # june 1st, winter
+  # geom_vline(xintercept = ymd("2022-09-01"))+ #sep 1st, spring
+  # geom_vline(xintercept = ymd("2022-12-01"))+ #dec 1st, summer
+  # geom_vline(xintercept = ymd("2023-03-01"))+ #mar 1st
+  # geom_vline(xintercept = ymd("2023-06-01"))+ #june 1
+  # geom_vline(xintercept = ymd("2023-09-01"))+
   geom_hline(yintercept = 0.21, linetype = "dashed")+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-15"), xmax = ymd("2022-11-27"), ymin = 0.13, ymax = 0.2), fill="white", alpha = 1, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-02-16"), xmax = ymd("2022-07-13"), ymin = 0, ymax = 1), fill="red", alpha = 0.2, inherit.aes = FALSE)+ 
@@ -431,8 +433,8 @@ dagg_plot<-ggplot(dagg_summ_perc)+
   theme_bw()+
   scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y", date_minor_breaks="1 month")+
   ylab("Running proportion of days with acoustic detections")+
-  annotate("text",label = c("autumn","winter","spring","summer","autumn"), 
-           x = c(ymd("2022-04-15"),ymd("2022-07-15"),ymd("2022-10-15"),ymd("2023-01-15"),ymd("2023-04-15")), y = 1.02)+
+  # annotate("text",label = c("autumn","winter","spring","summer","autumn"), 
+  #          x = c(ymd("2022-04-15"),ymd("2022-07-15"),ymd("2022-10-15"),ymd("2023-01-15"),ymd("2023-04-15")), y = 1.02)+
   theme(legend.position = "inside", legend.position.inside = c(0.88,0.82),
         legend.title = element_text( size=8), 
         legend.text=element_text(size=8))+
@@ -443,107 +445,65 @@ hist(dagg_summ_perc$all)
 
 ggsave('./figures/dagg_plot.png',dagg_plot, dpi = 300, width = 220, height = 150, units = "mm")
 
-treatment<-dagg_summ_perc%>%
-  dplyr::select(Date, perc_diff)%>%
-  mutate(ST_approach = case_when(
-    Date >= ymd("2023-02-20") & Date <= ymd("2023-04-30") ~ "samp_browse",
-    Date <= ymd("2022-07-13") | Date > ymd("2022-11-27") ~ "samp",
-    TRUE ~ "cont"
-  ))%>%
-  mutate(season = case_when(
-    month(Date) <= 2 | month(Date) == 12 ~ "summer",
-    month(Date) >= 3 & month(Date) <= 5 ~ "autumn",
-    month(Date) >= 6 & month(Date) <= 8 ~ "winter",
-    month(Date) >= 9 & month(Date) <= 11 ~ "spring"
-    
-  ))
-
-ggplot(treatment)+
-  geom_point(aes(x = Date, y = perc_diff))+
-  geom_smooth(aes(x = Date, y = perc_diff), method = "lm")+
-  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-02-16"), xmax = ymd("2022-07-13"), ymin = 0, ymax = 0.1), fill="red", alpha = 0.2, inherit.aes = FALSE)+ 
-  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-27"), xmax = ymd("2023-05-24"), ymin = 0, ymax = 0.1), fill="red", alpha = 0.2, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-04-30"), ymin = 0, ymax = 0.1), fill="blue", alpha = 0.2, inherit.aes = FALSE)
-
-#library(rstanarm)
-#rstanarm::stan_lmer(perc_diff ~ ST_approach * season + (1|ST_approach), data = treatment)
-
-# continuous ST sampling
-
-sampling_cont<-DAGG%>%
-  filter(Deployment_number == "Dagg01_03" & Datetime <= ymd_hms("2022-11-14 22:30:24"))%>%
-  distinct(Date, type, Deployment_number, Recorder_dur_day)%>%
-  group_by(Date)%>%
-  mutate(`Number of recorders` = n())%>%
-  group_by(`Number of recorders`)
-
-cont<-sampling_cont%>%
-  mutate(`Detection days` = n(),
-         `Listening days` = round(min(Recorder_dur_day), 0))%>%
-  distinct(`Number of recorders`, `Detection days`, `Listening days`)%>%
-  ungroup()%>%
-  mutate(`Percent of detection days` = round(`Detection days`/sum(`Detection days`) * 100, 1))%>%
-  arrange(-`Number of recorders`)%>%
-  dplyr::select(`Listening days`, everything())
-
-cont$`Listening days`[2]<-""
-
-cont%>%
-  kableExtra::kable(booktabs = T, align = "c") %>%
-  kableExtra::kable_classic(full_width = F, html_font = "Cambria")%>%
-  kableExtra::add_header_above(c("continuous ST & FPOD" = 4))
-
-capture_cont<-sampling_cont%>%
-  dplyr::select(Date, type, `Number of recorders`)%>%
-  ungroup()%>%
-  tidyr::pivot_wider(names_from = type, values_from = `Number of recorders`)
-
-capture_cont[capture_cont == 2] <- 1
-capture_cont[is.na(capture_cont)] <- 0
-
-capture_cont<-capture_cont%>%
-  mutate(type = "cont",
-         cum = 1:n(),
-         FPOD_cum = cumsum(FPOD),
-         ST_cum = cumsum(ST))%>%
-  mutate(days_listening = as.numeric(Date - Date[1])+1)%>%
-  mutate(FPOD_perc = FPOD_cum/days_listening,
-         ST_perc = ST_cum/days_listening)
-
-cap<-capture_15ST%>%
-  bind_rows(capture_cont)%>%
-  arrange(Date)%>%
-  mutate(FPOD_totcum = cumsum(FPOD),
-         ST_totcum = cumsum(ST),
-         tot_totcum = 1:n())
-
-cap%>%
-  dplyr::select(Date, FPOD, ST)%>%
-  tidyr::pivot_wider(Date)
-
 #### capture histories ----
-sampling_dates<-data.frame(date = as.Date(c(ymd("2022-02-16"):ymd("2022-07-12"),ymd("2022-11-28"):ymd("2023-02-19"))))
-cont_dates<-data.frame(date = as.Date(c(ymd("2022-07-14"):ymd("2022-11-12"))))
 
-samp_ch<-sampling_dates%>%left_join(cap, by = c("date" = "Date"))%>%
-  dplyr::select(date, FPOD, ST)%>%
-  mutate(samp = 1)
+#charles
+charles<-all_Cet%>%filter(Fiord == "CHARLES")%>%
+  ungroup()%>%
+  distinct(Date, Fiord_recorder)%>%
+  mutate(FPOD = 1)
+summary(charles)
+charles_dates<-data.frame(date = as.Date(c(ymd("2022-02-15"):ymd("2023-10-19"))))
+charles_ch<-charles_dates%>%left_join(charles, by = c("date" = "Date"))%>%
+  dplyr::select(date, FPOD)
+charles_ch[is.na(charles_ch)] <- 0
 
-samp_ch[is.na(samp_ch)] <- 0
-saveRDS(samp_ch, file = paste0("./data/Dagg_samp_ch.rds"))
+saveRDS(charles_ch, file = paste0("./data/charles_ch.rds"))
 
-cont_ch<-cont_dates%>%left_join(capture_cont, by = c("date" = "Date"))%>%
-  dplyr::select(date, FPOD, ST)%>%
-  mutate(samp = 0)
+#nancy
+nancy<-all_Cet%>%filter(Fiord == "NANCY")%>%
+  ungroup()%>%
+  distinct(Date, Fiord_recorder)%>%
+  mutate(ST = 1)
+summary(nancy)
 
-cont_ch[is.na(cont_ch)] <- 0
-saveRDS(cont_ch, file = paste0("./data/Dagg_cont_ch.rds"))
+nancy_dates<-data.frame(date = as.Date(c(ymd("2022-02-15"):ymd("2022-10-06"),ymd("2022-11-28"):ymd("2023-01-01"),ymd("2023-03-15"):ymd("2023-11-19"))))
 
-ch<-samp_ch%>%
-  bind_rows(cont_ch)%>%
-  arrange(date)
-saveRDS(ch, file = paste0("./data/ch.rds"))
+nancy_ch<-nancy_dates%>%left_join(nancy, by = c("date" = "Date"))%>%
+  dplyr::select(date, ST)%>%
+  mutate(samp = case_when(
+    date >= ymd("2023-06-20") ~ 0,
+    TRUE ~ 1
+  ),
+  analysis = 0)
+nancy_ch[is.na(nancy_ch)] <- 0
 
+saveRDS(nancy_ch, file = paste0("./data/nancy_ch.rds"))
+
+#dagg
+dagg<-all_Cet%>%filter(Fiord == "DAGG")%>%
+  ungroup()%>%
+  distinct(Date, Fiord_recorder)%>%
+  filter(!(Date >= ymd("2022-11-14") & Date <= ymd("2022-11-27")))%>%
+  filter(Date < ymd("2023-05-24"))%>%
+  mutate(val = 1)%>%
+  tidyr::pivot_wider(names_from = Fiord_recorder, values_from = val)
+  
+summary(dagg)
+dagg_dates<-data.frame(date = as.Date(c(ymd("2022-02-16"):ymd("2022-11-13"),ymd("2022-11-28"):ymd("2023-05-24"))))
+dagg_ch<-dagg_dates%>%left_join(dagg, by = c("date" = "Date"))%>%
+  mutate(samp = case_when(
+    date >= ymd("2022-07-14") & date <= ymd("2022-11-14") ~ 0,
+    TRUE ~ 1
+  ),
+  analysis = case_when(
+   date >= ymd("2023-02-20") & date <= ymd("2023-04-30") ~ 1,
+   TRUE ~ 0
+  )
+  )
+dagg_ch[is.na(dagg_ch)] <- 0
+
+saveRDS(dagg_ch, file = paste0("./data/dagg_ch.rds"))
 #####
 
 ggplot(cap)+
