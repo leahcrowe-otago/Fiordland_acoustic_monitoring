@@ -142,16 +142,16 @@ ggplot2::ggsave(paste0("./figures/Supplement/sig_acou.png"), sig_acou, device = 
 ST_time<-ST_dol%>%
   ungroup()%>%
   #filter(Fiord == "DUSKY" | grepl("MAR",Fiord))%>%
-  mutate(DATE = date(ymd_hms(Begin.Date.Time)),
-         TIME = hms(format(as.POSIXct(Begin.Date.Time), format = '%H:%M:%S')))%>%
+  mutate(DATE = Date,
+         TIME = hms(format(as.POSIXct(Datetime), format = '%H:%M:%S')))%>%
   #filter(DATE < ymd("2022-11-30") & DATE > ymd("2022-02-20"))
-  dplyr::select(DATE, TIME, Fiord, type)
+  dplyr::select(DATE, TIME, Fiord, type, Datetime)
 
 FPOD_time<-all_FPOD_Dol%>%
   mutate(DATE = Date,
          TIME = hms(format(as.POSIXct(Datetime), format = '%H:%M:%S')))%>%
   #filter(DATE < ymd("2022-11-30") & DATE > ymd("2022-02-20"))
-  dplyr::select(DATE, TIME, Fiord, type)
+  dplyr::select(DATE, TIME, Fiord, type, Datetime)
   
 acou_time<-ST_time%>%
   bind_rows(FPOD_time)%>%
@@ -168,6 +168,8 @@ summary(acou_time)
 acou_time%>%
   filter(is.na(DATE))
 
+## without daylight savings -----
+
 sun_times_woDS <-
   suncalc::getSunlightTimes(
     date = seq(
@@ -181,14 +183,11 @@ sun_times_woDS <-
     keep = c("dawn", "nauticalDawn", "dusk", "nauticalDusk", "sunrise", "sunset")
   )
 
-
-
-tidy_sun_times_woDS <-
-  sun_times_woDS %>%
+tidy_sun_times_woDS <-sun_times_woDS %>%
   select(-lat, -lon) %>%
   tidyr::pivot_longer(-date, names_to = "event", values_to = "time") %>%
   mutate(
-    tz = strftime(time, "%Z"),
+    #tz = strftime(time, "%Z"),
     time = hms::as_hms(time)
   )
 
@@ -284,3 +283,37 @@ sig_effort_sunlight<-ggplot(sig_times%>%mutate(time = hms(format(as.POSIXct(DATE
 survey_2022%>%filter(TIME < "05:00:00")
 
 ggplot2::ggsave(paste0("./figures/Supplement/sig_effort_sunlight.png"), sig_effort_sunlight, device = "png", dpi = 700, width = 300, height = 200, units = 'mm')
+
+### acoustics during the day ----
+
+sun<-sun_times_woDS%>%
+  dplyr::select(date, dawn, dusk)
+
+sun$date<-ymd(sun$date)
+
+head(acou_time)
+
+acou_dusky<-acou_time%>%
+  filter(Fiord == "DUSKY" | grepl("MAR",Fiord))%>%
+  left_join(deploy%>%filter(grepl("_01", Deployment_number))%>%dplyr::select(-Date), by = c("Fiord_recorder","Fiord"))%>%
+  left_join(sun, by = c("DATE" = "date"))%>%
+  filter(Datetime > dawn & Datetime < dusk)%>%
+  inner_join(surv_dates, by = c("DATE"))%>%
+  arrange(DATE)
+
+sig_acou<-ggplot()+
+  geom_sf(data = NZ_coast, alpha = 0.9, fill = "antiquewhite3", lwd = 0.1)+
+  geom_path(survey_plot, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,EVENT), color = year_mo))+
+  geom_path(sig_plot, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,SIGHTING_NUMBER), color = year_mo), linewidth = 3, alpha = 0.4)+
+  coord_sf(xlim = c(166.45, 166.6), ylim = c(-45.8, -45.67))+
+  geom_point(deploy%>%filter(grepl("_01", Deployment_number)), mapping = aes(x = Longitude, y = Latitude), color = "red", size = 2)+
+  geom_point(acoustic_dusky, mapping = aes(x = Longitude, y = Latitude), color = "black", size = 1.5)+
+  geom_point(acou_dusky, mapping = aes(x = Longitude, y = Latitude), color = "yellow", size = 1)+
+  theme_bw()+
+  facet_wrap(~DATE)+
+  theme(legend.position = "inside", legend.position.inside =  c(.9, .05))+
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+  scale_y_continuous(breaks = seq(-45.7,-45.8, by = -0.05))+
+  scale_x_continuous(breaks = seq(166.5,166.6, by = 0.05))
+
+ggplot2::ggsave(paste0("./figures/Supplement/sig_acou2.png"), sig_acou, device = "png", dpi = 700, width = 200, height = 200, units = 'mm')
