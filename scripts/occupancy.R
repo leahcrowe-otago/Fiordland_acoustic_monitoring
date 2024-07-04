@@ -24,6 +24,8 @@ for(j in 1:ns){
   s[j] = nrow(dat[[j]])
 }
 
+K=2 #for Dagg only, K is different gear at same site
+
 model<-function(){
 
 ## model structure
@@ -33,8 +35,8 @@ model<-function(){
     
     logit(pd[i,1]) <- beta[1] # FPOD: not sure why I'm putting this on logit scale -- prob to be comparable to ST
     logit(pd[i,2]) <- beta[2] + beta[3] * sampd[i] + beta[4] * analysisd[i]   
-    for(j in 1:K){
-      yd[i,j]~dbern(pd[i,j]*zd[i]) 
+    for(k in 1:K){
+      yd[i,k]~dbern(pd[i,k]*zd[i]) 
     }
   }
   
@@ -58,7 +60,7 @@ model<-function(){
   for (i in 1:s[4]){
     zch[i]~dbern(psi[4])
     
-    logit(pch[i]) <- beta[2] + beta[3] * sampch[i]
+    logit(pch[i]) <- beta[2] + beta[3] * sampch[i] + beta[4] * analysisch[i]
     ych[i]~dbern(pch[i]*zch[i]) 
   }
   
@@ -74,7 +76,7 @@ model<-function(){
   for (i in 1:s[6]){
     za[i]~dbern(psi[6])
     
-    logit(pa[i]) <- beta[1]
+    logit(pa[i]) <- beta[2]
     ya[i]~dbern(pa[i]*za[i]) 
   }
   
@@ -82,7 +84,7 @@ model<-function(){
   for (i in 1:s[7]){
     zm1[i]~dbern(psi[7])
     
-    logit(pm1[i]) <- beta[1]
+    logit(pm1[i]) <- beta[2]
     ym1[i]~dbern(pm1[i]*zm1[i]) 
   }
   
@@ -90,7 +92,7 @@ model<-function(){
   for (i in 1:s[8]){
     zm2[i]~dbern(psi[8])
     
-    logit(pm2[i]) <- beta[1]
+    logit(pm2[i]) <- beta[2]
     ym2[i]~dbern(pm2[i]*zm2[i]) 
   }
   
@@ -99,10 +101,10 @@ model<-function(){
     psi[j] ~ dbeta(0.5,0.5)
   }
   
-  
   for(j in 1:4){
     beta[j] ~ dt(0,1,3) 
-  }
+    #beta[j] ~ dnorm(0,1) #tau = precision = 1/sigma^2
+    }
   
   #transformed parameters
   logit(pie[1])<-beta[1] # probability of FPOD
@@ -133,8 +135,8 @@ mcmc.inits<-function() {list(zd=rep(1,s[1]), zn = rep(1,s[2]), zc = rep(1,s[3]),
 
 write.model(model,con="FAM_model.txt") # write JAGS model code to file
 FAM_samp <- jags(data=mcmc.data, inits = mcmc.inits, parameters.to.save=mcmc.params,
-                  n.iter=11000, model.file="FAM_model.txt",n.chains=3,parallel=TRUE,verbose=TRUE,n.burnin = 2000)
-saveRDS(FAM_samp, file = paste0("./data/FAM_samp_",Sys.Date(),".rds"))
+                  n.iter=11000, model.file="FAM_model.txt",n.chains=3,parallel=TRUE,verbose=TRUE,n.burnin = 1000)
+saveRDS(FAM_samp, file = paste0("./data/FAM_samp_dt_1k_",Sys.Date(),".rds"))
 
 FAM_samp$samples
 FAM_samp$summary
