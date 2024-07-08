@@ -1,5 +1,8 @@
 library(readxl);library(odbc);library(dplyr);library(DBI);library(lubridate);library(ggplot2)
 
+shapefile_path<-"C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_reporting/shapefiles"
+NZ_coast<-sf::read_sf(shapefile_path, layer = "nz-coastlines-and-islands-polygons-topo-1500k")
+
 data_log<-read_excel('./data/Data_Log_12Apr2024.xlsx')
 
 nf_dates<-data_log%>%
@@ -170,15 +173,17 @@ acou_time%>%
 
 ## without daylight savings -----
 
+maxdate_plot<-ymd("2023-11-30")
+
 sun_times_woDS <-
   suncalc::getSunlightTimes(
     date = seq(
       as.Date(min(acou_time$DATE)),
-      as.Date(max(acou_time$DATE)),
+      maxdate_plot,
       by = "day"
     ),
-    lat = deploy$Latitude[1],
-    lon = deploy$Longitude[1],
+    lat = -45.725,
+    lon = 166.525,
     tz = "Etc/GMT+13",
     keep = c("dawn", "nauticalDawn", "dusk", "nauticalDusk", "sunrise", "sunset")
   )
@@ -191,18 +196,25 @@ tidy_sun_times_woDS <-sun_times_woDS %>%
     time = hms::as_hms(time)
   )
 
+min_deploy<-deploy%>%ungroup%>%group_by(Fiord_recorder)%>%filter(Datetime_retrieval_local == min(Datetime_retrieval_local, na.rm = T))
+max_deploy<-deploy%>%ungroup%>%group_by(Fiord_recorder)%>%filter(Datetime_retrieval_local == max(Datetime_retrieval_local, na.rm = T))
+
 acou_time
 acou_sunlight<-ggplot(acou_time)+
-  geom_ribbon(tidy_sun_times_woDS%>%filter(event == "dusk"), mapping = aes(x = date, ymin = time, ymax = hms::as_hms("24:00:00")), color = "midnightblue", fill = "midnightblue", alpha = 0.4)+
-  geom_ribbon(tidy_sun_times_woDS%>%filter(event == "dawn"), mapping = aes(x = date, ymin = time, ymax = hms::as_hms("00:00:00")), color = "midnightblue", fill = "midnightblue", alpha = 0.4)+
+  geom_ribbon(tidy_sun_times_woDS%>%filter(event == "dusk"), mapping = aes(x = date, ymin = time, ymax = hms::as_hms("24:00:00")), color = NA, fill = "midnightblue", alpha = 0.4)+
+  geom_ribbon(tidy_sun_times_woDS%>%filter(event == "dawn"), mapping = aes(x = date, ymin = time, ymax = hms::as_hms("00:00:00")), color = NA, fill = "midnightblue", alpha = 0.4)+
+  geom_vline(min_deploy, mapping = aes(xintercept = as.Date(Datetime_deployment_local)), linetype = "twodash", color = "red")+
+  geom_vline(max_deploy, mapping = aes(xintercept = as.Date(Datetime_retrieval_local)), linetype = "twodash", color = "red")+
   #geom_point(aes(x = DATE, y = TIME, color = as.factor(season)))+
-  geom_point(aes(x = DATE, y = TIME))+
+  geom_point(aes(x = DATE, y = TIME), size = 0.5)+
   scale_y_time()+
   facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","MARINE-RESERVE-1_ST","MARINE-RESERVE-2_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 3)+
   #facet_wrap(~factor(Fiord, levels = c("CHARLES","NANCY","DAGG","MARINE-RESERVE-1","MARINE-RESERVE-2","DUSKY","CHALKY","PRESERVATION")), ncol = 2)+
   theme_bw()+
   ylab("Time (HH:MM:SS)")+
-  scale_x_date("Date",date_breaks="4 months", date_labels="%b-%Y", limits = c(min(acou_time$DATE),max(acou_time$DATE)))
+  scale_x_date("Date",date_breaks="3 months", date_labels="%b-%Y")+
+  theme(axis.text.x=element_text(angle=45,hjust=1))+
+  coord_cartesian(xlim = c(ymd("2022-02-15"), maxdate_plot))
 
 acou_sunlight<-acou_sunlight+
   #soundtrap died shaded areas 
@@ -212,32 +224,24 @@ acou_sunlight<-acou_sunlight+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-09-02"), xmax = ymd("2023-11-09"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   #MR_2 = FF03
   geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-2_ST"), aes(xmin = ymd("2022-12-31"), xmax = ymd("2023-06-26"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-2_ST"), aes(xmin = ymd("2023-11-29"), xmax = ymd("2024-02-16"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-2_ST"), aes(xmin = ymd("2023-11-29"), xmax = maxdate_plot, ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   #MR_1 = FF02
   geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-1_ST"), aes(xmin = ymd("2022-12-29"), xmax = ymd("2023-02-23"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "MARINE-RESERVE-1_ST"), aes(xmin = ymd("2023-06-22"), xmax = maxdate_plot, ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2022-11-23"), xmax = ymd("2023-02-23"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-06-02"), xmax = ymd("2023-06-27"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-11-25"), xmax = ymd("2024-02-14"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DUSKY_ST"), aes(xmin = ymd("2023-11-25"), xmax = maxdate_plot, ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-10-19"), xmax = ymd("2023-11-09"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   #FPOD died
   geom_rect(data = data.frame(Fiord_recorder = "PRESERVATION_FPOD"), aes(xmin = ymd("2023-03-15"), xmax = ymd("2023-04-28"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_FPOD"), aes(xmin = ymd("2023-05-24"), xmax = ymd("2023-11-09"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "CHARLES_FPOD"), aes(xmin = ymd("2023-10-21"), xmax = ymd("2024-01-25"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)
+  geom_rect(data = data.frame(Fiord_recorder = "CHARLES_FPOD"), aes(xmin = ymd("2023-10-21"), xmax = maxdate_plot, ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)
   
 
 acou_sunlight$layers<-c(
-  #15/30 below everything else
-  #geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2022-02-15"), xmax = ymd("2022-10-07"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="red", alpha = 0.2, inherit.aes = FALSE),
-  #geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2022-11-27"), xmax = ymd("2023-01-02"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="red", alpha = 0.2, inherit.aes = FALSE),
-  #geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-03-14"), xmax = ymd("2023-06-20"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="red", alpha = 0.2, inherit.aes = FALSE),
-  #geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-02-16"), xmax = ymd("2022-07-13"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="red", alpha = 0.2, inherit.aes = FALSE), 
-  #geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-27"), xmax = ymd("2023-09-02"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="red", alpha = 0.2, inherit.aes = FALSE), 
-  #geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-02-21"), xmax = ymd("2022-11-16"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="red", alpha = 0.2, inherit.aes = FALSE), 
-  #geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-04-28"), xmax = ymd("2023-10-19"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="red", alpha = 0.2, inherit.aes = FALSE),
-  #handbrowse
-  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-04-30"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="blue", alpha = 0.2, inherit.aes = FALSE), 
-  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-06-21"), xmax = ymd("2023-10-19"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="blue", alpha = 0.2, inherit.aes = FALSE),
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-04-30"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="goldenrod", alpha = 0.4, inherit.aes = FALSE), 
+  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-06-21"), xmax = ymd("2023-10-19"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="goldenrod", alpha = 0.4, inherit.aes = FALSE),
   acou_sunlight$layers)
 
 ggplot2::ggsave(paste0("./figures/Supplement/acou_sunlight.png"), acou_sunlight, device = "png", dpi = 700, width = 300, height = 200, units = 'mm')
@@ -248,11 +252,11 @@ sun_times_wDS <-
   suncalc::getSunlightTimes(
     date = seq(
       as.Date(min(acou_time$DATE)),
-      as.Date(max(acou_time$DATE)),
+      maxdate_plot,
       by = "day"
     ),
-    lat = deploy$Latitude[1],
-    lon = deploy$Longitude[1],
+    lat = -45.725,
+    lon = 166.525,
     tz = "Pacific/Auckland",
     keep = c("dawn", "nauticalDawn", "dusk", "nauticalDusk", "sunrise", "sunset")
   )
@@ -278,7 +282,7 @@ sig_effort_sunlight<-ggplot(sig_times%>%mutate(time = hms(format(as.POSIXct(DATE
   theme_bw()+
   ylab("Time (HH:MM:SS)")+
   #the not plotted warning includes Jan/Feb 2022 effort before acoustic monitoring
-  scale_x_date("Date",date_breaks="4 months", date_labels="%b-%Y", limits = c(min(acou_time$DATE),max(acou_time$DATE)))
+  scale_x_date("Date",date_breaks="4 months", date_labels="%b-%Y", limits = c(min(acou_time$DATE),maxdate_plot))
 
 survey_2022%>%filter(TIME < "05:00:00")
 
