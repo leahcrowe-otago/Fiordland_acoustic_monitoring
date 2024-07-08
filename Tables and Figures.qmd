@@ -7,7 +7,7 @@ editor: visual
 # Tables
 
 ```{r echo=FALSE, results='asis'}
-    options(knitr.kable.NA = '-')
+    options(knitr.kable.NA = '--')
 
 ```
 
@@ -17,14 +17,41 @@ Table 1. Deployment and dolphin detection details for all sites included in this
 library(dplyr);library(knitr);library(kableExtra);
 
 daily_det_rate_table = readRDS(file = './tables/daily_det_rate_table.rds')
+table1.occ = readRDS(file = './tables/table1.occ.rds')
+
+psi<-table1.occ[1:8,]
 
 daily_det_rate_table%>%
+  left_join(psi, by = "Fiord_recorder")%>%
   kableExtra::kable(booktabs = T, align = "c") %>%
+  add_header_above(c(" " = 4, "Occupancy ($\\psi$)" = 3)) %>% 
   kableExtra::kable_classic(full_width = F, html_font = "Cambria")
 
 ```
 
 \newpage
+Table 2. Detection probability ($\pi$) for the different approach scenarios. ST = SoundTrap, FPOD = FPOD deployment, and BOTH = dual deployment of a SoundTrap and an FPOD at the same location.
+
+```{r, beta_pi, echo = F, message = F, warning = F, out.width = '100%'}
+
+beta<-table1.occ[9:12,]
+pi<-table1.occ[13:16,]
+row.names(pi) <- NULL
+
+pi%>%
+  arrange(-Median)%>%
+  mutate(Device = c("ST", "FPOD", "ST", "ST"),
+    Sampling = c("15/30min", "Continuous", "Continuous", "15/30min"),
+    Detector = c("Manual browsing", "FPOD software", "FinFinder", "FinFinder"))%>%
+  dplyr::rename("Parameter" = "Fiord_recorder")%>%
+  dplyr::select(Parameter, Device, Sampling, Detector, everything())%>%
+  kableExtra::kable(booktabs = T, align = "c") %>%
+  add_header_above(c(" " = 4, "Scenario detection probability ($\\pi$)" = 3)) %>% 
+  kableExtra::kable_classic(full_width = F, html_font = "Cambria")
+
+```
+\newpage
+Table 3.
 
 ```{r sig_tab, echo = F, warning = F, message=F}
 library(readxl)
@@ -78,7 +105,7 @@ Fig. 2. Example bottlenose dolphin mid-frequency (1--24 kHz), frequency-modulate
 knitr::include_graphics('./figures/allcet_v1.png')
 ```
 
-Fig. 3. Daily detected acoustic presence (green vertical lines) at each deployment site organized from north to south. Quality is only relevant to FPOD detections. The red shaded areas are times when the SoundTrap (ST) was duty sampled to record 15 out of every 30 min, and the blue shaded areas are times when the ST data were manually browsed due to sensitivity issues with the hydrophone (this looks purple if both were true). The grey shaded areas are times when the recorder was not active. The vertical red lines indicate when the gear was deployed/retrieved.
+Fig. 3. Daily detected acoustic presence (green vertical lines) at each deployment site organized from north to south. The blue shaded areas are times when the SoundTrap (ST) was duty sampled to record 15 out of every 30 min, and the orange shaded areas are duty sampled ST data that were manually browsed due to sensitivity issues with the hydrophone. The grey shaded areas are times when the recorder was not active. The vertical red lines indicate when the gear was deployed/retrieved.
 
 ```{r, acou_sunglight, echo = F, out.width = '100%'}
 knitr::include_graphics('./figures/Supplement/acou_sunlight.png')
@@ -95,9 +122,9 @@ Fig. 5. The running proportion of daily detected acoustic presence of dolphins i
 \newpage
 
 ```{r, sig_acou, echo = F, out.width = '100%'}
-knitr::include_graphics('./figures/sig_acou.png')
+knitr::include_graphics('./figures/sig_acou2.png')
 ```
-Fig. 6. Days when visual survey effort occurred in the outer Tamatea-Dusky Sound during the period all three acoustic devices were active simultaneously (20-Feb-2022 through 30-Nov-2022). The lines reflect the survey effort that day, the shaded areas around the lines are times with bottlenose dolphins, the red dots represent the deployment sites and the yellow dots indicate acoustic presence of dolphins at the site on the survey day.
+Fig. 6. Days when visual survey effort occurred in the Tamatea-Dusky Complex during the period when all three acoustic devices were active simultaneously (20-Feb-2022 through 30-Nov-2022). The lines reflect the survey effort that day with the shaded areas around the lines indicating times with bottlenose dolphins. The red dots represent the deployment sites where the yellow and black dots indicate day-time and night-time acoustic presence, respectively, of dolphins at the site.
 
 ```{r, Fig_venn_ID, echo = F, out.width = '100%'}
 #source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/sightings_venn.R', local = TRUE, verbose = F)$value
