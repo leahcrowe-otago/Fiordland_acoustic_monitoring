@@ -72,7 +72,7 @@ model<-function(){
     yp[i]~dbern(pp[i]*zp[i]) 
   }
   
-  ## then dusky/anchor site
+  ## then dusky/anchor site  
   for (i in 1:s[6]){
     za[i]~dbern(psi[6])
     
@@ -87,8 +87,9 @@ model<-function(){
     logit(pm1[i]) <- beta[2]
     ym1[i]~dbern(pm1[i]*zm1[i]) 
   }
-  
-  ## then dusky MR-2
+
+  ## then dusky MR-2  
+
   for (i in 1:s[8]){
     zm2[i]~dbern(psi[8])
     
@@ -102,9 +103,10 @@ model<-function(){
   }
   
   for(j in 1:4){
-    beta[j] ~ dt(0,1,3) 
+    beta[j] ~ dt(0,1,3) #Matt's
+    #beta[j] ~ dt(0,1,1) #cauchy
     #beta[j] ~ dnorm(0,1) #tau = precision = 1/sigma^2
-    }
+  }
   
   #transformed parameters
   logit(pie[1])<-beta[1] # probability of FPOD
@@ -129,14 +131,14 @@ mcmc.data<-list(s=s,
                 analysisd = dat$dagg$analysis,
                 analysisch = dat$chalky$analysis,
                 K=K) #samp=samp, define input variables for model
-mcmc.params<-c("psi","pie","beta")
+mcmc.params<-c("psi","beta","pie")
 mcmc.inits<-function() {list(zd=rep(1,s[1]), zn = rep(1,s[2]), zc = rep(1,s[3]), zch = rep(1,s[4]), 
                              zp = rep(1,s[5]), za = rep(1,s[6]), zm1 = rep(1,s[7]), zm2 = rep(1,s[8]))} # z has to be 0 or 1
 
 write.model(model,con="FAM_model.txt") # write JAGS model code to file
 FAM_samp <- jags(data=mcmc.data, inits = mcmc.inits, parameters.to.save=mcmc.params,
-                  n.iter=11000, model.file="FAM_model.txt",n.chains=3,parallel=TRUE,verbose=TRUE,n.burnin = 1000)
-saveRDS(FAM_samp, file = paste0("./data/FAM_samp_dt_1k_",Sys.Date(),".rds"))
+                  n.iter=55000, model.file="FAM_model.txt",n.chains=3,parallel=TRUE,verbose=TRUE,n.burnin = 5000)
+saveRDS(FAM_samp, file = paste0("./data/FAM_samp_dt1_50k_",Sys.Date(),".rds"))
 
 FAM_samp$samples
 FAM_samp$summary
@@ -145,11 +147,35 @@ bayesplot::mcmc_trace(FAM_samp$samples)
 bayesplot::mcmc_dens(FAM_samp$samples)
 
 #matt's way below
-m1 = jags.model("FAM_model.txt", data = mcmc.data, inits = mcmc.inits, n.chains = 3, n.adapt = 1000)
-out1 = coda.samples(model = m1, variable.names = mcmc.params, n.iter = 10000)
-FAM1_df = as_draws_df(FAM_samp)
+m1 = jags.model("FAM_model.txt", data = mcmc.data, inits = mcmc.inits, n.chains = 3, n.adapt = 5000)
+out1 = coda.samples(model = m1, variable.names = mcmc.params, n.iter = 50000)
+out1_df = as_draws_df(out1)
 
 mcmc_trace(out1_df)
 summary(out1_df)
 
 mean(out1_df$`beta[1]` > out1_df$`beta[2]`)
+
+## Read results ----
+read.date = "2024-07-08"
+occ.results<-readRDS(paste0("./data/FAM_samp_dt3_50k_",read.date,".rds"))
+
+summ.occ<-as.data.frame(summary(occ.results))
+
+max(summ.occ$Rhat)
+min(summ.occ$n.eff)
+
+table1.occ<-summ.occ%>%
+  mutate(Median = `50%`,
+         Fiord_recorder = c("DAGG_BOTH", "NANCY_ST", "CHARLES_FPOD",
+                   "CHALKY_ST", "PRESERVATION_FPOD","DUSKY_ST",
+                   "MARINE-RESERVE-1_ST", "MARINE-RESERVE-2_ST",
+                   "$\\beta_0$","$\\beta_1$","$\\beta_2$","$\\beta_3$",
+                   "$\\pi_0$","$\\pi_1$","$\\pi_2$","$\\pi_3$","deviance"))%>%
+  dplyr::select(Median,`2.5%CI` = `2.5%`,`97.5%CI` = `97.5%`, Fiord_recorder)
+
+table1.occ$Median<-round(table1.occ$Median, 2)
+table1.occ$`2.5%CI`<-round(table1.occ$`2.5%CI`, 2)
+table1.occ$`97.5%CI`<-round(table1.occ$`97.5%CI`, 2)
+
+saveRDS(table1.occ, file = paste0("./tables/table1.occ.rds"))
