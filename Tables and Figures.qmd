@@ -1,6 +1,14 @@
 ---
 title: "Crowe et al. acoustic monitoring"
-format: pdf
+csl: "biological-conservation.csl"
+format:
+  pdf:
+    amsmath: true
+    mathspec: true
+    fig-pos: 'H'
+header-includes:
+- \usepackage{booktabs}
+- \usepackage{siunitx}
 editor: visual
 ---
 
@@ -21,16 +29,19 @@ table1.occ = readRDS(file = './tables/table1.occ.rds')
 
 psi<-table1.occ[1:8,]
 
-daily_det_rate_table%>%
-  left_join(psi, by = "Fiord_recorder")%>%
-  kableExtra::kable(booktabs = T, align = "c") %>%
-  add_header_above(c(" " = 4, "Occupancy ($\\psi$)" = 3)) %>% 
-  kableExtra::kable_classic(full_width = F, html_font = "Cambria")
+#do wrangling in its own statement before kabling
+table1<-daily_det_rate_table%>%
+  left_join(psi, by = "Fiord_recorder")
+
+table1%>%
+  kableExtra::kable(booktabs = T, align = "c", escape = F) %>%
+  column_spec(2:4, width = "2cm")%>% 
+  add_header_above(c(" " = 4, "Occupancy ($\\psi$)" = 3), escape = FALSE)
 
 ```
 
 \newpage
-Table 2. Detection probability ($\pi$) for the different approach scenarios. ST = SoundTrap, FPOD = FPOD deployment, and BOTH = dual deployment of a SoundTrap and an FPOD at the same location.
+Table 2. Detection probability for the different approach scenarios ($\pi$). ST = SoundTrap, FPOD = FPOD deployment.
 
 ```{r, beta_pi, echo = F, message = F, warning = F, out.width = '100%'}
 
@@ -38,16 +49,16 @@ beta<-table1.occ[9:12,]
 pi<-table1.occ[13:16,]
 row.names(pi) <- NULL
 
-pi%>%
+pi_table<-pi%>%
   arrange(-Median)%>%
   mutate(Device = c("ST", "FPOD", "ST", "ST"),
     Sampling = c("15/30min", "Continuous", "Continuous", "15/30min"),
-    Detector = c("Manual browsing", "FPOD software", "FinFinder", "FinFinder"))%>%
+    Detector = c("Manual browsing", "KERNO-F classifier", "FinFinder", "FinFinder"))%>%
   dplyr::rename("Parameter" = "Fiord_recorder")%>%
-  dplyr::select(Parameter, Device, Sampling, Detector, everything())%>%
-  kableExtra::kable(booktabs = T, align = "c") %>%
-  add_header_above(c(" " = 4, "Scenario detection probability ($\\pi$)" = 3)) %>% 
-  kableExtra::kable_classic(full_width = F, html_font = "Cambria")
+  dplyr::select(Parameter, Device, Sampling, Detector, everything())
+
+pi_table%>%
+  kableExtra::kable(booktabs = T, align = "c", escape = F) 
 
 ```
 \newpage
