@@ -104,7 +104,6 @@ model<-function(){
   
   for(j in 1:4){
     beta[j] ~ dt(0,1,3) #Matt's
-    #beta[j] ~ dt(0,1,1) #cauchy
     #beta[j] ~ dnorm(0,1) #tau = precision = 1/sigma^2
   }
   
@@ -135,10 +134,10 @@ mcmc.params<-c("psi","beta","pie")
 mcmc.inits<-function() {list(zd=rep(1,s[1]), zn = rep(1,s[2]), zc = rep(1,s[3]), zch = rep(1,s[4]), 
                              zp = rep(1,s[5]), za = rep(1,s[6]), zm1 = rep(1,s[7]), zm2 = rep(1,s[8]))} # z has to be 0 or 1
 
-write.model(model,con="FAM_model.txt") # write JAGS model code to file
+R2OpenBUGS::write.model(model,con="FAM_model.txt") # write JAGS model code to file
 FAM_samp <- jags(data=mcmc.data, inits = mcmc.inits, parameters.to.save=mcmc.params,
                   n.iter=55000, model.file="FAM_model.txt",n.chains=3,parallel=TRUE,verbose=TRUE,n.burnin = 5000)
-saveRDS(FAM_samp, file = paste0("./data/FAM_samp_dt1_50k_",Sys.Date(),".rds"))
+saveRDS(FAM_samp, file = paste0("./data/FAM_samp_dt3_50k_",Sys.Date(),".rds"))
 
 FAM_samp$samples
 FAM_samp$summary
@@ -146,8 +145,8 @@ FAM_samp$summary
 bayesplot::mcmc_trace(FAM_samp$samples)
 bayesplot::mcmc_dens(FAM_samp$samples)
 
-#matt's way below
-m1 = jags.model("FAM_model.txt", data = mcmc.data, inits = mcmc.inits, n.chains = 3, n.adapt = 5000)
+## matt's way below ----
+m1 = rjags::jags.model("FAM_model.txt", data = mcmc.data, inits = mcmc.inits, n.chains = 3, n.adapt = 5000)
 out1 = coda.samples(model = m1, variable.names = mcmc.params, n.iter = 50000)
 out1_df = as_draws_df(out1)
 
@@ -158,6 +157,8 @@ mean(out1_df$`beta[1]` > out1_df$`beta[2]`)
 
 ## Read results ----
 read.date = "2024-07-08"
+read.date = "2024-07-29"
+read.date = "2024-08-04"
 occ.results<-readRDS(paste0("./data/FAM_samp_dt3_50k_",read.date,".rds"))
 
 summ.occ<-as.data.frame(summary(occ.results))
@@ -179,3 +180,26 @@ table1.occ$`2.5%CI`<-round(table1.occ$`2.5%CI`, 2)
 table1.occ$`97.5%CI`<-round(table1.occ$`97.5%CI`, 2)
 
 saveRDS(table1.occ, file = paste0("./tables/table1.occ.rds"))
+
+## beta priors ----
+#normal beta prior pi rank is the same
+read.date = "2024-07-09"
+read.date = "2024-07-29"
+read.date = "2024-08-04"
+occ.results_norm<-readRDS(paste0("./data/FAM_samp_n_50k_",read.date,".rds"))
+summary(occ.results_norm)
+summ.occ_norm<-as.data.frame(summary(occ.results_norm))
+supp.occ_norm<-summ.occ_norm%>%
+  mutate(Median = `50%`,
+         Fiord_recorder = c("$\\psi_{DAGG}$", "$\\psi_{NANCY}$", "$\\psi_{CHARLES}$",
+                            "$\\psi_{CHALKY}$", "$\\psi_{PRESERVATION}$","$\\psi_{DUSKY}$",
+                            "$\\psi_{MARINE-RESERVE-1}$", "$\\psi_{MARINE-RESERVE-2}$",
+                            "$\\beta_0$","$\\beta_1$","$\\beta_2$","$\\beta_3$",
+                            "$\\pi_0$","$\\pi_1$","$\\pi_2$","$\\pi_3$","deviance"))%>%
+  dplyr::select(Median,`2.5%CI` = `2.5%`,`97.5%CI` = `97.5%`, Fiord_recorder, Rhat, n.eff)
+
+supp.occ_norm$Median<-round(supp.occ_norm$Median, 2)
+supp.occ_norm$`2.5%CI`<-round(supp.occ_norm$`2.5%CI`, 2)
+supp.occ_norm$`97.5%CI`<-round(supp.occ_norm$`97.5%CI`, 2)
+
+saveRDS(supp.occ_norm, file = paste0("./tables/supp.occ_norm.rds"))
