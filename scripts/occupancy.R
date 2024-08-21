@@ -171,13 +171,13 @@ table1.occ<-summ.occ%>%
          Fiord_recorder = c("DAGG_BOTH", "NANCY_ST", "CHARLES_FPOD",
                    "CHALKY_ST", "PRESERVATION_FPOD","DUSKY_ST",
                    "MARINE-RESERVE-1_ST", "MARINE-RESERVE-2_ST",
-                   "$\\beta_0$","$\\beta_1$","$\\beta_2$","$\\beta_3$",
-                   "$\\pi_0$","$\\pi_1$","$\\pi_2$","$\\pi_3$","deviance"))%>%
+                   "$\\beta_1$","$\\beta_2$","$\\beta_3$","$\\beta_4$",
+                   "$\\pi_1$","$\\pi_2$","$\\pi_3$","$\\pi_4$","deviance"))%>%
   dplyr::select(Median,`2.5%CI` = `2.5%`,`97.5%CI` = `97.5%`, Fiord_recorder)
 
-table1.occ$Median<-round(table1.occ$Median, 2)
-table1.occ$`2.5%CI`<-round(table1.occ$`2.5%CI`, 2)
-table1.occ$`97.5%CI`<-round(table1.occ$`97.5%CI`, 2)
+table1.occ$Median<-round(table1.occ$Median, 3)
+table1.occ$`2.5%CI`<-round(table1.occ$`2.5%CI`, 3)
+table1.occ$`97.5%CI`<-round(table1.occ$`97.5%CI`, 3)
 
 saveRDS(table1.occ, file = paste0("./tables/table1.occ.rds"))
 
@@ -194,8 +194,8 @@ supp.occ_norm<-summ.occ_norm%>%
          Fiord_recorder = c("$\\psi_{DAGG}$", "$\\psi_{NANCY}$", "$\\psi_{CHARLES}$",
                             "$\\psi_{CHALKY}$", "$\\psi_{PRESERVATION}$","$\\psi_{DUSKY}$",
                             "$\\psi_{MARINE-RESERVE-1}$", "$\\psi_{MARINE-RESERVE-2}$",
-                            "$\\beta_0$","$\\beta_1$","$\\beta_2$","$\\beta_3$",
-                            "$\\pi_0$","$\\pi_1$","$\\pi_2$","$\\pi_3$","deviance"))%>%
+                            "$\\beta_1$","$\\beta_2$","$\\beta_3$","$\\beta_4$",
+                            "$\\pi_1$","$\\pi_2$","$\\pi_3$","$\\pi_4$","deviance"))%>%
   dplyr::select(Median,`2.5%CI` = `2.5%`,`97.5%CI` = `97.5%`, Fiord_recorder, Rhat, n.eff)
 
 supp.occ_norm$Median<-round(supp.occ_norm$Median, 2)
