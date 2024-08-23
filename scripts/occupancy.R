@@ -2,7 +2,8 @@
 
 library(RPresence)
 library(jagsUI)
-library(R2OpenBUGS)
+library(rjags)
+#library(R2OpenBUGS)
 library(dplyr)
 
 dat = vector("list",8)
@@ -134,23 +135,25 @@ mcmc.params<-c("psi","beta","pie")
 mcmc.inits<-function() {list(zd=rep(1,s[1]), zn = rep(1,s[2]), zc = rep(1,s[3]), zch = rep(1,s[4]), 
                              zp = rep(1,s[5]), za = rep(1,s[6]), zm1 = rep(1,s[7]), zm2 = rep(1,s[8]))} # z has to be 0 or 1
 
-R2OpenBUGS::write.model(model,con="FAM_model.txt") # write JAGS model code to file
-FAM_samp <- jags(data=mcmc.data, inits = mcmc.inits, parameters.to.save=mcmc.params,
-                  n.iter=55000, model.file="FAM_model.txt",n.chains=3,parallel=TRUE,verbose=TRUE,n.burnin = 5000)
-saveRDS(FAM_samp, file = paste0("./data/FAM_samp_dt3_50k_",Sys.Date(),".rds"))
-
-FAM_samp$samples
-FAM_samp$summary
-
-bayesplot::mcmc_trace(FAM_samp$samples)
-bayesplot::mcmc_dens(FAM_samp$samples)
+#R2OpenBUGS::write.model(model,con="FAM_model.txt") # write JAGS model code to file
+# FAM_samp <- jags(data=mcmc.data, inits = mcmc.inits, parameters.to.save=mcmc.params,
+#                   n.iter=55000, model.file="FAM_model.txt",n.chains=3,parallel=TRUE,verbose=TRUE,n.burnin = 5000)
+# saveRDS(FAM_samp, file = paste0("./data/FAM_samp_dt3_50k_",Sys.Date(),".rds"))
+# 
+# FAM_samp$samples
+# FAM_samp$summary
+# 
+# bayesplot::mcmc_trace(FAM_samp$samples)
+# bayesplot::mcmc_dens(FAM_samp$samples)
 
 ## matt's way below ----
 m1 = rjags::jags.model("FAM_model.txt", data = mcmc.data, inits = mcmc.inits, n.chains = 3, n.adapt = 5000)
 out1 = coda.samples(model = m1, variable.names = mcmc.params, n.iter = 50000)
-out1_df = as_draws_df(out1)
+out1_df = posterior::as_draws_df(out1)
 
-mcmc_trace(out1_df)
+saveRDS(out1_df, file = paste0("./data/FAM_samp_dt3_50k_",Sys.Date(),".rds"))
+
+bayesplot::mcmc_trace(out1_df)
 summary(out1_df)
 
 mean(out1_df$`beta[1]` > out1_df$`beta[2]`)
@@ -159,6 +162,8 @@ mean(out1_df$`beta[1]` > out1_df$`beta[2]`)
 read.date = "2024-07-08"
 read.date = "2024-07-29"
 read.date = "2024-08-04"
+read.date = "2024-08-23"
+
 occ.results<-readRDS(paste0("./data/FAM_samp_dt3_50k_",read.date,".rds"))
 
 summ.occ<-as.data.frame(summary(occ.results))
