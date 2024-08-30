@@ -17,7 +17,7 @@ sub(".*/", "",unique_list_effopp)
 
 DOCsig<-lapply(unique_list_sigopp, function(x) read_sf(paste0("./data/DOC_opp_sig_db/MMSD_sightings/sightings_shapefiles/",stringr::str_extract(x, "^.*(?=/MMSD)")), layer = sub(".*/", "",x)))
 DOCeff<-lapply(unique_list_effopp, function(x) read_sf(paste0("./data/DOC_opp_sig_db/MMSD_tracks/",stringr::str_extract(x, "^.*(?=/MMSD)")), layer = sub(".*/", "",x)))
-warnings()
+#warnings()
 #mapview::mapview(DOCeff[[3]])
 
 #sigs#
@@ -28,8 +28,8 @@ DOCsig[[4]]<-st_transform(DOCsig[[4]], CRS("+proj=longlat +datum=WGS84 +no_defs"
 DOCsig[[1]]%>%mutate(coords.x1 = sf::st_coordinates(.)[,2],
        coords.x2 = sf::st_coordinates(.)[,1])
 
-DOCsig_df<-lapply(DOCsig, function(x) as.data.frame(x%>%mutate(coords.x1 = sf::st_coordinates(.)[,2],
-                                                               coords.x2 = sf::st_coordinates(.)[,1])))
+DOCsig_df<-lapply(DOCsig, function(x) as.data.frame(x%>%mutate(coords.x2 = sf::st_coordinates(.)[,2],
+                                                               coords.x1 = sf::st_coordinates(.)[,1])))
 
 names(DOCsig_df[[3]])
 
@@ -174,7 +174,8 @@ bodo_opp<-ggplot()+
   xlab("Longitude")+
   ylab("Latitude")+
   geom_point(bodo, mapping = aes(x = coords.x1, y = coords.x2, color = SPECIES), alpha = 0.8, size = 2)+
-  coord_sf(xlim = c(166.3,168), ylim = c(-44.5,-46.25), crs = 4269)+
+  #coord_sf(xlim = c(166.3,168), ylim = c(-44.5,-46.25), crs = 4269)+
+  coord_sf(xlim = c(166.3,167.5), ylim = c(-45,-46.25), crs = 4269)+
   theme(legend.position = "right",
         legend.title = element_blank())
 
@@ -186,7 +187,8 @@ delph_opp<-ggplot()+
   xlab("Longitude")+
   ylab("Latitude")+
   geom_point(delph, mapping = aes(x = coords.x1, y = coords.x2, color = SPECIES), alpha = 0.9, size = 2)+
-  coord_sf(xlim = c(166.3,168), ylim = c(-44.5,-46.25), crs = 4269)+
+  #coord_sf(xlim = c(166.3,168), ylim = c(-44.5,-46.25), crs = 4269)+
+  coord_sf(xlim = c(166.3,167.5), ylim = c(-45,-46.25), crs = 4269)+
   scale_color_viridis_d()+
   theme(legend.position = "right",
         legend.title = element_blank())
@@ -199,19 +201,14 @@ other_opp<-ggplot()+
   xlab("Longitude")+
   ylab("Latitude")+
   geom_point(other, mapping = aes(x = coords.x1, y = coords.x2, color = SPECIES), alpha = 0.9, size = 2)+
-  coord_sf(xlim = c(166.3,168), ylim = c(-44.5,-46.25), crs = 4269)+
+  #coord_sf(xlim = c(166.3,168), ylim = c(-44.5,-46.25), crs = 4269)+
+  coord_sf(xlim = c(166.3,167.5), ylim = c(-45,-46.25), crs = 4269)+
   scale_color_manual(values = c("#88CCEE", "#332288", "#999933","pink"))+
   theme(legend.position = "right",
         legend.title = element_blank())
 
-opp_maps<-ggpubr::ggarrange(bodo_opp, delph_opp, other_opp, labels = "auto", align = "v")
-
-ggsave("./figures/Supplement/opp_maps.png", opp_maps, dpi = 700, width = 200, height = 800, units = 'mm')
-
 ####
 # effort ----
-
-mapview::mapview()
 
 all_eff1<-fortify(all_eff)
 
@@ -223,7 +220,9 @@ all_eff_sfc<-sf::st_as_sfc(all_eff)
 
 #all_eff@data$ID<-1:99
 
-all_eff1_sf<-all_eff%>% 
+all_eff1_sf<-all_eff%>%
+  bind_rows(data.frame(LONGITUDE = 166,LATITUDE = -46.5, DATE = "2024-08-09", EVENT = "99"))%>% #hack the bounding box by adding these bounds
+  bind_rows(data.frame(LONGITUDE = 168,LATITUDE = -44.5, DATE = "2024-08-10", EVENT = "999"))%>% # allows to actually get wanted grid
   sf::st_as_sf(coords = c("long", "lat"), crs = 4326, wkt = "group")
 
 rownames(all_eff1_sf)
@@ -232,7 +231,7 @@ all_eff1_line<-all_eff1_sf %>%
   dplyr::summarize() %>%
   sf::st_cast("LINESTRING") 
 
-grid <- sf::st_make_grid(sf::st_bbox(all_eff1_sf), cellsize = 0.016667/2, square = T) %>%
+grid <- sf::st_make_grid(sf::st_bbox(all_eff1_sf), cellsize = 1/240, square = T) %>%
   sf::st_as_sf() %>%
   dplyr::mutate(cell = 1:nrow(.))
 
@@ -272,32 +271,38 @@ grid_total<-grid_accum%>%
 
 grid_count_raster<-grid%>%
   left_join(grid_total, by = "cell")%>%
-  #filter(!(cell %in% c(33558,33559,33560,33753,33754)))
-  filter(!(cell %in% c(8437,8438)))
+  filter(!is.na(total_n1))%>%
+  filter(!(cell %in% c(33558,33559,33560,33753,33754)))
 
-#saveRDS(grid_count_raster,'./figures/Supplement/grid_0.25.RDS')
-#saveRDS(grid_count_raster,'./figures/Supplement/grid_0.5.RDS')
+saveRDS(grid_count_raster,'./figures/Supplement/grid_0.5.RDS')
+#saveRDS(grid_count_raster,'./figures/Supplement/grid_1.RDS')
 
-grid_count_raster<-readRDS('./figures/Supplement/grid_0.25.RDS')%>%
+#grid_count_raster<-readRDS('./figures/Supplement/grid_1.RDS')%>%
+grid_count_raster<-readRDS('./figures/Supplement/grid_0.5.RDS')%>%
   mutate(total_n1_40 = case_when(
     total_n1 >= 40 ~ 40,
     TRUE ~ total_n1
     
   ))
 
+#mapview::mapview(grid_count_raster)
+
 effort_opp_map<-ggplot()+
   geom_sf(data = NZ_coast, alpha = 0.9, fill = "antiquewhite3", lwd = 0.1)+
   theme_bw()+
   xlab("Longitude")+
   ylab("Latitude")+
-  geom_sf(grid_count_raster%>%filter(!is.na(total_n1_40)), mapping = aes(fill = total_n1_40, color = after_scale(fill)))+
-  #geom_sf(all_eff1_line$geometry[7:20], mapping = aes())
-  #geom_point(all_eff, mapping = aes(x=long,y=lat, group=group))+
-  #geom_bin_2d(binwidth = c(0.016667*0.5, 0.016667*0.5))+
-  #geom_bin_2d(data = fortify(all_eff), mapping = aes(x=long,y=lat), binwidth = c(0.016667*1, 0.016667*1))+#1x1 min grids
+  geom_sf(grid_count_raster, mapping = aes(fill = total_n1_40, color = after_scale(fill)))+
   coord_sf(xlim = c(166.3,167.5), ylim = c(-45,-46.25), crs = 4269)+
   scale_fill_continuous(type = "viridis")+
   theme(legend.position = "right",
         legend.title = element_blank())
 
-ggsave("./figures/Supplement/effort_opp_maps_0.25min.png", effort_opp_map, dpi = 700, width = 200, height = 200, units = 'mm')
+effort_opp_map
+
+#ggsave("./figures/Supplement/effort_opp_maps_1min.png", effort_opp_map, dpi = 700, width = 200, height = 200, units = 'mm')
+ggsave("./figures/Supplement/effort_opp_maps_0.5min.png", effort_opp_map, dpi = 700, width = 200, height = 200, units = 'mm')
+
+opp_maps<-ggpubr::ggarrange(bodo_opp, delph_opp, other_opp, effort_opp_map, labels = "auto", align = "v")
+
+ggsave("./figures/Supplement/opp_maps.png", opp_maps, dpi = 700, width = 350, height = 350, units = 'mm')
