@@ -3,7 +3,7 @@ library(readxl);library(odbc);library(dplyr);library(DBI);library(lubridate);lib
 shapefile_path<-"C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_reporting/shapefiles"
 NZ_coast<-sf::read_sf(shapefile_path, layer = "nz-coastlines-and-islands-polygons-topo-1500k")
 
-data_log<-read_excel('./data/Data_Log_12Apr2024.xlsx')
+data_log<-read_excel('~/git-otago/Fiordland_acoustic_monitoring/data/Data_Log_06Aug2024.xlsx')
 
 nf_dates<-data_log%>%
   filter(Fiord == "CHARLES" | Fiord == "NANCY" | Fiord == "DAGG" | Fiord == "CHALKY" | Fiord == "PRESERVATION")%>%
@@ -16,22 +16,31 @@ nf_dates<-data_log%>%
 source('~/git-otago/Fiordland_reporting/scripts/connect to MySQL.R', local = TRUE)$value
 
 survey_data<-dbReadTable(con, "survey_data_calfyear")
-survey_data$DATE<-ymd(survey_data$DATE)
 
 survey_data[survey_data == '']<-NA
+survey_data$DATE<-ymd(survey_data$DATE)
 
 survey_2022<-survey_data%>%
   filter(year(DATE) >= 2022 & year(DATE) <= 2023)%>%
-  filter(LONGITUDE < 168.5)
+  filter(LONGITUDE < 168.5)%>%
+  mutate(date_event = paste0(DATE,"_",EVENT))
+
+Nov11<-survey_data%>%
+  filter(DATE == "2022-11-11")
 
 species = c("Bottlenose","Common","Dusky","Hector's")
+
+nancy_2023<-data.frame(DATEIME = "2023-11-21 00:00:00", DATE = ymd("2023-11-21"), TIME = "00:00:00", LATITUDE = -45.17361,
+                         LONGITUDE = 167.10012, EVENT_TYPE = "Encounter START", ENCOUNTER_TYPE = "Initial", SIGHTING_NUMBER = "1",
+                         SPECIES = "Bottlenose", CALFYEAR = 2024, YEAR = 2023, SEASON = "SPRING", Year_season = '2023_SPRING')
 
 sig_2022<-survey_2022%>%
   filter(ENCOUNTER_TYPE != "")%>%
   tidyr::fill(SIGHTING_NUMBER, SPECIES)%>%
   filter(SPECIES %in% species)%>%
-  mutate(Year_season = paste0(YEAR,"_",SEASON))
-
+  mutate(Year_season = paste0(YEAR,"_",SEASON))%>%
+  bind_rows(nancy_2023)
+  
 sig_2022$Year_season<-factor(sig_2022$Year_season, levels = c("2022_SUMMER","2022_AUTUMN","2022_WINTER","2022_SPRING","2023_SUMMER","2023_AUTUMN","2023_WINTER","2023_SPRING"))
 
 nf_tracks<-nf_dates%>%
@@ -39,39 +48,108 @@ nf_tracks<-nf_dates%>%
   filter(!is.na(SEASON))%>%
   mutate(Year_season = paste0(YEAR,"_",SEASON))
 
-# hex_map<-ggplot(survey_2022, aes(x = LONGITUDE, y = LATITUDE, fill = factor(DATE)))+
-#   geom_hex(fill = after_stat(count))
-#   stat_summary_2d(aes(fill = after_stat(group)))
-#   #stat_summary_hex(fun = function(z) count(unique(z)), binwidth = c(0.016667/2, 0.016667/2))+
-#   coord_sf(crs = 4269)+
-#   theme_bw()+
-#   #theme(legend.position = "none")+
-#   scale_fill_viridis_c()
+#library(sp)
 
-#nice hex map but heat is from number of points
-hex_map<-ggplot(survey_2022, aes(x = LONGITUDE, y = LATITUDE))+
-  #0.5 x 0.5 min grids
-  geom_hex(binwidth = c(0.016667/2, 0.016667/2))+
-  coord_sf(crs = 4269)+
+survey_ded<-survey_2022%>%
+  bind_rows(data.frame(LONGITUDE = 166,LATITUDE = -46.5, DATE = ymd("2024-08-09"), EVENT = "99"))%>% #hack the bounding box by adding these bounds
+  bind_rows(data.frame(LONGITUDE = 168,LATITUDE = -44.5, DATE = ymd("2024-08-10"), EVENT = "999")) # allows to actually get wanted grid
+
+
+coordinates(survey_ded)<-~LONGITUDE+LATITUDE
+#mapview::mapview(survey_ded)
+crs(survey_ded)<-"+proj=longlat +datum=WGS84 +no_defs"
+sf_split<-split(survey_ded, survey_ded$date_event)
+sf_points<-lapply(sf_split, function(x) sf::st_as_sf(x, crs = 4326))
+x_linestring<-lapply(sf_points, function(x) sf::st_combine(x) %>% st_cast("LINESTRING"))
+length(x_linestring)
+
+grid_l <- sf::st_make_grid(sf::st_bbox(survey_ded), cellsize = 1/240, square = T) %>% #0.5x0.5 min grid
+  sf::st_as_sf() %>%
+  dplyr::mutate(cell = 1:nrow(.))
+#mapview::mapview(grid_l)
+
+grid_accum_ded<-NULL
+
+for(i in 1:length(x_linestring)){
+
+  intersection<-sf::st_intersection(grid_l, x_linestring[[i]])
+  
+  # grid_lines <- sf::st_cast(intersection, "LINESTRING") %>% 
+  #   st_cast("LINESTRING")
+  
+  grid_count_ded<-intersection %>% 
+    st_drop_geometry() %>% # no longer relevant...
+    group_by(cell) %>% 
+    tally() %>% 
+    mutate(n1 = 1)
+  
+  print(head(grid_count_ded))
+  
+  grid_accum_ded<-grid_accum_ded%>%
+    bind_rows(grid_count_ded)
+  
+  print(nrow(grid_accum_ded))
+  
+}
+
+  grid_total_ded<-grid_accum_ded%>%
+  group_by(cell)%>%
+  mutate(total_n1 = sum(n1),
+         total = sum(n))%>%
+  distinct(cell, total_n1)%>%
+  ungroup()
+
+grid_count_raster_ded<-grid_l%>%
+  left_join(grid_total_ded, by = "cell")%>%
+  filter(!is.na(total_n1))
+
+#saveRDS(grid_count_raster_ded,'./figures/Supplement/ded_grid_1.RDS')
+saveRDS(grid_count_raster_ded,'./figures/Supplement/ded_grid_0.5.RDS')
+
+#grid_count_raster_ded<-readRDS('./figures/Supplement/ded_grid_1.RDS')%>%
+grid_count_raster_ded<-readRDS('./figures/Supplement/ded_grid_0.5.RDS')%>%  
+  mutate(total_n1_40 = case_when(
+    total_n1 >= 40 ~ 40,
+    TRUE ~ total_n1))
+
+date_07<-survey_2022%>%filter(SEASON == "WINTER" & YEAR == 2022 & EVENT == 1)%>%
+  arrange(DATETIME, PLATFORM)
+
+effort_ded_map<-ggplot()+
+  geom_sf(data = NZ_coast, alpha = 0.9, fill = "antiquewhite3", lwd = 0.1)+
   theme_bw()+
-  theme(legend.position = "none")+
-  scale_fill_viridis_c()
+  xlab("Longitude")+
+  ylab("Latitude")+
+  geom_sf(grid_count_raster_ded, mapping = aes(fill = total_n1_40, color = after_scale(fill)))+
+  #geom_path(survey_2022%>%filter(SEASON == "SPRING"), mapping = aes(x=LONGITUDE,y=LATITUDE, group=date_event, color = EVENT))+
+  #geom_bin_2d(data = fortify(all_eff), mapping = aes(x=long,y=lat), binwidth = c(0.016667*1, 0.016667*1))+#1x1 min grids
+  coord_sf(xlim = c(166.3,167.5), ylim = c(-45,-46.25), crs = 4269)+
+  #coord_sf(xlim = c(166.4,167.2), ylim = c(-45.5,-45.9), crs = 4269)+
+  scale_fill_continuous(type = "viridis")+
+  theme(legend.position = "right",
+        legend.title = element_blank())
 
-ggsave("./figures/hex_map.svg", hex_map, dpi = 700, height = 6, width = 4, units = 'in')
+effort_ded_map
+#ggsave("./figures/Supplement/effort_ded_map_1min.png", effort_ded_map, dpi = 700, width = 200, height = 200, units = 'mm')
+ggsave("./figures/Supplement/effort_ded_map_0.5min.png", effort_ded_map, dpi = 700, width = 200, height = 200, units = 'mm')
+
+
+####
 
 date_color<-viridis::viridis(length(unique(nf_tracks$Year_season)), alpha = 1, begin = 0, end = 1, direction = 1, option = "D")
 names(date_color) <- unique(nf_tracks$Year_season)
 date_color_scale <- scale_colour_manual(name = "Date", values = date_color)
-
+  
 nf_effort_base<-ggplot()+
   geom_sf(data = NZ_coast, alpha = 0.9, fill = "antiquewhite3", lwd = 0.1)+
-  geom_path(nf_tracks, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,EVENT), color = Year_season), size = 0.3)+
+  geom_path(nf_tracks, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,EVENT), color = Year_season), linewidth = 0.3)+
   theme_bw()+
   #labs(color = "Year_Season")+
   geom_path(data = sig_2022, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,EVENT,SIGHTING_NUMBER), color = Year_season), size = 1)+
   geom_point(data = sig_2022%>%filter(SPECIES %in% species & EVENT_TYPE == "Encounter START"), mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,EVENT,SIGHTING_NUMBER), shape = SPECIES), size = 3.3)+
   geom_point(data = sig_2022%>%filter(SPECIES %in% species & EVENT_TYPE == "Encounter START"), mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,EVENT,SIGHTING_NUMBER), fill = Year_season, shape = SPECIES, color = Year_season), size = 3)+
-  scale_shape_manual(values = c(21:24))
+  scale_shape_manual(values = c(21:24))+
+  coord_sf(xlim = c(166.3,167.5), ylim = c(-45,-46.25), crs = 4269)
 
 #Charles & Nancy
 north<-nf_effort_base+
@@ -85,9 +163,13 @@ middle<-nf_effort_base+
 south<-nf_effort_base+
   coord_sf(crs = 4269, xlim = c(166.4,166.91), ylim = c(-45.88,-46.2))
 
-ggpubr::ggarrange(north, middle, south, common.legend = TRUE, labels = "auto", ncol = 1, legend = "right")
+nms<-ggpubr::ggarrange(north, middle, south, common.legend = TRUE, labels = "auto", ncol = 1, legend = "right")
 
-ggplot2::ggsave(paste0("./figures/Supplement/nf_effort.png"), device = "png", dpi = 700, width = 200, height = 400, units = 'mm')
+ggplot2::ggsave(paste0("./figures/Supplement/nf_effort.png"), nms, device = "png", dpi = 700, width = 200, height = 300, units = 'mm')
+
+nms_eff<-ggpubr::ggarrange(nms, effort_ded_map, ncol = 2, labels = c("","d"))
+
+ggplot2::ggsave(paste0("./figures/Supplement/nf_effort_ded.png"), nms_eff, device = "png", dpi = 700, width = 300, height = 200, units = 'mm')
 
 ### Taumoana ----
 
@@ -106,7 +188,7 @@ survey_plot<-surv_dates%>%
   mutate(year_mo = format(parse_date_time(as.character(DATE), "ymd"), "%Y_%m"))%>%
   left_join(survey_2022, by = 'DATE')
 
-species = c("Bottlenose","Common","Dusky","Hector's")
+species = c("Bottlenose","Common","Dusky")
 
 sig_plot<-survey_plot%>%
   filter(ENCOUNTER_TYPE != "")%>%
@@ -188,6 +270,9 @@ sun_times_woDS <-
     keep = c("dawn", "nauticalDawn", "dusk", "nauticalDusk", "sunrise", "sunset")
   )
 
+sun_times_woDS<-sun_times_woDS%>%
+  mutate(date = as.Date(dawn))
+
 tidy_sun_times_woDS <-sun_times_woDS %>%
   select(-lat, -lon) %>%
   tidyr::pivot_longer(-date, names_to = "event", values_to = "time") %>%
@@ -208,7 +293,7 @@ acou_sunlight<-ggplot(acou_time)+
   #geom_point(aes(x = DATE, y = TIME, color = as.factor(season)))+
   geom_point(aes(x = DATE, y = TIME), size = 0.5)+
   scale_y_time()+
-  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","MARINE-RESERVE-1_ST","MARINE-RESERVE-2_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 3)+
+  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","MARINE-RESERVE-1_ST","MARINE-RESERVE-2_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 2)+
   #facet_wrap(~factor(Fiord, levels = c("CHARLES","NANCY","DAGG","MARINE-RESERVE-1","MARINE-RESERVE-2","DUSKY","CHALKY","PRESERVATION")), ncol = 2)+
   theme_bw()+
   ylab("Time (HH:MM:SS)")+
@@ -244,7 +329,7 @@ acou_sunlight$layers<-c(
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-06-21"), xmax = ymd("2023-10-19"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="goldenrod", alpha = 0.4, inherit.aes = FALSE),
   acou_sunlight$layers)
 
-ggplot2::ggsave(paste0("./figures/Supplement/acou_sunlight.png"), acou_sunlight, device = "png", dpi = 700, width = 300, height = 200, units = 'mm')
+ggplot2::ggsave(paste0("./figures/acou_sunlight.png"), acou_sunlight, device = "png", dpi = 700, width = 150, height = 300, units = 'mm')
 
 ## survey with daylight -----
 
@@ -260,6 +345,9 @@ sun_times_wDS <-
     tz = "Pacific/Auckland",
     keep = c("dawn", "nauticalDawn", "dusk", "nauticalDusk", "sunrise", "sunset")
   )
+
+sun_times_wDS<-sun_times_wDS%>%
+  mutate(date = as.Date(dawn))
 
 tidy_sun_times_wDS <-
   sun_times_wDS %>%
@@ -297,22 +385,16 @@ sun$date<-ymd(sun$date)
 
 head(acou_time)
 
-acou_dusky<-acou_time%>%
-  filter(Fiord == "DUSKY" | grepl("MAR",Fiord))%>%
-  left_join(deploy%>%filter(grepl("_01", Deployment_number))%>%dplyr::select(-Date), by = c("Fiord_recorder","Fiord"))%>%
-  left_join(sun, by = c("DATE" = "date"))%>%
-  filter(Datetime > dawn & Datetime < dusk)%>%
-  inner_join(surv_dates, by = c("DATE"))%>%
-  arrange(DATE)
+
 
 sig_acou<-ggplot()+
   geom_sf(data = NZ_coast, alpha = 0.9, fill = "antiquewhite3", lwd = 0.1)+
   geom_path(survey_plot, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,EVENT), color = year_mo))+
   geom_path(sig_plot, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,SIGHTING_NUMBER), color = year_mo), linewidth = 3, alpha = 0.4)+
   coord_sf(xlim = c(166.45, 166.6), ylim = c(-45.8, -45.67))+
-  geom_point(deploy%>%filter(grepl("_01", Deployment_number)), mapping = aes(x = Longitude, y = Latitude), color = "red", size = 2)+
-  geom_point(acoustic_dusky, mapping = aes(x = Longitude, y = Latitude), color = "black", size = 1.5)+
-  geom_point(acou_dusky, mapping = aes(x = Longitude, y = Latitude), color = "yellow", size = 1)+
+  geom_point(deploy%>%filter(grepl("_01", Deployment_number)), mapping = aes(x = Longitude, y = Latitude), color = "red", size = 2, shape = 15)+
+  geom_point(acoustic_dusky, mapping = aes(x = Longitude, y = Latitude), color = "midnightblue", size = 1.5, shape = 15)+
+  geom_point(acou_dusky, mapping = aes(x = Longitude, y = Latitude), color = "yellow", size = 1, shape = 15)+
   theme_bw()+
   facet_wrap(~DATE)+
   theme(legend.position = "inside", legend.position.inside =  c(.9, .05))+
@@ -320,4 +402,32 @@ sig_acou<-ggplot()+
   scale_y_continuous(breaks = seq(-45.7,-45.8, by = -0.05))+
   scale_x_continuous(breaks = seq(166.5,166.6, by = 0.05))
 
-ggplot2::ggsave(paste0("./figures/Supplement/sig_acou2.png"), sig_acou, device = "png", dpi = 700, width = 200, height = 200, units = 'mm')
+ggplot2::ggsave(paste0("./figures/sig_acou2.png"), sig_acou, device = "png", dpi = 700, width = 200, height = 200, units = 'mm')
+
+###
+
+diel<-acou_time%>%
+  #filter(Fiord == "DUSKY" | grepl("MAR",Fiord))%>%
+  #left_join(deploy%>%filter(grepl("_01", Deployment_number))%>%dplyr::select(-Date), by = c("Fiord_recorder","Fiord"))%>%
+  left_join(sun, by = c("DATE" = "date"))%>%
+  mutate(tod = case_when( #time of day
+    ymd_hms(Datetime) < ymd_hms(dawn) | ymd_hms(Datetime) > ymd_hms(dusk) ~ "Night",
+    ymd_hms(Datetime) > ymd_hms(dawn) | ymd_hms(Datetime) < ymd_hms(dusk) ~ "Day",
+    TRUE ~ "Night"
+  ),
+  Hour = hour(TIME))%>%
+  distinct(DATE, Fiord_recorder, tod, Hour)
+
+diel_plot<-ggplot(diel, aes(x = Hour, fill = tod))+
+  geom_histogram(stat = "count", position = "dodge", binwidth = 1, color = "black", alpha = 0.6)+
+  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","MARINE-RESERVE-1_ST","MARINE-RESERVE-2_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), scales = "free", ncol = 2)+
+  theme_bw()+
+  scale_fill_manual(values = c("yellow", "midnightblue"))+
+  theme(legend.title = element_blank(),
+        legend.position = "inside", legend.position.inside =  c(.75, .1))+
+  ylab("Number of unique days")
+
+ggplot2::ggsave(paste0("./figures/diel_hist.png"), diel_plot, device = "png", dpi = 700, width = 150, height = 300, units = 'mm')
+
+diel_ab<-ggpubr::ggarrange(acou_sunlight,diel_plot, labels = "auto")
+ggplot2::ggsave(paste0("./figures/diel_ab.png"), diel_ab, device = "png", dpi = 700, width = 300, height = 300, units = 'mm')
