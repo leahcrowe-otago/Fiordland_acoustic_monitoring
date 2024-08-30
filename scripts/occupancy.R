@@ -104,8 +104,8 @@ model<-function(){
   }
   
   for(j in 1:4){
-    beta[j] ~ dt(0,1,3) #Matt's
-    #beta[j] ~ dnorm(0,1) #tau = precision = 1/sigma^2
+    #beta[j] ~ dt(0,1,3) #Matt's
+    beta[j] ~ dnorm(0,1) #tau = precision = 1/sigma^2
   }
   
   #transformed parameters
@@ -151,7 +151,8 @@ m1 = rjags::jags.model("FAM_model.txt", data = mcmc.data, inits = mcmc.inits, n.
 out1 = coda.samples(model = m1, variable.names = mcmc.params, n.iter = 50000)
 out1_df = posterior::as_draws_df(out1)
 
-saveRDS(out1_df, file = paste0("./data/FAM_samp_dt3_50k_",Sys.Date(),".rds"))
+#saveRDS(out1_df, file = paste0("./data/FAM_samp_dt3_50k_",Sys.Date(),".rds"))
+#saveRDS(out1_df, file = paste0("./data/FAM_samp_n_50k_",Sys.Date(),".rds"))
 
 bayesplot::mcmc_trace(out1_df)
 summary(out1_df)
@@ -168,17 +169,19 @@ occ.results<-readRDS(paste0("./data/FAM_samp_dt3_50k_",read.date,".rds"))
 
 summ.occ<-as.data.frame(summary(occ.results))
 
-max(summ.occ$Rhat)
-min(summ.occ$n.eff)
+max(summ.occ$rhat)
+min(summ.occ$ess_bulk)
 
 table1.occ<-summ.occ%>%
-  mutate(Median = `50%`,
-         Fiord_recorder = c("DAGG_BOTH", "NANCY_ST", "CHARLES_FPOD",
-                   "CHALKY_ST", "PRESERVATION_FPOD","DUSKY_ST",
-                   "MARINE-RESERVE-1_ST", "MARINE-RESERVE-2_ST",
-                   "$\\beta_1$","$\\beta_2$","$\\beta_3$","$\\beta_4$",
-                   "$\\pi_1$","$\\pi_2$","$\\pi_3$","$\\pi_4$","deviance"))%>%
-  dplyr::select(Median,`2.5%CI` = `2.5%`,`97.5%CI` = `97.5%`, Fiord_recorder)
+  mutate(Median = median,
+         Fiord_recorder = c(
+           "$\\beta_1$","$\\beta_2$","$\\beta_3$","$\\beta_4$",
+           "$\\pi_1$","$\\pi_2$","$\\pi_3$","$\\pi_4$",
+           "DAGG_BOTH", "NANCY_ST", "CHARLES_FPOD",
+              "CHALKY_ST", "PRESERVATION_FPOD","DUSKY_ST",
+              "MARINE-RESERVE-1_ST", "MARINE-RESERVE-2_ST"
+                   ))%>%
+  dplyr::select(Median,`2.5%CI` = q5,`97.5%CI` = q95, Fiord_recorder)
 
 table1.occ$Median<-round(table1.occ$Median, 3)
 table1.occ$`2.5%CI`<-round(table1.occ$`2.5%CI`, 3)
@@ -191,17 +194,20 @@ saveRDS(table1.occ, file = paste0("./tables/table1.occ.rds"))
 read.date = "2024-07-09"
 read.date = "2024-07-29"
 read.date = "2024-08-04"
+read.date = "2024-08-23"
+
 occ.results_norm<-readRDS(paste0("./data/FAM_samp_n_50k_",read.date,".rds"))
 summary(occ.results_norm)
 summ.occ_norm<-as.data.frame(summary(occ.results_norm))
 supp.occ_norm<-summ.occ_norm%>%
-  mutate(Median = `50%`,
-         Fiord_recorder = c("$\\psi_{DAGG}$", "$\\psi_{NANCY}$", "$\\psi_{CHARLES}$",
+  mutate(Median = median,
+         Fiord_recorder = c("$\\beta_1$","$\\beta_2$","$\\beta_3$","$\\beta_4$",
+                            "$\\pi_1$","$\\pi_2$","$\\pi_3$","$\\pi_4$",
+                            "$\\psi_{DAGG}$", "$\\psi_{NANCY}$", "$\\psi_{CHARLES}$",
                             "$\\psi_{CHALKY}$", "$\\psi_{PRESERVATION}$","$\\psi_{DUSKY}$",
-                            "$\\psi_{MARINE-RESERVE-1}$", "$\\psi_{MARINE-RESERVE-2}$",
-                            "$\\beta_1$","$\\beta_2$","$\\beta_3$","$\\beta_4$",
-                            "$\\pi_1$","$\\pi_2$","$\\pi_3$","$\\pi_4$","deviance"))%>%
-  dplyr::select(Median,`2.5%CI` = `2.5%`,`97.5%CI` = `97.5%`, Fiord_recorder, Rhat, n.eff)
+                            "$\\psi_{MARINE-RESERVE-1}$", "$\\psi_{MARINE-RESERVE-2}$"
+                            ))%>%
+  dplyr::select(Median,`2.5%CI` = q5,`97.5%CI` = q95, Fiord_recorder, Rhat = rhat, ESS = ess_bulk)
 
 supp.occ_norm$Median<-round(supp.occ_norm$Median, 2)
 supp.occ_norm$`2.5%CI`<-round(supp.occ_norm$`2.5%CI`, 2)
