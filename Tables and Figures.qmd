@@ -1,15 +1,16 @@
 ---
-title: "Crowe et al. acoustic monitoring"
 csl: "biological-conservation.csl"
 format:
   pdf:
-    amsmath: true
-    mathspec: true
     fig-pos: 'H'
+fontsize: 12pt
+geometry: margin=1in
 header-includes:
-- \usepackage{booktabs}
-- \usepackage{siunitx}
+  - \usepackage[left]{lineno}
+  - \linenumbers
+  - \usepackage{setspace}
 editor: visual
+bibliography: references.bib
 ---
 
 # Tables
@@ -35,12 +36,13 @@ table1<-daily_det_rate_table%>%
 
 table1%>%
   kableExtra::kable(booktabs = T, align = "c", escape = F) %>%
-  column_spec(2:4, width = "2cm")%>% 
-  add_header_above(c(" " = 4, "Occupancy ($\\psi$)" = 3), escape = FALSE)
+  column_spec(2:4, width = "2.2cm")%>% 
+  add_header_above(c(" " = 4, "Occupancy ($\\\\psi$)" = 3), escape = FALSE)
 
 ```
 
 \newpage
+
 Table 2. Detection probability for the different approach scenarios ($\pi$). ST = SoundTrap, FPOD = FPOD deployment.
 
 ```{r, beta_pi, echo = F, message = F, warning = F, out.width = '100%'}
@@ -51,41 +53,45 @@ row.names(pi) <- NULL
 
 pi_table<-pi%>%
   arrange(-Median)%>%
-  mutate(Device = c("ST", "FPOD", "ST", "ST"),
-    Sampling = c("15/30min", "Continuous", "Continuous", "15/30min"),
-    Detector = c("Manual browsing", "KERNO-F classifier", "FinFinder", "FinFinder"))%>%
+  mutate(Device = c("ST", "F-POD", "ST", "ST"),
+    Sampling = c("15/30min", "Cont.", "Cont.", "15/30min"),
+    Detector = c("Manual browsing", "KERNO-F classifier", "Whistle detector", "Whistle detector"))%>%
   dplyr::rename("Parameter" = "Fiord_recorder")%>%
   dplyr::select(Parameter, Device, Sampling, Detector, everything())
 
 pi_table%>%
-  kableExtra::kable(booktabs = T, align = "c", escape = F) 
+  kableExtra::kable(booktabs = T, align = "c", escape = F)
 
 ```
+
 \newpage
-Table 3.
+
+Table 3. Photographed bottlenose dolphin sightings in the neighbouring fiords as well the Doubtful and Dusky pod outside of their namesake fiord complexes reported from opportunistic efforts, dedicated survey, and during efforts to service acoustic monitoring gear. "Acoustic detections" indicate if dolphins were detected acoustically on the same day as the reported sighting if occurring during the acoustic study. $^\mathrm{a}$Henderson et al. 2013, $^\mathrm{b}$Brough et al. 2015.
+
 
 ```{r sig_tab, echo = F, warning = F, message=F}
 library(readxl)
 
 ## sightings table
 
-sigs_nf<-read_excel("./data/SIGHTINGS_NF.xlsx")%>%
+sigs_nf<-read_excel("./data/Photo_NF.xlsx")%>%
   arrange(Year, Date)%>%
-  dplyr::select(-Source, -Notes)
-#head(sigs_nf)
+  mutate(Date = format(Date, "%Y-%b-%d"))%>%
+  dplyr::select(-Source, -Notes, -Photos)%>%
+  dplyr::rename(`Group size` = "Group_size", `Acoustic detections` = "Acoustic_detection")
 
-# color_fiord<-paletteer::paletteer_d("vapoRwave::hotlineBling")[1:length(unique(sigs_nf$Fiord))]
-# 
-# sigs_nf$Fiord<-cell_spec(sigs_nf$Fiord, bold = T, 
-#              color = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(rep("white",6),"black")),
-#              background = factor(sigs_nf$Fiord, c(unique(sigs_nf$Fiord)), c(color_fiord)))
-# 
-# kbl(sigs_nf%>%dplyr::select(-Notes), escape = F, align = "c", "latex") %>%
-#   kable_classic("striped", full_width = F)
+sigs_nf$Fiord[2]<-paste0(sigs_nf$Fiord[2]," \\textsuperscript{a}")
+sigs_nf$Fiord[7]<-paste0(sigs_nf$Fiord[7]," \\textsuperscript{b}")
+# sigs_nf$Fiord[17]<-paste0(sigs_nf$Fiord[17],"\\textsuperscript{c}")
+# sigs_nf$Fiord[25]<-paste0(sigs_nf$Fiord[25],"\\textsuperscript{d}")
+
+#sigs_nf$Fiord[6]<-paste0(sigs_nf$Fiord[6],"\\textsuperscript{d}") #not including henderson citation here as these data should be considered ones pulled from the database, not from the literature
 
 sigs_nf%>%
-  kableExtra::kable(booktabs = T, align = "c") %>%
-  kableExtra::kable_classic(full_width = F, html_font = "Cambria")
+  kableExtra::kable(booktabs = T, align = "c", escape = F, "latex") %>%
+  kableExtra::kable_classic(full_width = F, html_font = "Cambria")%>%
+  column_spec(c(4,8), width = "1.5cm")%>% 
+  kable_styling(font_size = 9, position = "center")
 
 ```
 
@@ -119,23 +125,12 @@ knitr::include_graphics('./figures/allcet_v1.png')
 Fig. 3. Daily detected acoustic presence (green vertical lines) at each deployment site organized from north to south. The blue shaded areas are times when the SoundTrap (ST) was duty sampled to record 15 out of every 30 min, and the orange shaded areas are duty sampled ST data that were manually browsed due to sensitivity issues with the hydrophone. The grey shaded areas are times when the recorder was not active. The vertical red lines indicate when the gear was deployed/retrieved.
 
 ```{r, acou_sunglight, echo = F, out.width = '100%'}
-knitr::include_graphics('./figures/Supplement/acou_sunlight.png')
+knitr::include_graphics('./figures/diel_ab.png')
 ```
 
-Fig. 4. The time of day when dolphin acoustic detections (black dots) occurred at each site and device (either an F-POD or a SoundTrap, 'ST'). The shaded dark blue areas represent the time between dusk and dawn. The dark shade rectangles are times when the device was not actively recording. The lighter blue rectangles are the periods where the acoustic files were browsed manually for daily presence and were not comprehensively analysed. 
-
-```{r, dagg, echo = F, out.width = '100%'}
-knitr::include_graphics('./figures/dagg_plot.png')
-```
-
-Fig. 5. The running proportion of daily detected acoustic presence of dolphins in Te Rā-Dagg Sound when the two different passive acoustic monitoring devices (FPODs and SoundTraps, 'ST') were deployed and active simultaneously at the same location. The red shaded areas are when the ST was duty sampled to record 15 out of every 30 min, and the blue shaded areas are when the ST data were manually browsed due to sensitivity issues with the hydrophone (this looks purple if both are true). The horizontal dotted line marks the overall daily detection rate from the FPOD alone as well as the combined FPOD + ST detection rate over the entire course of the study (see Table 1). The vertical error bars off the FPOD line represent the overall 4% difference in the daily detection rate between the FPOD/FPOD + ST and the ST.
+Fig. 4. Bottlenose dolphin acoustic detections at each site relative to the time of day. a) The timing of acoustic detections over the course of the entire study (black dots) where the dark grey shaded rectangles indicate periods when the device was not actively listening, and the orange rectangles are the periods where the acoustic files were browsed manually for daily presence (if presence was detected, the rest of the day was not normally analysed). b) Count of detection positive hours on a daily scale. In a) and b), the "Night" (blue) refers to the time between dusk and dawn.
 
 \newpage
-
-```{r, sig_acou, echo = F, out.width = '100%'}
-knitr::include_graphics('./figures/sig_acou2.png')
-```
-Fig. 6. Days when visual survey effort occurred in the Tamatea-Dusky Complex during the period when all three acoustic devices were active simultaneously (20-Feb-2022 through 30-Nov-2022). The lines reflect the survey effort that day with the shaded areas around the lines indicating times with bottlenose dolphins. The red dots represent the deployment sites where the yellow and black dots indicate day-time and night-time acoustic presence, respectively, of dolphins at the site.
 
 ```{r, Fig_venn_ID, echo = F, out.width = '100%'}
 #source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/sightings_venn.R', local = TRUE, verbose = F)$value
@@ -143,12 +138,19 @@ Fig. 6. Days when visual survey effort occurred in the Tamatea-Dusky Complex dur
 knitr::include_graphics('./figures/venn.png')
 ```
 
-Fig. 7. Fiords where individuals alive since 2009 from the two Fiordland resident bottlenose dolphin sub-populations have been sighted. 'DOUBTFUL' = Patea-Doubtful complex, 'DUSKY' = Tamatea-Dusky complex, 'NANCY' = Hinenui-Nancy Sound, 'DAGG' = Te Rā-Dagg Sound, 'PRESERVATION' = Rakitimu-Preservation Inlet, and 'BLUFF' refers to the stranding event at Motupōhue-Bluff. a) Individuals from the Doubtful pod ($n$ = 106). b) Individuals from the Dusky pod ($n$ = 178).
+Fig. 5. Fiords where individuals alive since 2009 from the two Fiordland resident bottlenose dolphin sub-populations have been sighted. 'DOUBTFUL' = Patea-Doubtful complex, 'DUSKY' = Tamatea-Dusky complex, 'NANCY' = Hinenui-Nancy Sound, 'DAGG' = Te Rā-Dagg Sound, 'PRESERVATION' = Rakitimu-Preservation Inlet, and 'BLUFF' refers to the stranding event at Motupōhue-Bluff. a) Individuals from the Doubtful pod ($n$ = 106). b) Individuals from the Dusky pod ($n$ = 178).
 
 \newpage
+
 ```{r, Fig_dist, echo = F, out.width='100%'}
 knitr::include_graphics('./figures/Fig4ab.png')
 ```
 
-Fig. 8. The distance as the dolphin swims between two example re-sightings of individuals. a) At location #1 within the Patea-Doubtful complex, 37 individuals from the Doubtful pod were sighted on 2022-May-06 at 09:35 (NZST). At location #2 in Te Rā-Dagg Sound, 40 Doubtful pod individuals were sighted on 2022-May-07 08:59 (NZST). The two locations are 41 km apart, and 27 individuals were sighting in both locations. b) At location #1, a group of 30 Dusky pod individuals were sighted on 2022-Jul-12, including a mother/calf pairs ('Ray'/'Sunshine'). This was the last sighting before they were observed stranded near Motupōhue-Bluff, location #2, on 2022-Sep-15. The two locations are 255 km apart. Note the different color scales for distance between plots a and b.
+Fig. 6. The distance as the dolphin swims between two example re-sightings of individuals. a) At location #1 within the Patea-Doubtful complex, 37 individuals from the Doubtful pod were sighted on 2022-May-06 at 09:35 (NZST). At location #2 in Te Rā-Dagg Sound, 40 Doubtful pod individuals were sighted on 2022-May-07 08:59 (NZST). The two locations are 41 km apart, and 27 individuals were sighting in both locations. b) At location #1, a group of 30 Dusky pod individuals were sighted on 2022-Jul-12, including a mother/calf pairs ('Ray'/'Sunshine'). This was the last sighting before they were observed stranded near Motupōhue-Bluff, location #2, on 2022-Sep-15. The two locations are 255 km apart. Note the different color scales for distance between plots a and b.
+
+```{r, sig_acou, echo = F, out.width = '100%'}
+knitr::include_graphics('./figures/sig_acou2.png')
+```
+
+Fig. 7. Days when visual survey effort occurred in the Tamatea-Dusky Complex during the period when all three acoustic devices were active simultaneously (20-Feb-2022 through 30-Nov-2022). The lines reflect the survey effort that day with the shaded areas around the lines indicating times with bottlenose dolphins. The red dots represent the acoustic deployment sites, and the yellow and black dots indicate day-time and night-time acoustic presence, respectively, of dolphins at the site.
 
