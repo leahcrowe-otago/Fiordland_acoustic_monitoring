@@ -1,6 +1,7 @@
 library(marmap);library(dplyr);library(readxl);library(sf);library(ggrepel)
 
 # deployments ----
+
 deploy<-read_excel("./data/Fiordland deployment locations.xlsx")
 deploy<-deploy%>%
   filter(grepl("_01",Deployment_number))%>%
@@ -19,7 +20,6 @@ fiordland_base <- marmap::getNOAA.bathy(lon1 = 165, lon2 = 169,
                         lat1 = -43.5, lat2 = -47.5, resolution = 0.5, keep = TRUE)
 
 fiordland_base_raster<-marmap::as.raster(fiordland_base)
-#mapview::mapview(fiordland_base_raster)
 
 test_spdf <- as(fiordland_base_raster, "SpatialPixelsDataFrame")
 test_df <- as.data.frame(test_spdf)
@@ -39,7 +39,6 @@ alliso200<-as.data.frame(st_coordinates(alliso200))
 # other shapesfiles ----
 
 NZ_coast<-sf::read_sf(shapefile_path, layer = "nz-coastlines-and-islands-polygons-topo-1500k") #https://data.linz.govt.nz/layer/51560-nz-coastlines-and-islands-polygons-topo-1500k/
-#NZ_coast<-as.data.frame(st_coordinates(NZ_coast))
 
 NZ_lakes<-sf::read_sf(shapefile_path, layer = "nz-lake-polygons-topo-150k") #https://data.linz.govt.nz/layer/50293-nz-lake-polygons-topo-150k/
 big_lakes<-subset(NZ_lakes, !is.na(name_ascii))
@@ -79,8 +78,6 @@ fiord_labels_white<-data.frame(label = c("Taiporoporo-Charles Sound","Hinenui-Na
                                  166.78,166.51,166.6))
 
 # map ----
-
-#fiord_fill = c("Marine Reserve" = "orange")
 
 bathy_FMA<-ggplot()+
   geom_tile(data=test_df, aes(x=x, y=y, fill=`Depth (m)`), alpha=0.8)+
