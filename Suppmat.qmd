@@ -1,30 +1,140 @@
 ---
-title: "Crowe et al. acoustic monitoring - Supplementary"
-format: pdf
+title: "Supplementary"
+csl: "biological-conservation.csl"
+bibliography: references.bib
+format:
+  pdf:
+    fig-pos: 'H'
 editor: visual
+geometry: margin=1in
+header-includes:
+- \usepackage{booktabs}
+- \usepackage{siunitx}
 ---
+
+\vspace{-15ex}
 
 ```{=tex}
 \begin{center}
-
-Leah M. Crowe*$^{\mathrm{a,b}}$, William Rayment$^{\mathrm{a}}$, Jenni A. Stanley$^{\mathrm{c}}$
+\huge
+If these walls could talk: investigating bottlenose dolphin occupancy and range in fiord ecosystems using acoustic and visual approaches
+\end{center}
+```
+```{=tex}
+\begin{center}
+Leah M. Crowe*$^{\mathrm{a,b}}$, Chloe Corne$^{\mathrm{a,c}}$, Stephen M. Dawson$^{\mathrm{a}}$, Matt Pine$^{\mathrm{d}}$, William J. Rayment$^{\mathrm{a}}$, Matthew R. Schofield$^{\mathrm{b}}$, Jenni A. Stanley$^{\mathrm{e}}$
 
 *leah.crowe\@postgrad.otago.ac.nz
 
-$^{a}$Department of Marine Science $^{b}$Department of Mathematics and Statistics
+$^{\mathrm{a}}$Department of Marine Science $^{\mathrm{b}}$Department of Mathematics and Statistics
 
 University of Otago, Dunedin, New Zealand
 
-$^{c}$Coastal Marine Field Station, University of Waikato, Tauranga, New Zealand
+$^{\mathrm{c}}$New Zealand Department of Conservation, Te Anau, New Zealand
+
+$^{\mathrm{d}}$Styles Group Underwater Acoustics, Auckland, New Zealand
+
+$^{\mathrm{e}}$Coastal Marine Field Station, University of Waikato, Tauranga, New Zealand
 \end{center}
+```
+# Additional R packages used \[not complete\]
+
+'cowplot' [@cowplot], 'ggplot' [@ggplot], 'ggpubr' [@ggpubr], 'ggrepel' [@ggrepel], 'lubridate' [@lubridate], 'dplyr' [@dplyr], 'marmap' [@marmap], 'sf' [@sf-2], 'stringr' [@stringr], 'tidyr' [@tidyr], 'readxl' [@readxl], 'viridis' [@viridis]
+
+```{=tex}
+\newpage
+\newgeometry{margin=0.5in}
+```
+# Tables
+
+```{r echo=FALSE, results='asis'}
+    options(knitr.kable.NA = '--')
+
+```
+
+Table S1. Passive acoustic monitoring deployment details. MR = Marine Reserve, FBD = Fiordland Bottlenose Dolphin.
+
+```{r, deployments, echo = F, message = F, warning = F, out.width = '100%'}
+library(dplyr);library(readxl);library(kableExtra)
+
+deploy<-read_excel("./data/Fiordland deployment locations.xlsx")
+
+deploy%>%
+  filter(!grepl("FF01",Deployment_number))%>%
+  mutate(Deployment_number = stringr::str_replace(Deployment_number, "FF02", "MR01"))%>%
+  mutate(Deployment_number = stringr::str_replace(Deployment_number, "FF03", "MR02"))%>%
+  mutate(Deployment_number = stringr::str_replace(Deployment_number, "Anchor", "Dusky"))%>%
+  dplyr::select(PROJECT, Deployment_number, Fiord, Recorder_type, `ST model`, `Sampling rate`, Datetime_deployment_local, Latitude, Longitude, Recorder_stop_local, Datetime_retrieval_local)%>%
+  mutate(
+    Datetime_deployment_local = as.Date(Datetime_deployment_local),
+    Datetime_retrieval_local = as.Date(Datetime_retrieval_local),
+    Recorder_stop_local = as.Date(Recorder_stop_local))%>%
+  arrange(Deployment_number, Recorder_type)%>%
+  dplyr::rename("Project" = "PROJECT", `Deployment ID` = "Deployment_number", `Recorder type` = "Recorder_type", `Deployment date` = "Datetime_deployment_local", `Recorder stop date` = "Recorder_stop_local", `Retrieval date` = "Datetime_retrieval_local", `Lat S` = "Latitude", `Lon E` = "Longitude")%>%
+  kableExtra::kable(booktabs = T, align = "c", escape = F)%>%
+  column_spec(c(4:6), width = "1cm")%>%
+  column_spec(c(7,10,11), width = "1.5cm")%>% 
+  kable_styling(font_size = 7, position = "center")
+
+```
+
+```{=tex}
+\restoregeometry
+\newpage
+```
+Table S2. Model estimates of $\beta$.
+
+```{r, beta_t, echo = F, message = F, warning = F, out.width = '100%'}
+table1.occ = readRDS(file = './tables/table1.occ.rds')
+
+beta<-table1.occ[1:4,]%>%dplyr::select("Parameter" = Fiord_recorder, everything())
+rownames(beta) <- NULL
+
+beta%>%
+  kableExtra::kable(booktabs = T, align = "c", escape = F)
+
+```
+
+Table S3. Model estimates of occupancy at each site ($\psi_h$), regression coefficients ($\beta$), and detection probability of each approach scenario ($\pi$) using a normal prior distribution for $\boldsymbol{\beta}$ ($\boldsymbol{\beta} \sim$ Normal(0,1)).
+
+```{r, beta_norm, echo = F, message = F, warning = F, out.width = '100%'}
+
+supp.occ_norm = readRDS(file = './tables/supp.occ_norm.rds')
+supp.occ_norm<-supp.occ_norm%>%
+  dplyr::select(Fiord_recorder, everything())
+supp.occ_norm<-supp.occ_norm[1:16,]
+row.names(supp.occ_norm) <- NULL
+
+#do wrangling in its own statement before kabling
+
+supp.occ_norm%>%
+  kableExtra::kable(booktabs = T, align = "c", escape = F) 
+
+```
+
+\newpage
+Table S4. Number of opportunistic sightings reported to the New Zealand Department of Conservation from tourism vessels and the public where certainty was either "Positive" or "Possible". Maps of these sightings are provided in Fig. S1.
+
+```{r, opp_sigs, echo = F, message = F, warning = F, out.width = '100%'}
+
+opp_sig_table = readRDS(file = './tables/opp_sig_table.rds')
+
+opp_sig_table%>%
+  kableExtra::kable(booktabs = T, align = "c", escape = F)%>%
+  column_spec(c(1), width = "3cm")%>%
+  kable_styling(font_size = 8, position = "center")
+
+
 ```
 
 # Figures
 
-```{r, S1, echo = F, out.width='95%'}
-knitr::include_graphics(c('./figures/Supplement/FF03_01_common dolphins.png'))
+```{r, S1_opp_sig, echo = F, out.width='95%'}
+
+knitr::include_graphics(c('./figures/Supplement/opp_maps+.png'))
 ```
-Fig. S1. Example of whistles excluded from this study as they are suspected common (*Delphinus delphus*) or dusky (*Lagenorhynchus obscurus*) dolphins. 
+
+Fig. S1. Opportunistic sightings data of delphinid species from vessel platforms traveling in the southern fiords (M/V Southern Winds and M/V Milford Wanderer) between 2008 and 2021 as curated by the New Zealand Department of Conservation including a) bottlenose dolphins, b) common and dusky dolphins, and c) all other sighted species. d) The tracklines provided from these platforms are summarized by the count of the daily presence of each vessel in a 0.5 x 0.5-min raster grid. See Table S3 for details on the number of sightings reported in each year.
 
 ```{r, S2_map, echo = F, out.width='80%'}
 
@@ -33,9 +143,15 @@ Fig. S1. Example of whistles excluded from this study as they are suspected comm
 knitr::include_graphics(c('./figures/Supplement/nf_effort.png'))
 ```
 
-Fig. S2. Effort maps and delphinid sightings that occurred in the neighbouring fiords during dedicated effort that co-occurred with the servicing of acoustic devices between February 2022 and February 2023.
+Fig. S2. Effort maps and delphinid sightings in the neighbouring fiords during dedicated effort that co-occurred with the servicing of acoustic devices between February 2022 and November 2023.
 
+```{r, S3_map, echo = F, out.width='80%'}
 
-# Tables
+#source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/suppmat_map_s2.R', local = TRUE, verbose = F)$value
 
-Table of deployment locations?
+knitr::include_graphics(c('./figures/Supplement/effort_ded_map_0.5min+.png'))
+```
+
+Fig. S3. Map of dedicated trackline effort summarised by the count of distinct days within each 0.5 x 0.5min grid cell.
+
+# References
