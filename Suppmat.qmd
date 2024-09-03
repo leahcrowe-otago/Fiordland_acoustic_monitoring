@@ -37,9 +37,17 @@ $^{\mathrm{d}}$Styles Group Underwater Acoustics, Auckland, New Zealand
 $^{\mathrm{e}}$Coastal Marine Field Station, University of Waikato, Tauranga, New Zealand
 \end{center}
 ```
-# Additional R packages used \[not complete\]
+# 1.1 Further deployment details
+
+Acoustic data in this study included data collected between the start of the study (2022-Feb-15) and the latest date a recorder in a neighbouring fiord was still active (Hinenui-Nancy Sound, 2023-Nov-20). There were periods of no acoustic monitoring due to various reasons (e.g. battery lifespan and inability to access a site to service instruments). The equipment was deployed at the 'Marine Reserve-1' site in late December 2022 was not recovered/is missing. There was an acoustic release failure at the 'Marine Reserve-2', and there was no active recorder between January and the end of June 2023.
+
+# 1.2 Additional R packages used
 
 'cowplot' [@cowplot], 'ggplot' [@ggplot], 'ggpubr' [@ggpubr], 'ggrepel' [@ggrepel], 'lubridate' [@lubridate], 'dplyr' [@dplyr], 'marmap' [@marmap], 'sf' [@sf-2], 'stringr' [@stringr], 'tidyr' [@tidyr], 'readxl' [@readxl], 'viridis' [@viridis]
+
+# 1.3 Details on other dolphins species
+
+During regular survey effort in the Tamatea-Dusky complex, dusky dolphins were sighted near the 'Marine Reserve-2' site in November 2022, yet no whistles were detected by the automated detector or by manual browsing to further investigate vocalizations during this sighting. While dusky dolphins have the ability to whistle, they are considered to be a predominantly non-whistling species in Aotearoa-New Zealand, particularly when they are not in mixed groups with other dolphin species [@au2010]. Conversely, common dolphins are known to share similar echolocation click patterns [@soldevilla2008] and whistle frequency ranges as bottlenose dolphins [i.e @petrella2011; @boisseau2005]. A confounding factor particular to this study is that from the beginning of dedicated photo-identification efforts in the Tamatea-Dusky Sound complex, one common dolphin individual has been consistently associated with the bottlenose dolphin Dusky pod [@currey2008]. Aside from this ingratiated individual, the only common dolphins known to have been within the fiords during this study period was in Te Rā-Dagg Sound on 13 July 2022. Three individuals were sighted over 10 minutes beginning at 13:00 NZST, however, the only acoustic detections at the Te Rā-Dagg Sound site were later that evening from 20:24 NZDT making it difficult to draw an association between the acoustic and visual detections that day. Altogether, it is a reasonable assumption that bottlenose dolphins are the predominant species in the southern fiords.
 
 ```{=tex}
 \newpage
@@ -113,16 +121,41 @@ supp.occ_norm%>%
 ```
 
 \newpage
-Table S4. Number of opportunistic sightings reported to the New Zealand Department of Conservation from tourism vessels and the public where certainty was either "Positive" or "Possible". Maps of these sightings are provided in Fig. S1.
+
+Table S4. Photographed bottlenose dolphin sightings in the neighbouring fiords as well the Doubtful and Dusky pod outside of their namesake fiord complexes reported from opportunistic efforts, dedicated survey, and during efforts to service acoustic monitoring gear. 'Acoustic detections' indicates if dolphins were detected acoustically on the same day as the reported sighting if occurring during the acoustic study ('Y' = detected, 'N' = not detected, 'N/A' = device not active). $^\mathrm{a}$Henderson et al. 2013, $^\mathrm{b}$Brough et al. 2015.
+
+```{r sig_tab, echo = F, warning = F, message=F}
+library(readxl)
+
+## sightings table
+
+sigs_nf<-read_excel("./data/Photo_NF.xlsx")%>%
+  arrange(Year, Date)%>%
+  mutate(Date = format(Date, "%Y-%b-%d"))%>%
+  dplyr::select(-Source, -Notes, -Photos)%>%
+  dplyr::rename(`Group size` = "Group_size", `Acoustic detections` = "Acoustic_detection")
+
+sigs_nf$Fiord[2]<-paste0(sigs_nf$Fiord[2]," \\textsuperscript{a}")
+sigs_nf$Fiord[7]<-paste0(sigs_nf$Fiord[7]," \\textsuperscript{b}")
+
+sigs_nf%>%
+  kableExtra::kable(booktabs = T, align = "c", escape = F, "latex") %>%
+  kableExtra::kable_classic(full_width = F, html_font = "Cambria")%>%
+  column_spec(c(4,8), width = "1.5cm")%>% 
+  kable_styling(font_size = 9, position = "center")
+
+```
 
 ```{r, opp_sigs, echo = F, message = F, warning = F, out.width = '100%'}
 
-opp_sig_table = readRDS(file = './tables/opp_sig_table.rds')
+#Table S5. Number of opportunistic sightings reported to the New Zealand Department of Conservation from tourism vessels and the public where certainty was either "Positive" or "Possible". Maps of these sightings are provided in Fig. S1.
 
-opp_sig_table%>%
-  kableExtra::kable(booktabs = T, align = "c", escape = F)%>%
-  column_spec(c(1), width = "3cm")%>%
-  kable_styling(font_size = 8, position = "center")
+#opp_sig_table = readRDS(file = './tables/opp_sig_table.rds')
+
+#opp_sig_table%>%
+  # kableExtra::kable(booktabs = T, align = "c", escape = F)%>%
+  # column_spec(c(1), width = "3cm")%>%
+  # kable_styling(font_size = 8, position = "center")
 
 
 ```
@@ -134,24 +167,37 @@ opp_sig_table%>%
 knitr::include_graphics(c('./figures/Supplement/opp_maps+.png'))
 ```
 
-Fig. S1. Opportunistic sightings data of delphinid species from vessel platforms traveling in the southern fiords (M/V Southern Winds and M/V Milford Wanderer) between 2008 and 2021 as curated by the New Zealand Department of Conservation including a) bottlenose dolphins, b) common and dusky dolphins, and c) all other sighted species. d) The tracklines provided from these platforms are summarized by the count of the daily presence of each vessel in a 0.5 x 0.5-min raster grid. See Table S3 for details on the number of sightings reported in each year.
+Fig. S1. Opportunistic sightings data of delphinid species from vessel platforms traveling in the southern fiords (M/V Southern Winds and M/V Milford Wanderer) between 2008 and 2021 as curated by the New Zealand Department of Conservation [@docopp] including a) bottlenose dolphins, b) common and dusky dolphins, and c) all other sighted species. d) The tracklines provided from these platforms are summarized by the count of the daily presence of each vessel in a 0.5 x 0.5-min raster grid. See Table S3 for details on the number of sightings reported in each year.
 
-```{r, S2_map, echo = F, out.width='80%'}
+```{r, Fig_example_whistles, echo = F, out.width = '100%'}
+knitr::include_graphics('./figures/FF01_01 example Tt.png')
+```
+
+Fig. S2. Example bottlenose dolphin mid-frequency (1--24 kHz), frequency-modulated sounds which are characteristic components of whistles, contact calls, social calls, and burst-pulses.
+
+```{r, S3_map, echo = F, out.width='100%'}
 
 #source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/suppmat_map_s2.R', local = TRUE, verbose = F)$value
 
-knitr::include_graphics(c('./figures/Supplement/nf_effort.png'))
+knitr::include_graphics(c('./figures/Supplement/nf_effort_ded+.png'))
 ```
 
-Fig. S2. Effort maps and delphinid sightings in the neighbouring fiords during dedicated effort that co-occurred with the servicing of acoustic devices between February 2022 and November 2023.
+Fig. S3. Effort and delphinid sightings in the neighbouring fiords during dedicated effort co-occurring with the servicing of acoustic devices between February 2022 and November 2023 including in a) Taiporoporo-Charles and Hinenui-Nancy Sound, b) Te Rā-Dagg Sound, and c) Taiari-Chalky and Rakituma-Preservation Inlet. d) The count density of dedicated trackline effort summarized by daily vessel presence within a 0.5 x 0.5-min raster grid.
 
-```{r, S3_map, echo = F, out.width='80%'}
+\newpage
 
-#source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/suppmat_map_s2.R', local = TRUE, verbose = F)$value
-
-knitr::include_graphics(c('./figures/Supplement/effort_ded_map_0.5min+.png'))
+```{r, Fig_dist, echo = F, out.width='100%'}
+knitr::include_graphics('./figures/Fig4ab.png')
 ```
 
-Fig. S3. Map of dedicated trackline effort summarised by the count of distinct days within each 0.5 x 0.5min grid cell.
+Fig. S4. The distance as the dolphin swims between two example re-sightings of individuals. a) At location #1 within the Patea-Doubtful complex, 37 Doubtful pod individuals were sighted on 2022-May-06 at 09:35 (NZST). At location #2 in Te Rā-Dagg Sound, 40 Doubtful pod individuals were sighted on 2022-May-07 08:59 (NZST). The two locations are 41 km apart, and 27 individuals were sighting in both locations. b) At location #1, a group of 30 Dusky pod individuals were sighted on 2022-Jul-12, including a mother/calf pair ('Ray'/'Sunshine'). This was the last sighting before they were observed stranded near Motupōhue-Bluff, location #2, on 2022-Sep-15. The two locations are 255 km apart. Note the different color scales between plots a and b.
+
+```{r, sig_acou, echo = F, out.width = '100%'}
+knitr::include_graphics('./figures/sig_acou2.png')
+```
+
+Fig. S5. Days when visual survey effort occurred in the Tamatea-Dusky Complex during the period when all three acoustic devices were active simultaneously (20-Feb-2022 through 30-Nov-2022). The lines reflect the survey effort that day with the shaded areas around the lines indicating times with bottlenose dolphins. The red dots represent the acoustic deployment sites, and the yellow and dark blue dots indicate day and night acoustic presence, respectively, of dolphins at the site.
+
+\newpage
 
 # References
