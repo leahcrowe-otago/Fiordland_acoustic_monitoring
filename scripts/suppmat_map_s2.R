@@ -1,4 +1,4 @@
-library(readxl);library(odbc);library(dplyr);library(DBI);library(lubridate);library(ggplot2)
+library(readxl);library(odbc);library(dplyr);library(DBI);library(lubridate);library(ggplot2);library(sf)
 
 shapefile_path<-"C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_reporting/shapefiles"
 NZ_coast<-sf::read_sf(shapefile_path, layer = "nz-coastlines-and-islands-polygons-topo-1500k")
@@ -48,13 +48,11 @@ nf_tracks<-nf_dates%>%
   filter(!is.na(SEASON))%>%
   mutate(Year_season = paste0(YEAR,"_",SEASON))
 
-#library(sp)
-
 survey_ded<-survey_2022%>%
   bind_rows(data.frame(LONGITUDE = 166,LATITUDE = -46.5, DATE = ymd("2024-08-09"), EVENT = "99"))%>% #hack the bounding box by adding these bounds
   bind_rows(data.frame(LONGITUDE = 168,LATITUDE = -44.5, DATE = ymd("2024-08-10"), EVENT = "999")) # allows to actually get wanted grid
 
-
+library(sp)
 coordinates(survey_ded)<-~LONGITUDE+LATITUDE
 #mapview::mapview(survey_ded)
 crs(survey_ded)<-"+proj=longlat +datum=WGS84 +no_defs"
@@ -201,28 +199,12 @@ sig_plot%>%
 
 acoustic_dusky<-all_Cet%>%
   filter(Fiord == "DUSKY" | grepl("MAR",Fiord))%>%
-  left_join(deploy%>%filter(grepl("_01", Deployment_number))%>%dplyr::select(-Date), by = "Fiord_recorder")%>%
+  left_join(deploy%>%filter(grepl("_01", Deployment_number))%>%dplyr::select(-Date), by = c("Fiord_recorder", "Fiord"))%>%
   inner_join(surv_dates, by = c("Date" = "DATE"))%>%
   dplyr::rename("DATE" = "Date")%>%
   arrange(DATE)
 
 head(acoustic_dusky)
-
-sig_acou<-ggplot()+
-  geom_sf(data = NZ_coast, alpha = 0.9, fill = "antiquewhite3", lwd = 0.1)+
-  geom_path(survey_plot, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,EVENT), color = year_mo))+
-  geom_path(sig_plot, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,SIGHTING_NUMBER), color = year_mo), linewidth = 3, alpha = 0.4)+
-  coord_sf(xlim = c(166.45, 166.6), ylim = c(-45.8, -45.67))+
-  geom_point(deploy%>%filter(grepl("_01", Deployment_number)), mapping = aes(x = Longitude, y = Latitude), color = "red", size = 2)+
-  geom_point(acoustic_dusky, mapping = aes(x = Longitude, y = Latitude), color = "yellow", size = 1)+
-  theme_bw()+
-  facet_wrap(~DATE)+
-  theme(legend.position = "inside", legend.position.inside =  c(.9, .05))+
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
-  scale_y_continuous(breaks = seq(-45.7,-45.8, by = -0.05))+
-  scale_x_continuous(breaks = seq(166.5,166.6, by = 0.05))
-
-ggplot2::ggsave(paste0("./figures/Supplement/sig_acou.png"), sig_acou, device = "png", dpi = 700, width = 200, height = 200, units = 'mm')
 
 ST_time<-ST_dol%>%
   ungroup()%>%
@@ -385,16 +367,26 @@ sun$date<-ymd(sun$date)
 
 head(acou_time)
 
+acou_dusky<-acou_time%>%
+  filter(Fiord == "DUSKY" | grepl("MAR",Fiord))%>%
+  left_join(deploy%>%filter(grepl("_01", Deployment_number))%>%dplyr::select(-Date), by = c("Fiord_recorder","Fiord"))%>%
+  inner_join(surv_dates, by = c("DATE"))%>%
+  left_join(sun, by = c("DATE" = "date"))%>%
+  mutate(tod = case_when( #time of day
+    ymd_hms(Datetime) < ymd_hms(dawn) | ymd_hms(Datetime) > ymd_hms(dusk) ~ "Night",
+    ymd_hms(Datetime) > ymd_hms(dawn) | ymd_hms(Datetime) < ymd_hms(dusk) ~ "Day",
+    TRUE ~ "Night"
+  ))
 
 
-sig_acou<-ggplot()+
+sig_acou2<-ggplot()+
   geom_sf(data = NZ_coast, alpha = 0.9, fill = "antiquewhite3", lwd = 0.1)+
   geom_path(survey_plot, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,EVENT), color = year_mo))+
-  geom_path(sig_plot, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,SIGHTING_NUMBER), color = year_mo), linewidth = 3, alpha = 0.4)+
+  geom_path(sig_plot%>%filter(SPECIES == "Bottlenose"), mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,SIGHTING_NUMBER), color = year_mo), linewidth = 3, alpha = 0.4)+
   coord_sf(xlim = c(166.45, 166.6), ylim = c(-45.8, -45.67))+
   geom_point(deploy%>%filter(grepl("_01", Deployment_number)), mapping = aes(x = Longitude, y = Latitude), color = "red", size = 2, shape = 15)+
-  geom_point(acoustic_dusky, mapping = aes(x = Longitude, y = Latitude), color = "midnightblue", size = 1.5, shape = 15)+
-  geom_point(acou_dusky, mapping = aes(x = Longitude, y = Latitude), color = "yellow", size = 1, shape = 15)+
+  geom_point(acou_dusky%>%filter(tod == "Night"), mapping = aes(x = Longitude, y = Latitude), color = "midnightblue", size = 2, shape = 15)+
+  geom_point(acou_dusky%>%filter(tod == "Day"), mapping = aes(x = Longitude, y = Latitude), color = "yellow", size = 1, shape = 15)+
   theme_bw()+
   facet_wrap(~DATE)+
   theme(legend.position = "inside", legend.position.inside =  c(.9, .05))+
@@ -402,7 +394,7 @@ sig_acou<-ggplot()+
   scale_y_continuous(breaks = seq(-45.7,-45.8, by = -0.05))+
   scale_x_continuous(breaks = seq(166.5,166.6, by = 0.05))
 
-ggplot2::ggsave(paste0("./figures/sig_acou2.png"), sig_acou, device = "png", dpi = 700, width = 200, height = 200, units = 'mm')
+ggplot2::ggsave(paste0("./figures/Supplement/sig_acou2.png"), sig_acou2, device = "png", dpi = 700, width = 200, height = 200, units = 'mm')
 
 ###
 
