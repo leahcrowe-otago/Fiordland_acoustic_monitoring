@@ -39,6 +39,8 @@ all_FPOD_Dol<-all_FPOD%>%
   filter(SpClass == "Dol")%>%
   filter(Quality != '?' & Quality != "L")
 
+hist(all_FPOD_Dol$medianKHz)
+
 all_FPOD_Cet<-all_FPOD_Dol%>%
   group_by(Date, Fiord, Quality)%>%
   mutate(DPD = n())%>% #DPD = detections per day
@@ -113,6 +115,21 @@ all_ST_Cet<-ST_dol%>%
   distinct(Date, Fiord, DPD, SpClass, Quality, Fiord_recorder)%>%
   filter(Quality != '?')
 
+all_ST_Cet%>%
+  filter(Date == "2023-05-23" & Fiord == "DAGG")
+
+ST_dol%>%
+  filter(Species == "")%>%
+  dplyr::select(Species, Dolphin...y.n.)
+
+unique(ST_dol$Species)
+unique(all_ST$Species)
+all_ST%>%
+  filter(Species == "Common")%>%
+  distinct(Date, Deployment_number)%>%
+  mutate(sp = "Common")%>%
+  left_join(ST_dol, by = c("Date", "Deployment_number"))%>%
+  distinct(Date, Deployment_number, sp, Species, Quality)
 
 all_ST%>%
   filter(Dolphin...y.n. == "")
@@ -175,7 +192,7 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_FPOD"), aes(xmin = ymd("2023-05-24"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHARLES_FPOD"), aes(xmin = ymd("2023-10-21"), xmax = maxdate_plot, ymin = 0, ymax = 1), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   #to be analysed
-  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-09-01"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="red", alpha = 0.5, inherit.aes = FALSE)
+  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-09-08"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="red", alpha = 0.5, inherit.aes = FALSE)
 
   
 all_Cet_plot$layers<-c(
@@ -319,7 +336,7 @@ chalky<-all_Cet%>%filter(Fiord == "CHALKY")%>%
   mutate(ST = 1)
 summary(chalky)
 
-chalky_dates<-data.frame(date = as.Date(c(ymd("2022-02-21"):ymd("2022-11-16"),ymd("2023-04-28"):ymd("2023-08-13"))))
+chalky_dates<-data.frame(date = as.Date(c(ymd("2022-02-21"):ymd("2022-11-16"),ymd("2023-04-28"):ymd("2023-09-08"))))
 
 chalky_ch<-chalky_dates%>%left_join(chalky, by = c("date" = "Date"))%>%
   dplyr::select(date, ST)%>%
