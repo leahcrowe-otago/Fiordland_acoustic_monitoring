@@ -52,8 +52,6 @@ all_FPOD_Cet%>%
   distinct(Fiord, Date)%>%
   tally()
 
-
-
 # ST/FinFinder review ----
 
 ST_data_list<-list.files("./data/ST", pattern = "*.txt", full.names = T, recursive = F)
@@ -192,21 +190,21 @@ all_Cet_plot<-all_Cet_plot+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_FPOD"), aes(xmin = ymd("2023-05-24"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHARLES_FPOD"), aes(xmin = ymd("2023-10-21"), xmax = maxdate_plot, ymin = 0, ymax = 1), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   #to be analysed
-  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-09-08"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="red", alpha = 0.5, inherit.aes = FALSE)
+  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-10-01"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="red", alpha = 0.5, inherit.aes = FALSE)
 
   
 all_Cet_plot$layers<-c(
   #15/30 below everything else
-  geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2022-02-15"), xmax = ymd("2022-10-07"), ymin = 0, ymax = 1), fill="blue", alpha = 0.1, inherit.aes = FALSE),
-  geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2022-11-27"), xmax = ymd("2023-01-02"), ymin = 0, ymax = 1), fill="blue", alpha = 0.1, inherit.aes = FALSE),
-  geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-03-14"), xmax = ymd("2023-06-20"), ymin = 0, ymax = 1), fill="blue", alpha = 0.1, inherit.aes = FALSE),
-  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-02-16"), xmax = ymd("2022-07-13"), ymin = 0, ymax = 1), fill="blue", alpha = 0.1, inherit.aes = FALSE), 
-  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-27"), xmax = ymd("2023-09-02"), ymin = 0, ymax = 1), fill="blue", alpha = 0.1, inherit.aes = FALSE), 
-  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-02-21"), xmax = ymd("2022-11-16"), ymin = 0, ymax = 1), fill="blue", alpha = 0.1, inherit.aes = FALSE), 
-  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-04-28"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="blue", alpha = 0.1, inherit.aes = FALSE),
+  geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2022-02-15"), xmax = ymd("2022-10-07"), ymin = 0, ymax = 1), fill="blue", alpha = 0.2, inherit.aes = FALSE),
+  geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2022-11-27"), xmax = ymd("2023-01-02"), ymin = 0, ymax = 1), fill="blue", alpha = 0.2, inherit.aes = FALSE),
+  geom_rect(data = data.frame(Fiord_recorder = "NANCY_ST"), aes(xmin = ymd("2023-03-14"), xmax = ymd("2023-06-20"), ymin = 0, ymax = 1), fill="blue", alpha = 0.2, inherit.aes = FALSE),
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-02-16"), xmax = ymd("2022-07-13"), ymin = 0, ymax = 1), fill="blue", alpha = 0.2, inherit.aes = FALSE), 
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2022-11-27"), xmax = ymd("2023-09-02"), ymin = 0, ymax = 1), fill="blue", alpha = 0.2, inherit.aes = FALSE), 
+  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-02-21"), xmax = ymd("2022-11-16"), ymin = 0, ymax = 1), fill="blue", alpha = 0.2, inherit.aes = FALSE), 
+  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-04-28"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="blue", alpha = 0.2, inherit.aes = FALSE),
   #handbrowse
-  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-04-30"), ymin = 0, ymax = 1), fill="goldenrod", alpha = 0.4, inherit.aes = FALSE), 
-  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-06-21"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="goldenrod", alpha = 0.4, inherit.aes = FALSE),
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-04-30"), ymin = 0, ymax = 1), fill="goldenrod", alpha = 0.6, inherit.aes = FALSE), 
+  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-06-21"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="goldenrod", alpha = 0.6, inherit.aes = FALSE),
   all_Cet_plot$layers)
 
 all_Cet_plot
@@ -269,6 +267,11 @@ daily_det_rate_table<-daily_det_rate%>%
 saveRDS(daily_det_rate_table, file = paste0("./tables/daily_det_rate_table_all.rds"))
 
 #### capture histories ----
+deploy%>%
+  group_by(Fiord)%>%
+  filter(Datetime_deployment_local == min(Datetime_deployment_local) | Recorder_stop_local == max(Recorder_stop_local))%>%
+  dplyr::select(Fiord, Datetime_deployment_local, Recorder_stop_local)%>%
+  arrange(Fiord, Datetime_deployment_local)
 
 #charles
 charles<-all_Cet%>%filter(Fiord == "CHARLES")%>%
@@ -276,7 +279,7 @@ charles<-all_Cet%>%filter(Fiord == "CHARLES")%>%
   distinct(Date, Fiord_recorder)%>%
   mutate(FPOD = 1)
 summary(charles)
-charles_dates<-data.frame(date = as.Date(c(ymd("2022-02-15"):ymd("2023-10-19"))))
+charles_dates<-data.frame(date = as.Date(c(ymd("2022-02-15"):ymd("2023-10-20"))))
 charles_ch<-charles_dates%>%left_join(charles, by = c("date" = "Date"))%>%
   dplyr::select(date, FPOD)
 charles_ch[is.na(charles_ch)] <- 0
@@ -289,9 +292,7 @@ nancy<-all_Cet%>%filter(Fiord == "NANCY")%>%
   distinct(Date, Fiord_recorder)%>%
   mutate(ST = 1)
 summary(nancy)
-
 nancy_dates<-data.frame(date = as.Date(c(ymd("2022-02-15"):ymd("2022-10-06"),ymd("2022-11-28"):ymd("2023-01-01"),ymd("2023-03-15"):ymd("2023-11-19"))))
-
 nancy_ch<-nancy_dates%>%left_join(nancy, by = c("date" = "Date"))%>%
   dplyr::select(date, ST)%>%
   mutate(samp = case_when(
@@ -311,7 +312,6 @@ dagg<-all_Cet%>%filter(Fiord == "DAGG")%>%
   filter(Date < ymd("2023-05-24"))%>%
   mutate(val = 1)%>%
   tidyr::pivot_wider(names_from = Fiord_recorder, values_from = val)
-  
 summary(dagg)
 dagg_dates<-data.frame(date = as.Date(c(ymd("2022-02-16"):ymd("2022-11-13"),ymd("2022-11-28"):ymd("2023-05-24"))))
 dagg_ch<-dagg_dates%>%left_join(dagg, by = c("date" = "Date"))%>%
@@ -327,7 +327,6 @@ dagg_ch<-dagg_dates%>%left_join(dagg, by = c("date" = "Date"))%>%
 dagg_ch[is.na(dagg_ch)] <- 0
 
 saveRDS(dagg_ch, file = paste0("./data/dagg_ch.rds"))
-#####
 
 #chalky
 chalky<-all_Cet%>%filter(Fiord == "CHALKY")%>%
@@ -335,9 +334,7 @@ chalky<-all_Cet%>%filter(Fiord == "CHALKY")%>%
   distinct(Date, Fiord_recorder)%>%
   mutate(ST = 1)
 summary(chalky)
-
-chalky_dates<-data.frame(date = as.Date(c(ymd("2022-02-21"):ymd("2022-11-16"),ymd("2023-04-28"):ymd("2023-09-08"))))
-
+chalky_dates<-data.frame(date = as.Date(c(ymd("2022-02-21"):ymd("2022-11-16"),ymd("2023-04-28"):ymd("2023-09-30"))))
 chalky_ch<-chalky_dates%>%left_join(chalky, by = c("date" = "Date"))%>%
   dplyr::select(date, ST)%>%
   mutate(samp = 1,
@@ -348,33 +345,27 @@ chalky_ch<-chalky_dates%>%left_join(chalky, by = c("date" = "Date"))%>%
 chalky_ch[is.na(chalky_ch)] <- 0
 
 saveRDS(chalky_ch, file = paste0("./data/chalky_ch.rds"))
-#####
+
 #preservation
 pres<-all_Cet%>%filter(Fiord == "PRESERVATION")%>%
   ungroup()%>%
   distinct(Date, Fiord_recorder)%>%
   mutate(FPOD = 1)
 summary(pres)
-
-pres_dates<-data.frame(date = as.Date(c(ymd("2022-02-21"):ymd("2023-03-14"),ymd("2023-04-28"):ymd("2023-11-01"))))
-
+pres_dates<-data.frame(date = as.Date(c(ymd("2022-02-21"):ymd("2023-03-14"),ymd("2023-04-28"):ymd("2023-11-14"))))
 pres_ch<-pres_dates%>%left_join(pres, by = c("date" = "Date"))%>%
   dplyr::select(date, FPOD)
 pres_ch[is.na(pres_ch)] <- 0
 
 saveRDS(pres_ch, file = paste0("./data/pres_ch.rds"))
-##
 
-#####
 #anchor
 dusky<-all_Cet%>%filter(Fiord == "DUSKY")%>%
   ungroup()%>%
   distinct(Date, Fiord_recorder)%>%
   mutate(ST = 1)
 summary(dusky)
-
 dusky_dates<-data.frame(date = as.Date(c(ymd("2022-02-20"):ymd("2022-11-22"),ymd("2023-02-24"):ymd("2023-06-01"),ymd("2023-06-27"):ymd("2023-11-24"))))
-
 dusky_ch<-dusky_dates%>%left_join(dusky, by = c("date" = "Date"))%>%
   dplyr::select(date, ST)%>%
   mutate(samp = 0)
@@ -382,16 +373,13 @@ dusky_ch[is.na(dusky_ch)] <- 0
 
 saveRDS(dusky_ch, file = paste0("./data/dusky_ch.rds"))
 
-####
 #MR-1
 mr1<-all_Cet%>%filter(Fiord == "MARINE-RESERVE-1")%>%
   ungroup()%>%
   distinct(Date, Fiord_recorder)%>%
   mutate(ST = 1)
 summary(mr1)
-
 mr1_dates<-data.frame(date = as.Date(c(ymd("2022-02-19"):ymd("2022-12-28"),ymd("2023-02-24"):ymd("2023-06-21"))))
-
 mr1_ch<-mr1_dates%>%left_join(mr1, by = c("date" = "Date"))%>%
   dplyr::select(date, ST)%>%
   mutate(samp = 0)
@@ -399,16 +387,13 @@ mr1_ch[is.na(mr1_ch)] <- 0
 
 saveRDS(mr1_ch, file = paste0("./data/mr1_ch.rds"))
 
-####
 #MR-2
 mr2<-all_Cet%>%filter(Fiord == "MARINE-RESERVE-2")%>%
   ungroup()%>%
   distinct(Date, Fiord_recorder)%>%
   mutate(ST = 1)
 summary(mr2)
-
 mr2_dates<-data.frame(date = as.Date(c(ymd("2022-02-20"):ymd("2022-12-31"),ymd("2023-06-27"):ymd("2023-11-28"))))
-
 mr2_ch<-mr2_dates%>%left_join(mr2, by = c("date" = "Date"))%>%
   dplyr::select(date, ST)%>%
   mutate(samp = 0)
