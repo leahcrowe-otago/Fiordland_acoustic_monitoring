@@ -7,7 +7,7 @@ library(rjags)
 library(dplyr)
 
 dat = vector("list",8)
-dat[[1]]=readRDS("./data/dagg_ch.rds")
+dat[[1]] = readRDS("./data/dagg_ch.rds")
 dat[[2]] = readRDS("./data/nancy_ch.rds")
 dat[[3]] = readRDS("./data/charles_ch.rds")
 dat[[4]] = readRDS("./data/chalky_ch.rds")
@@ -104,8 +104,8 @@ model<-function(){
   }
   
   for(j in 1:4){
-    #beta[j] ~ dt(0,1,3) #Matt's
-    beta[j] ~ dnorm(0,1) #tau = precision = 1/sigma^2
+    beta[j] ~ dt(0,1,3) #Matt's
+    #beta[j] ~ dnorm(0,1) #tau = precision = 1/sigma^2
   }
   
   #transformed parameters
@@ -164,6 +164,7 @@ read.date = "2024-07-08"
 read.date = "2024-07-29"
 read.date = "2024-08-04"
 read.date = "2024-08-23"
+read.date = "2024-10-07"
 
 occ.results<-readRDS(paste0("./data/FAM_samp_dt3_50k_",read.date,".rds"))
 
@@ -191,11 +192,6 @@ saveRDS(table1.occ, file = paste0("./tables/table1.occ.rds"))
 
 ## beta priors ----
 #normal beta prior pi rank is the same
-read.date = "2024-07-09"
-read.date = "2024-07-29"
-read.date = "2024-08-04"
-read.date = "2024-08-23"
-
 occ.results_norm<-readRDS(paste0("./data/FAM_samp_n_50k_",read.date,".rds"))
 summary(occ.results_norm)
 summ.occ_norm<-as.data.frame(summary(occ.results_norm))
@@ -214,3 +210,58 @@ supp.occ_norm$`2.5%CI`<-round(supp.occ_norm$`2.5%CI`, 2)
 supp.occ_norm$`97.5%CI`<-round(supp.occ_norm$`97.5%CI`, 2)
 
 saveRDS(supp.occ_norm, file = paste0("./tables/supp.occ_norm.rds"))
+
+## dagg stats ----
+
+dagg<-dat[[1]]
+dagg_samp<-dagg
+
+dagg_samp<-dagg%>%
+  filter(analysis == 1)
+
+nrow(dagg_samp)
+
+dagg_samp%>%
+  filter((DAGG_FPOD == 1 & DAGG_ST == 1) | (DAGG_FPOD == 0 & DAGG_ST == 0))%>%
+  distinct(date)
+
+dagg_samp%>%
+  filter(!((DAGG_FPOD == 1 & DAGG_ST == 1) | (DAGG_FPOD == 0 & DAGG_ST == 0)))%>%
+  arrange(DAGG_FPOD)
+
+### between the two marine reserve sites
+mr1<-dat[[7]]
+mr2<-dat[[8]]
+
+mr<-mr1%>%
+  dplyr::rename('ST_MR1' = 'ST', 'ST_samp' = 'samp')%>%
+  left_join(mr2, by = 'date')
+
+nrow(mr)
+
+mr%>%
+  filter(ST_MR1 != ST)
+
+mr%>%
+  filter(ST == 1 & ST_MR1 == 1)
+
+mr%>%
+  filter(ST == 0 & ST_MR1 == 1)
+
+mr%>%
+  filter(ST == 1 & ST_MR1 == 0)
+
+## FPOD detections on performance dates
+
+dagg<-dat[[1]]
+
+head(dagg)
+
+dagg%>%
+  filter(date %in% c('2022-04-21', '2022-04-26', '2022-05-10', '2022-06-11', '2022-07-30', '2022-08-10', '2022-11-29','2023-01-04', '2023-05-13', '2023-05-23'))
+
+fpod_perf<-all_FPOD_Dol%>%
+  filter(Fiord == "DAGG")%>%
+  filter(Date %in% c('2022-04-21', '2022-04-26', '2022-05-10', '2022-06-11', '2022-07-30', '2022-08-10', '2022-11-29','2023-01-04', '2023-05-13', '2023-05-23'))
+  
+write.csv(fpod_perf,"./fpod_performance_dates.csv", row.names = F, na = "")
