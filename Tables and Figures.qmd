@@ -25,7 +25,7 @@ Table 1. Deployment and dolphin detection details for all sites included in this
 ```{r, det_table, echo = F, message = F, warning = F, out.width = '100%'}
 library(dplyr);library(knitr);library(kableExtra);
 
-daily_det_rate_table = readRDS(file = './tables/daily_det_rate_table.rds')
+daily_det_rate_table = readRDS(file = './tables/daily_det_rate_table_all.rds')
 table1.occ = readRDS(file = './tables/table1.occ.rds')
 
 psi<-table1.occ[9:16,]
@@ -87,16 +87,16 @@ knitr::include_graphics(c('./figures/bathy_FMA_white.png'))
 Fig. 1. Map of the study area including the acoustic deployment sites within the Te Moana o Atawhenua-Fiordland Marine Area (all areas of the sea inshore of the teal line including all fiords). The neighbouring fiords are labeled in white text, all FMA marine reserves are in orange, and the two acoustic recorder sites within the Taumoana-Five Fingers Marine Reserve are numbered where 1. is the Cormorant Cove site, and 2. is the peninsula site. The 50m (grey) and 200m (dark blue) isobaths are provided on both maps. Ōtepoti-Dunedin is marked as the yellow dot on the small inset map.
 
 ```{r, Fig_daily_detections, echo = F, out.width = '100%'}
-knitr::include_graphics('./figures/allcet_v1.png')
+knitr::include_graphics('./figures/allcet_v1_all.png')
 ```
 
-Fig. 2. Daily detected acoustic presence (green vertical lines) at each deployment site organized from north to south. The blue shaded areas are times when the SoundTrap (ST) was duty sampled to record 15 out of every 30 min, and the orange shaded areas are duty sampled ST data that were manually browsed due to sensitivity issues with the hydrophone. The grey shaded areas are times when the recorder was not active. The vertical red lines indicate when the gear was deployed/retrieved.
+Fig. 2. Daily detected acoustic presence of bottlenose dolphins (green vertical lines) at each deployment site organized from north to south. The acoustic detection approach ($\pi$) is $\pi_1$ for all F-POD collected data, and for SoundTrap (ST) collected data, $\pi_2$ is continuously recorded data processed with the whistle detector, $\pi_3$ (blue) is duty sampled data (15/30 min) processed with the whistle detector, and $\pi_4$ (orange) is duty sampled data (15/30 min) that were manually browsed for all calls types due to sensitivity issues with the hydrophone. The grey shaded areas are times when the recorder was not active. The vertical red lines indicate when the gear was deployed/retrieved.
 
 ```{r, acou_sunglight, echo = F, out.width = '100%'}
 knitr::include_graphics('./figures/diel_ab.png')
 ```
 
-Fig. 3. Bottlenose dolphin acoustic detections at each site relative to the time of day where "Night" (blue) refers to the time between dusk and dawn. a) The timing of acoustic detections over the course of the entire study (black dots). The dark grey shaded rectangles indicate periods when the device was not actively listening, and the orange rectangles are the periods where the acoustic files were browsed manually for daily presence. b) Count of detection positive hours on a daily scale. 
+Fig. 3. Bottlenose dolphin acoustic detections at each site relative to the time of day where "Night" (blue) refers to the time between dusk and dawn. a) The timing of acoustic detections over the course of the entire study (black dots). The dark grey shaded rectangles indicate periods when the device was not actively listening, and the orange rectangles are the periods where the acoustic files were browsed manually for daily presence. b) Count of each hour when bottlenose dolphins were detected over the course of the entire deployment at each site. 
 \newpage
 
 ```{r, Fig_venn_ID, echo = F, out.width = '100%'}
