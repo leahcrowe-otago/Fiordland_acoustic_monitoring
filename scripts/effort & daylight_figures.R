@@ -51,9 +51,9 @@ survey_ded<-survey_2022%>%
 
 # dedicated effort map during acoustic monitoring project ----
 library(sp)
-coordinates(survey_ded)<-~LONGITUDE+LATITUDE
 
-crs(survey_ded)<-"+proj=longlat +datum=WGS84 +no_defs"
+coordinates(survey_ded)<-~LONGITUDE+LATITUDE
+raster::crs(survey_ded)<-"+proj=longlat +datum=WGS84 +no_defs"
 sf_split<-split(survey_ded, survey_ded$date_event)
 sf_points<-lapply(sf_split, function(x) sf::st_as_sf(x, crs = 4326))
 x_linestring<-lapply(sf_points, function(x) sf::st_combine(x) %>% st_cast("LINESTRING"))
@@ -159,6 +159,7 @@ ggplot2::ggsave(paste0("./figures/Supplement/nf_effort_ded.png"), nms_eff, devic
 survey<-survey_2022%>%
   filter(DATE < ymd("2022-11-30") & DATE > ymd("2022-02-20")) # date after all Dusky are deployed
 
+#this also needed for day/night figures below
 surv_dates<-survey%>%
   mutate(year_mo = format(parse_date_time(as.character(DATE), "ymd"), "%Y_%m"))%>%
   filter(year_mo != "2022_05" & year_mo != "2022_10")%>% # did not survey in Dusky, but did in Dagg, Doubtful, and southern fiords
@@ -189,21 +190,23 @@ acoustic_dusky<-all_Cet%>%
 
 head(acoustic_dusky)
 
+# data with day/night data ----
+
 ST_time<-ST_dol%>%
   ungroup()%>%
   mutate(DATE = Date,
-         TIME = hms(format(as.POSIXct(Datetime), format = '%H:%M:%S')))%>%
-  dplyr::select(DATE, TIME, Fiord, type, Datetime)
+         TIME = hms(format(as.POSIXct(Datetime), format = '%H:%M:%S')),
+         Fiord_recorder = paste0(Fiord,'_',type))%>%
+  dplyr::select(DATE, TIME, Fiord_recorder, Datetime, Fiord)
 
 FPOD_time<-all_FPOD_Dol%>%
   mutate(DATE = Date,
          TIME = hms(format(as.POSIXct(Datetime), format = '%H:%M:%S')))%>%
-  dplyr::select(DATE, TIME, Fiord, type, Datetime)
+  dplyr::select(DATE, TIME, Fiord_recorder, Datetime, Fiord)
   
 acou_time<-ST_time%>%
   bind_rows(FPOD_time)%>%
-  mutate(Fiord_recorder = paste0(Fiord,'_',type),
-         season = case_when(
+  mutate(season = case_when(
            month(DATE) == 12 | month(DATE) <=2 ~ "Summer",
            month(DATE) >= 3 & month(DATE) <= 5 ~ "Autumn",
            month(DATE) >= 6 & month(DATE) <= 8 ~ "Winter",
@@ -253,7 +256,7 @@ acou_sunlight<-ggplot(acou_time)+
   #geom_point(aes(x = DATE, y = TIME, color = as.factor(season)))+
   geom_point(aes(x = DATE, y = TIME), size = 0.5)+
   scale_y_time()+
-  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","MARINE-RESERVE-1_ST","MARINE-RESERVE-2_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), ncol = 2)+
+  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_F-POD","NANCY_ST","DAGG_F-POD","DAGG_ST","MARINE-RESERVE-1_ST","MARINE-RESERVE-2_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_F-POD")), ncol = 2)+
   #facet_wrap(~factor(Fiord, levels = c("CHARLES","NANCY","DAGG","MARINE-RESERVE-1","MARINE-RESERVE-2","DUSKY","CHALKY","PRESERVATION")), ncol = 2)+
   theme_bw()+
   ylab("Time (HH:MM:SS)")+
@@ -279,15 +282,16 @@ acou_sunlight<-acou_sunlight+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2022-11-16"), xmax = ymd("2023-04-28"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-10-19"), xmax = ymd("2023-11-09"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   #FPOD died
-  geom_rect(data = data.frame(Fiord_recorder = "PRESERVATION_FPOD"), aes(xmin = ymd("2023-03-15"), xmax = ymd("2023-04-28"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "DAGG_FPOD"), aes(xmin = ymd("2023-05-24"), xmax = ymd("2023-11-09"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "CHARLES_FPOD"), aes(xmin = ymd("2023-10-21"), xmax = maxdate_plot, ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)
-  
+  geom_rect(data = data.frame(Fiord_recorder = "PRESERVATION_F-POD"), aes(xmin = ymd("2023-03-15"), xmax = ymd("2023-04-28"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "DAGG_F-POD"), aes(xmin = ymd("2023-05-24"), xmax = ymd("2023-11-09"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)+
+  geom_rect(data = data.frame(Fiord_recorder = "CHARLES_F-POD"), aes(xmin = ymd("2023-10-21"), xmax = maxdate_plot, ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="black", alpha = 0.6, inherit.aes = FALSE)
 
 acou_sunlight$layers<-c(
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_ST"), aes(xmin = ymd("2023-02-20"), xmax = ymd("2023-04-30"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="goldenrod", alpha = 0.4, inherit.aes = FALSE), 
   geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-06-21"), xmax = ymd("2023-10-19"), ymin = hms::as_hms("00:00:00"), ymax = hms::as_hms("24:00:00")), fill="goldenrod", alpha = 0.4, inherit.aes = FALSE),
   acou_sunlight$layers)
+
+acou_sunlight
 
 ggplot2::ggsave(paste0("./figures/acou_sunlight.png"), acou_sunlight, device = "png", dpi = 700, width = 150, height = 300, units = 'mm')
 
@@ -344,7 +348,7 @@ diel<-acou_time%>%
 
 diel_plot<-ggplot(diel, aes(x = Hour, fill = tod))+
   geom_histogram(stat = "count", position = "dodge", binwidth = 1, color = "black", alpha = 0.6)+
-  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_FPOD","NANCY_ST","DAGG_FPOD","DAGG_ST","MARINE-RESERVE-1_ST","MARINE-RESERVE-2_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_FPOD")), scales = "free", ncol = 2)+
+  facet_wrap(~factor(Fiord_recorder, levels = c("CHARLES_F-POD","NANCY_ST","DAGG_F-POD","DAGG_ST","MARINE-RESERVE-1_ST","MARINE-RESERVE-2_ST","DUSKY_ST","CHALKY_ST","PRESERVATION_F-POD")), scales = "free", ncol = 2)+
   theme_bw()+
   scale_fill_manual(values = c("yellow", "midnightblue"))+
   theme(legend.title = element_blank(),
