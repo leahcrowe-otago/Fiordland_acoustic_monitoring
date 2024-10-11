@@ -135,18 +135,7 @@ mcmc.params<-c("psi","beta","pie")
 mcmc.inits<-function() {list(zd=rep(1,s[1]), zn = rep(1,s[2]), zc = rep(1,s[3]), zch = rep(1,s[4]), 
                              zp = rep(1,s[5]), za = rep(1,s[6]), zm1 = rep(1,s[7]), zm2 = rep(1,s[8]))} # z has to be 0 or 1
 
-#R2OpenBUGS::write.model(model,con="FAM_model.txt") # write JAGS model code to file
-# FAM_samp <- jags(data=mcmc.data, inits = mcmc.inits, parameters.to.save=mcmc.params,
-#                   n.iter=55000, model.file="FAM_model.txt",n.chains=3,parallel=TRUE,verbose=TRUE,n.burnin = 5000)
-# saveRDS(FAM_samp, file = paste0("./data/FAM_samp_dt3_50k_",Sys.Date(),".rds"))
-# 
-# FAM_samp$samples
-# FAM_samp$summary
-# 
-# bayesplot::mcmc_trace(FAM_samp$samples)
-# bayesplot::mcmc_dens(FAM_samp$samples)
-
-## matt's way below ----
+## run model ----
 m1 = rjags::jags.model("FAM_model.txt", data = mcmc.data, inits = mcmc.inits, n.chains = 3, n.adapt = 5000)
 out1 = coda.samples(model = m1, variable.names = mcmc.params, n.iter = 50000)
 out1_df = posterior::as_draws_df(out1)
@@ -178,8 +167,8 @@ table1.occ<-summ.occ%>%
          Fiord_recorder = c(
            "$\\beta_1$","$\\beta_2$","$\\beta_3$","$\\beta_4$",
            "$\\pi_1$","$\\pi_2$","$\\pi_3$","$\\pi_4$",
-           "DAGG_BOTH", "NANCY_ST", "CHARLES_FPOD",
-              "CHALKY_ST", "PRESERVATION_FPOD","DUSKY_ST",
+           "DAGG_BOTH", "NANCY_ST", "CHARLES_F-POD",
+              "CHALKY_ST", "PRESERVATION_F-POD","DUSKY_ST",
               "MARINE-RESERVE-1_ST", "MARINE-RESERVE-2_ST"
                    ))%>%
   dplyr::select(Median,`2.5%CI` = q5,`97.5%CI` = q95, Fiord_recorder)
