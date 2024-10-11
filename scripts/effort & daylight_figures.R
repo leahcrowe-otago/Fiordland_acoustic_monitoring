@@ -361,3 +361,20 @@ ggplot2::ggsave(paste0("./figures/diel_hist.png"), diel_plot, device = "png", dp
 
 diel_ab<-ggpubr::ggarrange(acou_sunlight,diel_plot, labels = "auto")
 ggplot2::ggsave(paste0("./figures/diel_ab.png"), diel_ab, device = "png", dpi = 700, width = 300, height = 300, units = 'mm')
+
+# 
+
+acou_dusky<-acou_time%>%filter(DATE <= ymd("2023-01-01") & (Fiord == "MARINE-RESERVE-1" | Fiord == "MARINE-RESERVE-2"))%>%
+  group_by(Fiord_recorder, DATE)%>%
+  tally()
+
+mr1mr2<-ggplot(acou_dusky, aes(x = DATE, y = n, fill = Fiord_recorder))+
+  geom_col(alpha = 0.5)+
+  theme_bw()+
+  theme(legend.title = element_blank(), 
+        legend.position = "bottom")+
+  ylab("Number of positive detections")+
+  xlab("Day")+
+  scale_x_date(date_breaks="1 month", date_labels="%b-%Y")
+  
+ggplot2::ggsave(paste0("./figures/Supplement/mr1mr2.png"), mr1mr2, device = "png", dpi = 700, width = 200, height = 100, units = 'mm')
