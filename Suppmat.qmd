@@ -39,21 +39,45 @@ $^{\mathrm{e}}$Coastal Marine Field Station, University of Waikato, Tauranga, Ne
 ```
 # 1.1 Further deployment details
 
-Acoustic data in this study included data collected between the start of the study (2022-Feb-15) and the latest date a recorder in a neighbouring fiord was still active (Hinenui-Nancy Sound, 2023-Nov-20). There were periods of no acoustic monitoring due to various reasons (e.g. battery lifespan and inability to access a site to service instruments). The equipment was deployed at the 'Marine Reserve-1' site in late December 2022 was not recovered/is missing. There was an acoustic release failure at the 'Marine Reserve-2', and there was no active recorder between January and the end of June 2023. Our chosen settings provided anticipated recording times of three months for SoundTrap 300s with the external battery pack (one month without it), up to five months for F-PODs deployed with all alkaline batteries, six months for SoundTrap 600s, and up to 8.5 months for F-PODs deployed with alkaline and lithium batteries.
+Acoustic data in this study was collected between the start of the study (2022-Feb-15) and the latest date a recorder in a remote fiord was still active (Hinenui-Nancy Sound, 2023-Nov-20). PAM equipment was attached 10 m from the bottom in the remote fiords, and 2--3 m from the bottom in Tamatea-Dusky Sound. There were periods of no acoustic monitoring due to various reasons (e.g. battery lifespan and inability to access a site to service instruments). The equipment was deployed at the 'Marine Reserve-1' site in late December 2022 was not recovered/is missing. There was an acoustic release failure at the 'Marine Reserve-2', and there was no active recorder between January and the end of June 2023. Our chosen settings provided anticipated recording times of three months for SoundTrap 300s with the external battery pack (one month without it), up to five months for F-PODs deployed with all alkaline batteries, six months for SoundTrap 600s, and up to 8.5 months for F-PODs deployed with alkaline and lithium batteries. All equipment was calibrated before initial deployments.
 
-# 1.2 R packages used
+# 1.2 *FinFinder*
 
-'cowplot' [@cowplot], 'eulerr' [@eulerr], 'fasterize' [@fasterize], 'ggplot' [@ggplot], 'ggpubr' [@ggpubr], 'ggrepel' [@ggrepel], 'lubridate' [@lubridate], 'dplyr' [@dplyr], 'jagsUI' [@jagsUI], 'marmap' [@marmap], 'raster' [@raster], 'rjags' [@rjags], 'RPresence' [@Rpresence], 'sf' [@sf-2], 'stringr' [@stringr], 'suncalc' \[@suncalc\], 'terra' [@terra], 'tidyr' [@tidyr], 'readxl' [@readxl], 'viridis' [@viridis].
+We used a machine-learning approach to detect target signals from the SoundTrap wavefiles using the *FinFinder* platform (developed by M. Pine and customised by J. Stanley). *FinFinder*'s detectors contain a series of predictive classification models built using a pre-trained version of the ResNet-50 convoluted neural network (from *ImageNet*, <http://www.image-net.org>). Each detector within *FinFinder* incorporates of a series of signal processing procedures whereby wavelet denoising steps are undertaken on the spectrogram.
+
+The delphinid whistle detector applied in this study (Table S2) was trained using various sources of mid-frequency delphinid signals from within Aotearoa-New Zealand and abroad. The denoising was used at a low level in acoustic data in this study to provide a more conservative detector; this reduced the number of false negatives, but increased the false positives. The manual validation step eliminated the false positives from the results.
+
+To assess the delphinid whistle detector's performance, validatation was conducted on 1100 positive and 1100 negative output images. Within the positive assigned set, 1087 were true positives, and within the negative assigned set, 1021 were true negatives. This resulted in a precision (true negative rate) of 92.8%, a recall (true positive rate) of 98.8%, and an overall accuracy of 95.8%.
 
 # 1.3 Prior distribution for $\beta$
 
-To test the sensitivity of the prior on the estimates of $\beta$, we ran the model under a normal prior distribution (mean = 0, precision $\tau$ = 1), $\boldsymbol{\beta} \sim \mathrm{Normal}(0, 1)$. The occupancy estimates were only slightly different ($\Delta$ median = 0--0.03), and the ranking of the detection scenarios $\pi$ was the same (Table S3).
+To test the sensitivity of the prior on the estimates of $\beta$, we ran the model under a normal prior distribution (mean = 0, precision $\tau$ = 1), $\boldsymbol{\beta} \sim \mathrm{Normal}(0, 1)$. The occupancy estimates were only slightly different ($\Delta$ median = 0--0.03), and the ranking of the detection scenarios $\pi$ was the same (Table S5).
 
-# 1.4 Details on other dolphins species
+# 1.4 R packages used
 
-During regular survey effort in the Tamatea-Dusky complex, dusky dolphins *Lagenorhynchus obscurus* were sighted at the 'Marine Reserve-2' site on 11-November-2022 between 07:10 NZST and 07:20 NZST. No whistles were detected concurrently (either by the automated detector or by manual browsing to further investigate vocalizations during this sighting). The acoustic detections indicated on this day in Fig. S5 occurred at 18:49 NZST. While dusky dolphins have the ability to whistle, they are considered to be a predominantly non-whistling species in Aotearoa-New Zealand, particularly when they are not in mixed groups with other dolphin species [@au2010].
+'cowplot' [@cowplot], 'eulerr' [@eulerr], 'fasterize' [@fasterize], 'ggplot' [@ggplot], 'ggpubr' [@ggpubr], 'ggrepel' [@ggrepel], 'lubridate' [@lubridate], 'dplyr' [@dplyr], 'jagsUI' [@jagsUI], 'marmap' [@marmap], 'raster' [@raster], 'rjags' [@rjags], 'RPresence' [@Rpresence], 'sf' [@sf], 'stringr' [@stringr], 'suncalc' [@suncalc], 'terra' [@terra], 'tidyr' [@tidyr], 'readxl' [@readxl], 'viridis' [@viridis].
 
-Conversely, common dolphins are known to share similar echolocation click patterns [@soldevilla2008] and whistle frequency ranges as bottlenose dolphins [i.e @petrella2011; @boisseau2005]. A confounding factor particular to this study is that from the beginning of dedicated photo-identification efforts in the Tamatea-Dusky Sound complex, one common dolphin individual has been consistently associated with the bottlenose dolphin Dusky pod [@currey2008]. Aside from this ingratiated individual, the only common dolphins known to have been within the fiords during this study period was in Te Rā-Dagg Sound on 13 July 2022. Three individuals were sighted over 10 minutes beginning at 13:00 NZST, however, the only acoustic detections at the Te Rā-Dagg Sound site were later that evening from 20:24 NZDT making it difficult to draw an association between the acoustic and visual detections that day.
+# 1.5 Acoustic detection performance analysis
+
+We evaluated the performance of the automated detectors (KERNO-F v1.0 classifier for F-POD data and the *FinFinder* whistle detector for SoundTrap data) by calculating their sensitivities and false positive detection rates. To do this, we manually browsed 10 random days of SoundTrap data recorded in Te Rā-Dagg Sound (2 days from each deployment, exclusive of the deployment with the damaged hydrophone, Dagg01_05 (see Table S1)). Recordings were reviewed in Raven Pro v1.6.5 ([@Ravenpro]) visually and aurally. Detected vocalisations were summarised on an hourly scale and classified into a 'click' and/or 'whistle+' type to reflect the target signals of the respective detectors described in 2.1.1 of the text.
+
+Sensitivity reflects the trade off between false negatives and false positives. For example, a low sensitivity result indicates higher false negatives and lower false positives. This gives high confidence in the positive detections at the expense of detecting everything. In the reverse scenario, high sensitivity indicates lower confidence in the positive detections, but has a higher potential of detecting most signals. In our study, the sensitivity $R_{S}$ of the each detector is the relationship between true positive acoustic detections $D_{TP}$ and actual acoustic presence, true postitves $D_{TP}$ and false negative $D_{FN}$ detections, where $$
+R_{S} = \frac{D_{TP}} {D_{TP} + D_{FN}}.
+$$
+
+The false positive detection rate $R_{FP}$ provides an indication for how often detections are not originating from the target source. It is the relationship between false positive acoustic detections $D_{FP}$ and detected acoustic presence, true $D_{TP}$ and false $D_{FP}$ positives, where $$
+R_{FP} = \frac{D_{FP}} {D_{TP} + D_{FP}}.
+$$
+
+Of the 10 days, only one day (04 January 2023) yielded positive dolphin detections across all approaches (KERNO-F v1.0 classifier for F-POD data, *FinFinder* whistle detector for SoundTrap data, and manual browsing of SoundTrap data). We used the hourly detections on this day to calculate sensitivity and false detection rates for the automated detectors. The KERNO-F v1.0 classifier identified one detection positive hour whereas manual browsing yielded clicks in four hours (including the same hour); the $R_{S}$ was 25%, and the $R_{FP}$ was 0%. The *FinFinder* whistle detector yielded detections in all 24 hours of the day, where five were true positives; the $R_{S}$ was 100%, and the $R_{FP}$ was 79%. Validation of the *FinFinder* data brings the $R_{FP}$ to 0%.
+
+These results quantify the performance we expected from these approaches. The KERNO-F v1.0 classifier for F-POD data is a conservative approach providing high confidence in click detections coming from the target source, but works best at lower resolution timescales as not every click train is detected. The *FinFinder* whistle detector for SoundTrap data is less conservative on its own, but the validation step provides high confidence and high resolution temporal data.
+
+# 1.6 Sighting details of other dolphin species
+
+During regular survey effort in the Tamatea-Dusky complex, 10 dusky dolphins *Lagenorhynchus obscurus* were first sighted at -45.71248\textdegree S, 166.50388\textdegree E near the 'Marine Reserve-2' site on 11-November-2022 between 07:10 NZST and 07:20 NZST. No whistles were detected concurrently (either by the automated detector or by manual browsing to further investigate vocalisations during this sighting). The acoustic detections indicated on this day in Fig. S5 occurred at 18:49 NZST.
+
+The only sighting of multiple common dolphins *Delphinus delphis* in the fiords during this study occurred in Te Rā-Dagg Sound at -45.41606\textdegree S, 166.86621\textdegree E on 13 July 2022. Three individuals were sighted over 10 minutes beginning at 13:00 NZST, however, the only acoustic detections at the Te Rā-Dagg Sound site were later that evening from 20:24 NZDT.
 
 ```{=tex}
 \newpage
@@ -96,7 +120,39 @@ deploy%>%
 \restoregeometry
 \newpage
 ```
-Table S2. Model estimates of $\beta$.
+Table S2. *FinFinder*'s delphinid detector parameters
+
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| **Method**                     | **Settings**                                                                                                                             |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Software version               | Core v2.1.22                                                                                                                             |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Computing environment          | MATLAB 2023, classification on GPU                                                                                                       |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Detection model                | Whistles_CNN_97perc_28Feb2023                                                                                                            |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Detector training data set     | 33,076 spectrogram samples: 16,538 mid-frequency whistles/burst pulse/buzz samples, 16,538 background sound samples                      |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| CNN architecture               | ResNet-50                                                                                                                                |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Signal processing              | Down sampling to 2 kHz, 5-second windows                                                                                                 |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Data window for classification | 2 seconds                                                                                                                                |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Spectrogram generation         | Mel (1024 FFT window, 248 frequency bands)                                                                                               |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Frequency range                | 1--24 kHz                                                                                                                                |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Denoising                      | Wavelet + transient signal emphasis/normalization                                                                                        |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Output Classes                 | Positive: low quality (LQ) based on 50-69.9% confidence scores or moderate/high quality (MHQ) based on confidence scores at or above 70% |
+|                                |                                                                                                                                          |
+|                                | Negative                                                                                                                                 |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Validation                     | Manual inspection of the spectrogram of every detection, and calculated detection positive hours                                         |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+
+Table S3. Model estimates of $\beta$.
 
 ```{r, beta_t, echo = F, message = F, warning = F, out.width = '100%'}
 table1.occ = readRDS(file = './tables/table1.occ.rds')
@@ -106,23 +162,6 @@ rownames(beta) <- NULL
 
 beta%>%
   kableExtra::kable(booktabs = T, align = "c", escape = F)
-
-```
-
-Table S3. Model estimates of occupancy at each site ($\psi_h$), regression coefficients ($\beta$), and detection probability of each approach scenario ($\pi$) using a normal prior distribution for $\boldsymbol{\beta}$ ($\boldsymbol{\beta} \sim$ Normal(0,1)).
-
-```{r, beta_norm, echo = F, message = F, warning = F, out.width = '100%'}
-
-supp.occ_norm = readRDS(file = './tables/supp.occ_norm.rds')
-supp.occ_norm<-supp.occ_norm%>%
-  dplyr::select(Fiord_recorder, everything())
-supp.occ_norm<-supp.occ_norm[1:16,]
-row.names(supp.occ_norm) <- NULL
-
-#do wrangling in its own statement before kabling
-
-supp.occ_norm%>%
-  kableExtra::kable(booktabs = T, align = "c", escape = F) 
 
 ```
 
@@ -152,6 +191,25 @@ sigs_nf%>%
 
 ```
 
+\newpage
+
+Table S5. Model estimates of occupancy at each site ($\psi_h$), regression coefficients ($\beta$), and detection probability of each approach scenario ($\pi$) using a normal prior distribution for $\boldsymbol{\beta}$ ($\boldsymbol{\beta} \sim$ Normal(0,1)).
+
+```{r, beta_norm, echo = F, message = F, warning = F, out.width = '100%'}
+
+supp.occ_norm = readRDS(file = './tables/supp.occ_norm.rds')
+supp.occ_norm<-supp.occ_norm%>%
+  dplyr::select(Fiord_recorder, everything())
+supp.occ_norm<-supp.occ_norm[1:16,]
+row.names(supp.occ_norm) <- NULL
+
+#do wrangling in its own statement before kabling
+
+supp.occ_norm%>%
+  kableExtra::kable(booktabs = T, align = "c", escape = F) 
+
+```
+
 ```{r, opp_sigs, echo = F, message = F, warning = F, out.width = '100%'}
 
 #Table S5. Number of opportunistic sightings reported to the New Zealand Department of Conservation from tourism vessels and the public where certainty was either "Positive" or "Possible". Maps of these sightings are provided in Fig. S1.
@@ -165,6 +223,8 @@ sigs_nf%>%
 
 
 ```
+
+\newpage
 
 # Figures
 
@@ -202,7 +262,15 @@ Fig. S4. The distance as the dolphin swims between two example re-sightings of i
 knitr::include_graphics('./figures/Supplement/sig_acou2.png')
 ```
 
-Fig. S5. Days when visual survey effort occurred in the Tamatea-Dusky Complex during the period when all three acoustic devices were active simultaneously (20-Feb-2022 through 30-Nov-2022). The lines reflect the survey effort that day with the shaded areas around the lines indicating times with bottlenose dolphins. The squares represent the acoustic deployment sites where yellow = daytime acoustic detection and and dark blue = nighttime acoustic detection; red indicates dolphins were not acoustically detected that day.
+Fig. S5. Days when visual survey effort occurred in the Tamatea-Dusky Complex during the period when all three acoustic devices were active simultaneously (20-Feb-2022 through 30-Nov-2022). The lines reflect the survey effort that day with the shaded areas around the lines indicating times with bottlenose dolphins. The squares represent the acoustic deployment sites where the small yellow box = daytime acoustic detection andthe larger dark blue box/outline = nighttime acoustic detection; a solid red box indicates dolphins were not acoustically detected that day, and a red outline of a yellow box indicates dolphins were only detected during the day.
+
+\newpage
+
+```{r, mr1mr2, echo = F, out.width = '100%'}
+knitr::include_graphics('./figures/Supplement/mr1mr2.png')
+```
+
+Fig. S6. The number of validated positive detections per day at the two sites within the Taumoana-Five Fingers Marine Reserve.
 
 \newpage
 
