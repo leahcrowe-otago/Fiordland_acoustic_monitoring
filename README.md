@@ -8,6 +8,6 @@
 3.  ./scripts/effort & daylight_figures.R: figures are created here related to survey effort and diel patterns including:
     -   Fig. 3, Fig. S3, Fig. S5, Fig. S6
 4.  Tables and Figures.qmd
-   - ./scripts/deployment_map_ms.R
-   - ./scripts/sightings_venn.R
-6.  Suppmat.qmd
+    -   ./scripts/deployment_map_ms.R
+    -   ./scripts/sightings_venn.R
+5.  Suppmat.qmd
