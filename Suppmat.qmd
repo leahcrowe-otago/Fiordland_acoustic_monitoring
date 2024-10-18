@@ -229,7 +229,6 @@ supp.occ_norm%>%
 # Figures
 
 ```{r, S1_opp_sig, echo = F, out.width='95%'}
-
 knitr::include_graphics(c('./figures/Supplement/opp_maps+.png'))
 ```
 
@@ -242,9 +241,6 @@ knitr::include_graphics('./figures/FF01_01 example Tt.png')
 Fig. S2. Example bottlenose dolphin mid-frequency (1--24 kHz), frequency-modulated sounds which are characteristic components of whistles, contact calls, social calls, and burst-pulses.
 
 ```{r, S3_map, echo = F, out.width='100%'}
-
-#source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/suppmat_map_s2.R', local = TRUE, verbose = F)$value
-
 knitr::include_graphics(c('./figures/Supplement/nf_effort_ded+.png'))
 ```
 
