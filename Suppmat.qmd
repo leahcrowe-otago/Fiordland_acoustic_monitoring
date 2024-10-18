@@ -17,7 +17,7 @@ header-includes:
 ```{=tex}
 \begin{center}
 \huge
-If these walls could talk: investigating bottlenose dolphin occupancy and range in fiord ecosystems using acoustic and visual approaches
+If these walls could talk: investigating bottlenose dolphin occupancy and range in fiord ecosystems using passive acoustic monitoring and visual surveys
 \end{center}
 ```
 ```{=tex}
@@ -51,7 +51,7 @@ To assess the delphinid whistle detector's performance, validatation was conduct
 
 # 1.3 Prior distribution for $\beta$
 
-To test the sensitivity of the prior on the estimates of $\beta$, we ran the model under a normal prior distribution (mean = 0, precision $\tau$ = 1), $\boldsymbol{\beta} \sim \mathrm{Normal}(0, 1)$. The occupancy estimates were only slightly different ($\Delta$ median = 0--0.03), and the ranking of the detection scenarios $\pi$ was the same (Table S5).
+To test the sensitivity of the prior on the estimates of $\beta$, we ran the model under a normal prior distribution (mean = 0, scale $\sigma$ = 1), $\boldsymbol{\beta} \sim \mathrm{Normal}(0, 1)$. The occupancy estimates were only slightly different ($\Delta$ median = 0--0.01), and the ranking of the detection scenarios was the same (Table S5).
 
 # 1.4 R packages used
 
@@ -193,7 +193,7 @@ sigs_nf%>%
 
 \newpage
 
-Table S5. Model estimates of occupancy at each site ($\psi_h$), regression coefficients ($\beta$), and detection probability of each approach scenario ($\pi$) using a normal prior distribution for $\boldsymbol{\beta}$ ($\boldsymbol{\beta} \sim$ Normal(0,1)).
+Table S5. Model estimates of occupancy at each site ($\psi_h$), regression coefficients ($\beta$), and detection probability of each approach scenario ($\pi$) using a normal prior distribution for $\boldsymbol{\beta}$ ($\boldsymbol{\beta} \sim$ Normal(0,1)). $\pi_1 =$ F-POD data with KERNO-F classifier, $\pi_2 =$ continuous ST data with whistle detector, $\pi_3 =$ duty sampled (15/30 min) ST data with whistle detector, $\pi_4 =$ duty sampled (15/30 min) ST data manually browsed.
 
 ```{r, beta_norm, echo = F, message = F, warning = F, out.width = '100%'}
 
