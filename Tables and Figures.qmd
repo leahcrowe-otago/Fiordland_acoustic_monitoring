@@ -33,12 +33,14 @@ psi<-table1.occ[9:16,]
 #do wrangling in its own statement before kabling
 table1<-daily_det_rate_table%>%
   left_join(psi, by = "Fiord_recorder")%>%
+  #dplyr::rename("Total active listening days ($S_h$)" = "Device active days")%>%
   mutate(Median = round(Median, 2),
          `2.5%CI` = round(`2.5%CI`, 2),
          `97.5%CI` = round(`97.5%CI`, 2))
 
-table1%>%
-  kableExtra::kable(booktabs = T, align = "c", escape = F) %>%
+
+  kableExtra::kable(table1, booktabs = T, align = "c", escape = F,
+                    col.names = c(names(table1)[1:2],"Total active listening days (S_h)",names(table1)[4:7])) %>%
   column_spec(2:4, width = "2.2cm")%>% 
   add_header_above(c(" " = 4, "Occupancy ($\\\\psi$)" = 3), escape = FALSE)
 
@@ -46,7 +48,7 @@ table1%>%
 
 \newpage
 
-Table 2. Detection probability for the different approach scenarios ($\pi$). ST = SoundTrap, FPOD = FPOD deployment.
+Table 2. Detection probability for the different detection scenarios. ST = SoundTrap, FPOD = FPOD deployment.
 
 ```{r, beta_pi, echo = F, message = F, warning = F, out.width = '100%'}
 
@@ -60,12 +62,15 @@ pi_table<-pi%>%
     Sampling = c("15/30min", "Cont.", "Cont.", "15/30min"),
     Detector = c("Manual browsing", "KERNO-F classifier", "Whistle detector", "Whistle detector"))%>%
   dplyr::rename("Parameter" = "Fiord_recorder")%>%
-  dplyr::select(Parameter, Device, Sampling, Detector, everything())%>%      mutate(Median = round(Median, 2),
+  dplyr::select(-Parameter)%>% 
+  dplyr::select(Device, Sampling, Detector, everything())%>%      
+  mutate(Median = round(Median, 2),
          `2.5%CI` = round(`2.5%CI`, 2),
          `97.5%CI` = round(`97.5%CI`, 2))
-
 pi_table%>%
-  kableExtra::kable(booktabs = T, align = "c", escape = F)
+  kableExtra::kable(booktabs = T, align = "c", escape = F)%>%
+  add_header_above(c(" " = 3, "Detection probability ($p$)" = 3), escape = F)
+
 
 ```
 
@@ -90,14 +95,13 @@ Fig. 1. Map of the study area including the acoustic deployment sites within the
 knitr::include_graphics('./figures/allcet_v1_all.png')
 ```
 
-Fig. 2. Daily detected acoustic presence of bottlenose dolphins (green vertical lines) at each deployment site organized from north to south. The acoustic detection approach ($\pi$) for all F-POD collected data is the same ($\pi_1$), and for SoundTrap (ST) collected data, unshaded periods represent periods when data was recorded continuously and processed with the whistle detector  ($\pi_2$), the blue shaded areas denote periods when recordings were duty cycled 15 of every 30 min and processed with the whistle detector ($\pi_3$), and the orange shaded areas denote duty sampled data (15/30 min) that were manually browsed for all calls types due to sensitivity issues with the hydrophone ($\pi_4$). The grey shaded areas are times when the recorder was not active. The vertical red lines indicate when the gear was deployed/retrieved.
+Fig. 2. Daily detected acoustic presence of bottlenose dolphins (green vertical lines) at each deployment site organized from north to south. The unshaded periods represent deployments when data were collected continuously; for SoundTraps, this also indicates data that were processed with the whistle detector. The blue shaded areas denote periods when recordings were duty cycled (15/30 min) and processed with the whistle detector. The orange shaded areas denote duty sampled data (15/30 min) manually browsed for all calls types due to sensitivity issues with the hydrophone. The grey shaded areas are times when the recorder was not active. The vertical red lines indicate when the gear was deployed/retrieved.
 
 ```{r, acou_sunglight, echo = F, out.width = '100%'}
 knitr::include_graphics('./figures/diel_ab.png')
 ```
 
-Fig. 3. Bottlenose dolphin acoustic detections at each site relative to the time of day where "Night" (blue) refers to the time between dusk and dawn. a) The timing of acoustic detections over the course of the entire study (black dots). The dark grey shaded rectangles indicate periods when the device was not actively listening, and the orange rectangles are the periods where the acoustic files were browsed manually for daily presence. b) Count of each hour when bottlenose dolphins were detected over the course of the entire deployment at each site. 
-\newpage
+Fig. 3. Bottlenose dolphin acoustic detections at each site relative to the time of day where "Night" (blue) refers to the time between dusk and dawn. a) The timing of acoustic detections over the course of the entire study (black dots). The dark grey shaded rectangles indicate periods when the device was not actively listening, and the orange rectangles are the periods where the acoustic files were browsed manually for daily presence. b) Count of each hour when bottlenose dolphins were detected over the course of the entire deployment at each site. \newpage
 
 ```{r, Fig_venn_ID, echo = F, out.width = '100%'}
 #source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/sightings_venn.R', local = TRUE, verbose = F)$value
@@ -106,4 +110,3 @@ knitr::include_graphics('./figures/venn.png')
 ```
 
 Fig. 4. Fiords/areas where individuals alive since 2009 from the two Fiordland resident bottlenose dolphin sub-populations have been sighted. 'DOUBTFUL' = Patea-Doubtful complex, 'DUSKY' = Tamatea-Dusky complex, 'NANCY' = Hinenui-Nancy Sound, 'DAGG' = Te Rā-Dagg Sound, 'PRESERVATION' = Rakitimu-Preservation Inlet, and 'BLUFF' refers to the stranding event at Motupōhue-Bluff. a) Individuals from the Doubtful pod ($n$ = 106). b) Individuals from the Dusky pod ($n$ = 178).
-
