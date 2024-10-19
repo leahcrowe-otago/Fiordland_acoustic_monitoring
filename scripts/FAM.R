@@ -83,7 +83,7 @@ all_ST<-bind_rows(ST_data)%>%
     TRUE ~ Fiord
   ))%>%
   mutate(type = "ST")%>%
-  #FPOD is synced with GPS time but with ST time coming from file, also adjusted for each deployment in Dagg 15 bin comparison
+  #FPOD is synced with GPS time but with ST time coming from file
   mutate(Datetime = case_when(
     Deployment_number == "Dagg01_01" & type == "ST" ~ Datetime + minutes(4),
     Deployment_number == "Dagg01_02" & type == "ST" ~ Datetime - minutes(3),
@@ -114,9 +114,6 @@ all_ST_Cet<-ST_dol%>%
   distinct(Date, Fiord, DPD, SpClass, Quality, Fiord_recorder)%>%
   filter(Quality != '?')
 
-all_ST_Cet%>%
-  filter(Date == "2023-05-23" & Fiord == "DAGG")
-
 ST_dol%>%
   filter(Species == "")%>%
   dplyr::select(Species, Dolphin...y.n.)
@@ -131,7 +128,6 @@ maxdate_plot<-ymd("2023-11-30")
 acou_timeline<-function(x){
   ggplot(x)+
     geom_col(aes(x = Date, y = 1), fill = "#33A02C")+
-    #geom_col(aes(x = Date, y = 1), fill = "black")+
     ylim(c(0,1))+
     theme_bw()+
     ylab("")+
@@ -177,9 +173,7 @@ all_Cet_plot<-all_Cet_plot+
   #FPOD died
   geom_rect(data = data.frame(Fiord_recorder = "PRESERVATION_F-POD"), aes(xmin = ymd("2023-03-15"), xmax = ymd("2023-04-28"), ymin = 0, ymax = 1), fill="black", alpha = 0.6, inherit.aes = FALSE)+
   geom_rect(data = data.frame(Fiord_recorder = "DAGG_F-POD"), aes(xmin = ymd("2023-05-24"), xmax = ymd("2023-11-09"), ymin = 0, ymax = 1), fill="black", alpha = 0.6, inherit.aes = FALSE)+
-  geom_rect(data = data.frame(Fiord_recorder = "CHARLES_F-POD"), aes(xmin = ymd("2023-10-21"), xmax = maxdate_plot, ymin = 0, ymax = 1), fill="black", alpha = 0.6, inherit.aes = FALSE)+
-  #to be analysed
-  geom_rect(data = data.frame(Fiord_recorder = "CHALKY_ST"), aes(xmin = ymd("2023-10-01"), xmax = ymd("2023-10-19"), ymin = 0, ymax = 1), fill="red", alpha = 0.5, inherit.aes = FALSE)
+  geom_rect(data = data.frame(Fiord_recorder = "CHARLES_F-POD"), aes(xmin = ymd("2023-10-21"), xmax = maxdate_plot, ymin = 0, ymax = 1), fill="black", alpha = 0.6, inherit.aes = FALSE)
 
 all_Cet_plot$layers<-c(
   #15/30 below everything else
@@ -309,9 +303,7 @@ dagg_ch<-dagg_dates%>%left_join(dagg, by = c("date" = "Date"))%>%
   ),
   analysis = case_when(
    date >= ymd("2023-02-20") & date <= ymd("2023-04-30") ~ 1,
-   TRUE ~ 0
-  )
-  )
+   TRUE ~ 0))
 dagg_ch[is.na(dagg_ch)] <- 0
 
 saveRDS(dagg_ch, file = paste0("./data/dagg_ch.rds"))
@@ -322,14 +314,13 @@ chalky<-all_Cet%>%filter(Fiord == "CHALKY")%>%
   distinct(Date, Fiord_recorder)%>%
   mutate(ST = 1)
 summary(chalky)
-chalky_dates<-data.frame(date = as.Date(c(ymd("2022-02-21"):ymd("2022-11-16"),ymd("2023-04-28"):ymd("2023-09-30"))))
+chalky_dates<-data.frame(date = as.Date(c(ymd("2022-02-21"):ymd("2022-11-16"),ymd("2023-04-28"):ymd("2023-10-19"))))
 chalky_ch<-chalky_dates%>%left_join(chalky, by = c("date" = "Date"))%>%
   dplyr::select(date, ST)%>%
   mutate(samp = 1,
     analysis = case_when(
       date >= ymd("2023-06-21") ~ 1,
-      TRUE ~ 0
-    ))
+      TRUE ~ 0))
 chalky_ch[is.na(chalky_ch)] <- 0
 
 saveRDS(chalky_ch, file = paste0("./data/chalky_ch.rds"))
