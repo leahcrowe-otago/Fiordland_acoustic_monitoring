@@ -193,6 +193,7 @@ head(acoustic_dusky)
 # data with day/night data ----
 
 ST_time<-ST_dol%>%
+  filter(Quality != '?')%>%
   ungroup()%>%
   mutate(DATE = Date,
          TIME = hms(format(as.POSIXct(Datetime), format = '%H:%M:%S')),
