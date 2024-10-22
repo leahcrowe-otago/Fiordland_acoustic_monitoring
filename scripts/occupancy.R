@@ -1,11 +1,9 @@
-#### Dagg comparison
-
 library(RPresence)
 library(jagsUI)
 library(rjags)
-#library(R2OpenBUGS)
 library(dplyr)
 
+# data ----
 dat = vector("list",8)
 dat[[1]] = readRDS("./data/dagg_ch.rds")
 dat[[2]] = readRDS("./data/nancy_ch.rds")
@@ -104,7 +102,7 @@ model<-function(){
   }
   
   for(j in 1:4){
-    beta[j] ~ dt(0,1,3) #Matt's
+    beta[j] ~ dt(0,1,3) 
     #beta[j] ~ dnorm(0,1) #tau = precision = 1/sigma^2
   }
   
@@ -140,7 +138,7 @@ m1 = rjags::jags.model("FAM_model.txt", data = mcmc.data, inits = mcmc.inits, n.
 out1 = coda.samples(model = m1, variable.names = mcmc.params, n.iter = 50000)
 out1_df = posterior::as_draws_df(out1)
 
-#saveRDS(out1_df, file = paste0("./data/FAM_samp_dt3_50k_",Sys.Date(),".rds"))
+saveRDS(out1_df, file = paste0("./data/FAM_samp_dt3_50k_",Sys.Date(),".rds"))
 #saveRDS(out1_df, file = paste0("./data/FAM_samp_n_50k_",Sys.Date(),".rds"))
 
 bayesplot::mcmc_trace(out1_df)
@@ -149,11 +147,7 @@ summary(out1_df)
 mean(out1_df$`beta[1]` > out1_df$`beta[2]`)
 
 ## Read results ----
-read.date = "2024-07-08"
-read.date = "2024-07-29"
-read.date = "2024-08-04"
-read.date = "2024-08-23"
-read.date = "2024-10-07"
+read.date = "2024-10-22"
 
 occ.results<-readRDS(paste0("./data/FAM_samp_dt3_50k_",read.date,".rds"))
 
@@ -211,12 +205,12 @@ dagg_samp<-dagg%>%
 nrow(dagg_samp)
 
 dagg_samp%>%
-  filter((DAGG_FPOD == 1 & DAGG_ST == 1) | (DAGG_FPOD == 0 & DAGG_ST == 0))%>%
+  filter((`DAGG_F-POD` == 1 & DAGG_ST == 1) | (`DAGG_F-POD` == 0 & DAGG_ST == 0))%>%
   distinct(date)
 
 dagg_samp%>%
-  filter(!((DAGG_FPOD == 1 & DAGG_ST == 1) | (DAGG_FPOD == 0 & DAGG_ST == 0)))%>%
-  arrange(DAGG_FPOD)
+  filter(!((`DAGG_F-POD` == 1 & DAGG_ST == 1) | (`DAGG_F-POD` == 0 & DAGG_ST == 0)))%>%
+  arrange(`DAGG_F-POD`)
 
 ### between the two marine reserve sites
 mr1<-dat[[7]]
@@ -253,4 +247,24 @@ fpod_perf<-all_FPOD_Dol%>%
   filter(Fiord == "DAGG")%>%
   filter(Date %in% c('2022-04-21', '2022-04-26', '2022-05-10', '2022-06-11', '2022-07-30', '2022-08-10', '2022-11-29','2023-01-04', '2023-05-13', '2023-05-23'))
   
-write.csv(fpod_perf,"./fpod_performance_dates.csv", row.names = F, na = "")
+#write.csv(fpod_perf,"./fpod_performance_dates.csv", row.names = F, na = "")
+
+# N ----
+
+nrow(dat$dagg)
+nrow(dat$nancy)
+nrow(dat$charles)
+nrow(dat$chalky)
+nrow(dat$pres)
+nrow(dat$dusky)
+nrow(dat$mr1)
+nrow(dat$mr2)
+
+nrow(dat$dagg)+
+nrow(dat$nancy)+
+nrow(dat$charles)+
+nrow(dat$chalky)+
+nrow(dat$pres)+
+nrow(dat$dusky)+
+nrow(dat$mr1)+
+nrow(dat$mr2)
