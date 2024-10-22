@@ -192,49 +192,23 @@ all_Cet_plot$layers<-c(
 all_Cet_plot
 ggsave('./figures/allcet_v1_all.png',all_Cet_plot, dpi = 300, width = 200, height = 220, units = "mm")
 
-# days listening
-listening<-deploy%>%
-  ungroup()%>%
-  mutate(Fiord_recorder = paste0(Fiord,"_",Recorder_type))%>%
-  group_by(Fiord_recorder)%>%
-  dplyr::summarise(min_date = as.Date(min(Datetime_deployment_local, na.rm= T)), max_date = as.Date(max(Datetime_retrieval_local, na.rm = T)))%>%
-  ungroup()%>%
-  mutate(days = max_date - min_date)%>%
-  ungroup()%>%
-  mutate(dead = case_when(
-    Fiord_recorder == "CHARLES_F-POD" ~ (ymd("2024-01-25") - ymd("2023-10-21")),
-    Fiord_recorder == "NANCY_ST" ~ (ymd("2022-11-27") - ymd("2022-10-07")) + (ymd("2023-03-14") - ymd("2023-01-02")),
-    Fiord_recorder == "DAGG_F-POD" ~ (ymd("2023-11-09") - ymd("2023-05-24")),
-    Fiord_recorder == "DAGG_ST" ~ (ymd("2022-11-27") - ymd("2022-11-15")) + (ymd("2023-11-09") - ymd("2023-09-02")), 
-    # MR_1 = FF02
-    Fiord_recorder == "MARINE-RESERVE-1_ST" ~ (ymd("2023-02-23") - ymd("2022-12-29")),
-    #no deployment FF03_03
-    Fiord_recorder == "MARINE-RESERVE-2_ST" ~ (ymd("2024-02-16") - ymd("2023-11-29")) + (ymd("2023-06-26") - ymd("2022-12-31")),
-    #change when Dusky analysed
-    Fiord_recorder == "DUSKY_ST" ~ (ymd("2023-02-23") - ymd("2022-11-23")) + (ymd("2023-06-27") - ymd("2023-06-02")) + (ymd("2024-02-14") - ymd("2023-11-25")),
-    Fiord_recorder == "CHALKY_ST" ~ (ymd("2023-04-28") - ymd("2022-11-16")) + (ymd("2023-11-09") - ymd("2023-10-19")),
-    Fiord_recorder == "PRESERVATION_F-POD" ~ (ymd("2023-04-28") - ymd("2023-03-15")),
-    TRUE ~ (ymd("2023-08-09") - ymd("2023-08-09"))
-  ))%>%
-  mutate(active = days - dead)
+#detection rate, S_h
+
+source('./scripts/listening.R', local = TRUE)$value
 
 ## all together, daily detection rate
-dagg_both<-all_Cet%>%
+dagg_b<-all_Cet%>%
   filter(Fiord == 'DAGG')%>%
-  mutate(Fiord_recorder = "DAGG_BOTH")
+  mutate(Fiord_recorder = "DAGG_BOTH")%>%
+  filter(Date < "2023-05-24")
   
 daily_det_rate<-all_Cet%>%
-  bind_rows(dagg_both)%>%
+  bind_rows(dagg_b)%>%
   ungroup()%>%
   distinct(Fiord_recorder, Date)%>%
   group_by(Fiord_recorder)%>%
   tally()%>%
   left_join(listening, by = "Fiord_recorder")%>%
-  mutate(min_date = tidyr::replace_na(min_date, ymd("2022-02-16")),
-         max_date = tidyr::replace_na(max_date, ymd("2023-11-09")),
-         days = tidyr::replace_na(days, ymd("2023-11-09") - ymd("2022-02-16")),
-         dead = tidyr::replace_na(dead, ymd("2023-11-09") - ymd("2023-09-02")),
-         active = days - dead)%>%
   mutate(det_pres = round(n/as.numeric(active), 2))%>%
   as.data.frame()%>%
   arrange(-det_pres)
@@ -265,7 +239,7 @@ charles_dates<-data.frame(date = as.Date(c(ymd("2022-02-15"):ymd("2023-10-20")))
 charles_ch<-charles_dates%>%left_join(charles, by = c("date" = "Date"))%>%
   dplyr::select(date, FPOD)
 charles_ch[is.na(charles_ch)] <- 0
-
+nrow(charles_ch)
 saveRDS(charles_ch, file = paste0("./data/charles_ch.rds"))
 
 #nancy
@@ -274,7 +248,7 @@ nancy<-all_Cet%>%filter(Fiord == "NANCY")%>%
   distinct(Date, Fiord_recorder)%>%
   mutate(ST = 1)
 summary(nancy)
-nancy_dates<-data.frame(date = as.Date(c(ymd("2022-02-15"):ymd("2022-10-06"),ymd("2022-11-28"):ymd("2023-01-01"),ymd("2023-03-15"):ymd("2023-11-19"))))
+nancy_dates<-data.frame(date = as.Date(c(ymd("2022-02-16"):ymd("2022-10-06"),ymd("2022-11-28"):ymd("2023-01-01"),ymd("2023-03-15"):ymd("2023-11-19"))))
 nancy_ch<-nancy_dates%>%left_join(nancy, by = c("date" = "Date"))%>%
   dplyr::select(date, ST)%>%
   mutate(samp = case_when(
@@ -283,7 +257,7 @@ nancy_ch<-nancy_dates%>%left_join(nancy, by = c("date" = "Date"))%>%
   ),
   analysis = 0)
 nancy_ch[is.na(nancy_ch)] <- 0
-
+nrow(nancy_ch)
 saveRDS(nancy_ch, file = paste0("./data/nancy_ch.rds"))
 
 #dagg
@@ -295,7 +269,7 @@ dagg<-all_Cet%>%filter(Fiord == "DAGG")%>%
   mutate(val = 1)%>%
   tidyr::pivot_wider(names_from = Fiord_recorder, values_from = val)
 summary(dagg)
-dagg_dates<-data.frame(date = as.Date(c(ymd("2022-02-16"):ymd("2022-11-13"),ymd("2022-11-28"):ymd("2023-05-24"))))
+dagg_dates<-data.frame(date = as.Date(c(ymd("2022-02-16"):ymd("2022-11-13"),ymd("2022-11-28"):ymd("2023-05-23"))))
 dagg_ch<-dagg_dates%>%left_join(dagg, by = c("date" = "Date"))%>%
   mutate(samp = case_when(
     date >= ymd("2022-07-14") & date <= ymd("2022-11-14") ~ 0,
@@ -305,7 +279,7 @@ dagg_ch<-dagg_dates%>%left_join(dagg, by = c("date" = "Date"))%>%
    date >= ymd("2023-02-20") & date <= ymd("2023-04-30") ~ 1,
    TRUE ~ 0))
 dagg_ch[is.na(dagg_ch)] <- 0
-
+nrow(dagg_ch)
 saveRDS(dagg_ch, file = paste0("./data/dagg_ch.rds"))
 
 #chalky
@@ -314,7 +288,7 @@ chalky<-all_Cet%>%filter(Fiord == "CHALKY")%>%
   distinct(Date, Fiord_recorder)%>%
   mutate(ST = 1)
 summary(chalky)
-chalky_dates<-data.frame(date = as.Date(c(ymd("2022-02-21"):ymd("2022-11-16"),ymd("2023-04-28"):ymd("2023-10-19"))))
+chalky_dates<-data.frame(date = as.Date(c(ymd("2022-02-22"):ymd("2022-11-16"),ymd("2023-04-28"):ymd("2023-10-18"))))
 chalky_ch<-chalky_dates%>%left_join(chalky, by = c("date" = "Date"))%>%
   dplyr::select(date, ST)%>%
   mutate(samp = 1,
@@ -322,7 +296,7 @@ chalky_ch<-chalky_dates%>%left_join(chalky, by = c("date" = "Date"))%>%
       date >= ymd("2023-06-21") ~ 1,
       TRUE ~ 0))
 chalky_ch[is.na(chalky_ch)] <- 0
-
+nrow(chalky_ch)
 saveRDS(chalky_ch, file = paste0("./data/chalky_ch.rds"))
 
 #preservation
@@ -331,11 +305,12 @@ pres<-all_Cet%>%filter(Fiord == "PRESERVATION")%>%
   distinct(Date, Fiord_recorder)%>%
   mutate(FPOD = 1)
 summary(pres)
-pres_dates<-data.frame(date = as.Date(c(ymd("2022-02-21"):ymd("2023-03-14"),ymd("2023-04-28"):ymd("2023-11-14"))))
+# last day ended: 2023-11-02 07:44:00
+pres_dates<-data.frame(date = as.Date(c(ymd("2022-02-22"):ymd("2023-03-15"),ymd("2023-04-29"):ymd("2023-11-01"))))
 pres_ch<-pres_dates%>%left_join(pres, by = c("date" = "Date"))%>%
   dplyr::select(date, FPOD)
 pres_ch[is.na(pres_ch)] <- 0
-
+nrow(pres_ch)
 saveRDS(pres_ch, file = paste0("./data/pres_ch.rds"))
 
 #anchor
@@ -344,12 +319,12 @@ dusky<-all_Cet%>%filter(Fiord == "DUSKY")%>%
   distinct(Date, Fiord_recorder)%>%
   mutate(ST = 1)
 summary(dusky)
-dusky_dates<-data.frame(date = as.Date(c(ymd("2022-02-20"):ymd("2022-11-22"),ymd("2023-02-24"):ymd("2023-06-01"),ymd("2023-06-27"):ymd("2023-11-24"))))
+dusky_dates<-data.frame(date = as.Date(c(ymd("2022-02-21"):ymd("2022-11-22"),ymd("2023-02-24"):ymd("2023-06-01"),ymd("2023-06-27"):ymd("2023-11-24"))))
 dusky_ch<-dusky_dates%>%left_join(dusky, by = c("date" = "Date"))%>%
   dplyr::select(date, ST)%>%
   mutate(samp = 0)
 dusky_ch[is.na(dusky_ch)] <- 0
-
+nrow(dusky_ch)
 saveRDS(dusky_ch, file = paste0("./data/dusky_ch.rds"))
 
 #MR-1
@@ -363,7 +338,7 @@ mr1_ch<-mr1_dates%>%left_join(mr1, by = c("date" = "Date"))%>%
   dplyr::select(date, ST)%>%
   mutate(samp = 0)
 mr1_ch[is.na(mr1_ch)] <- 0
-
+nrow(mr1_ch)
 saveRDS(mr1_ch, file = paste0("./data/mr1_ch.rds"))
 
 #MR-2
@@ -377,6 +352,6 @@ mr2_ch<-mr2_dates%>%left_join(mr2, by = c("date" = "Date"))%>%
   dplyr::select(date, ST)%>%
   mutate(samp = 0)
 mr2_ch[is.na(mr2_ch)] <- 0
-
+nrow(mr2_ch)
 saveRDS(mr2_ch, file = paste0("./data/mr2_ch.rds"))
 ##
