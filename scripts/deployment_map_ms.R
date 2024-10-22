@@ -51,12 +51,12 @@ MA<-sf::read_sf(shapefile_path, layer = "Marine_Protected_Areas_under_the_Marine
 FMA<-subset(MA, Name == "Fiordland Marine Area")
 
 # fiord labels ----
-fiord_labels<-data.frame(label = c("Lake\nManapouri","Piopiotahi-Milford Sound","Te H\u101pua-Sutherland Sound",
-                                   "H\u101wea-Bligh Sound","Te Houhou-George Sound","Taitetimu-Caswell Sound",
-                                   "Taiporoporo-Charles Sound","Hinenui-Nancy Sound","Te Awa-o-T\u16b-\nThompson Sound",
-                                   "Patea-Doubtful Sound","Te R\u101-Dagg Sound",
-                                   "Te Puaitaha-\nBreaksea Sound","Tamatea-Dusky\nSound","Taiari-Chalky Inlet",
-                                   "Rakituma-Preservation Inlet", "Motup\u14dhue-Bluff", "Rakiura-Stewart Island"),# "Vancouver\nArm"),
+fiord_labels<-data.frame(label = c("Lake\nManapouri","Piopiotahi/Milford Sound","Te H\u101pua/Sutherland Sound",
+                                   "H\u101wea/Bligh Sound","Te Houhou/George Sound","Taitetimu/Caswell Sound",
+                                   "Taiporoporo/Charles Sound","Hinenui/Nancy Sound","Te Awa-o-T\u16b-\nThompson Sound",
+                                   "Patea/Doubtful Sound","Te R\u101/Dagg Sound",
+                                   "Te Puaitaha/\nBreaksea Sound","Tamatea/Dusky\nSound","Taiari/Chalky Inlet",
+                                   "Rakituma/Preservation Inlet", "Motup\u14dhue/Bluff", "Rakiura/Stewart Island"),# "Vancouver\nArm"),
                          lat = c(-45.51, -44.55, -44.72,
                                  -44.77, -44.85, -45.01,
                                  -45.05, -45.1, -45.15,
@@ -70,8 +70,8 @@ fiord_labels<-data.frame(label = c("Lake\nManapouri","Piopiotahi-Milford Sound",
                                  166.67, 166.47, 166.51,
                                  166.6, 168.33, 167.75))#, 166.98))
 
-fiord_labels_white<-data.frame(label = c("Taiporoporo-Charles Sound","Hinenui-Nancy Sound",
-                                   "Te R\u101-Dagg Sound","Taiari-Chalky Inlet","Rakituma-Preservation Inlet"),
+fiord_labels_white<-data.frame(label = c("Taiporoporo/Charles Sound","Hinenui/Nancy Sound",
+                                   "Te R\u101/Dagg Sound","Taiari/Chalky Inlet","Rakituma/Preservation Inlet"),
                          lat = c(-45.05,-45.1,
                                  -45.39,-46.02,-46.1),
                          lon = c(167.09, 167.03,
@@ -131,7 +131,7 @@ bathy_FMA_white<-bathy_FMA+
 
 ###small NZ with box ----
 
-dunedin<-data.frame(label = c("\u14ctepoti-Dunedin"),
+dunedin<-data.frame(label = c("\u14ctepoti/Dunedin"),
                          lat = c(-45.880),
                          lon = c(170.501))
 
@@ -161,6 +161,6 @@ map_bathy_FMA_white<-cowplot::ggdraw() +
   cowplot::draw_plot(bathy_FMA_white) +
   cowplot::draw_plot(NZ, x = 0.18, y = 0.65, width = 0.2, height = 0.3)
   
-  ggsave("./figures/bathy_FMA_white.png", map_bathy_FMA_white, dpi = 700, height = 6, width = 4, units = 'in')
-  ggsave("./figures/bathy_FMA_white.svg", map_bathy_FMA_white, dpi = 700, height = 6, width = 4, units = 'in')
+  ggsave("./figures/bathy_FMA_white_slash.png", map_bathy_FMA_white, dpi = 700, height = 6, width = 4, units = 'in')
+  ggsave("./figures/bathy_FMA_white_slash.svg", map_bathy_FMA_white, dpi = 700, height = 6, width = 4, units = 'in')
   
