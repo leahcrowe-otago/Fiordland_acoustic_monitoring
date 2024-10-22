@@ -3,6 +3,7 @@
 # Workflow:
 
 1.  ./scripts/FAM.R: stands for Fiordland Acoustic Monitoring. This is where all acoustic detection data from all sources and deployments are collated. The data used for modeling is produced here.
+    -   calls ./scripts/listening.R which calculates the active listening periods for each site
 2.  ./scripts/occupancy.R: this is the code to compile and run the occupancy model. The results from the model are organized and produced in this code. Some site summaries are also executed here related to performance metrics. Output includes:
     -   data for Table 1, Table 2, Table S3, Table S5
 3.  ./scripts/effort & daylight_figures.R: figures are created here related to survey effort and diel patterns including:
