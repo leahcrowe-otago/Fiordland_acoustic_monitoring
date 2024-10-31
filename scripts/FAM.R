@@ -241,6 +241,7 @@ charles_ch<-charles_dates%>%left_join(charles, by = c("date" = "Date"))%>%
 charles_ch[is.na(charles_ch)] <- 0
 nrow(charles_ch)
 saveRDS(charles_ch, file = paste0("./data/charles_ch.rds"))
+write.csv(charles_ch, file = paste0("./data/Acoustic data/charles_ch.csv"))
 
 #nancy
 nancy<-all_Cet%>%filter(Fiord == "NANCY")%>%
@@ -259,6 +260,7 @@ nancy_ch<-nancy_dates%>%left_join(nancy, by = c("date" = "Date"))%>%
 nancy_ch[is.na(nancy_ch)] <- 0
 nrow(nancy_ch)
 saveRDS(nancy_ch, file = paste0("./data/nancy_ch.rds"))
+write.csv(nancy_ch, file = paste0("./data/Acoustic data/nancy_ch.csv"))
 
 #dagg
 dagg<-all_Cet%>%filter(Fiord == "DAGG")%>%
@@ -281,6 +283,7 @@ dagg_ch<-dagg_dates%>%left_join(dagg, by = c("date" = "Date"))%>%
 dagg_ch[is.na(dagg_ch)] <- 0
 nrow(dagg_ch)
 saveRDS(dagg_ch, file = paste0("./data/dagg_ch.rds"))
+write.csv(dagg_ch, file = paste0("./data/Acoustic data/dagg_ch.csv"))
 
 #chalky
 chalky<-all_Cet%>%filter(Fiord == "CHALKY")%>%
@@ -298,6 +301,7 @@ chalky_ch<-chalky_dates%>%left_join(chalky, by = c("date" = "Date"))%>%
 chalky_ch[is.na(chalky_ch)] <- 0
 nrow(chalky_ch)
 saveRDS(chalky_ch, file = paste0("./data/chalky_ch.rds"))
+write.csv(chalky_ch, file = paste0("./data/Acoustic data/chalky_ch.csv"))
 
 #preservation
 pres<-all_Cet%>%filter(Fiord == "PRESERVATION")%>%
@@ -312,6 +316,7 @@ pres_ch<-pres_dates%>%left_join(pres, by = c("date" = "Date"))%>%
 pres_ch[is.na(pres_ch)] <- 0
 nrow(pres_ch)
 saveRDS(pres_ch, file = paste0("./data/pres_ch.rds"))
+write.csv(pres_ch, file = paste0("./data/Acoustic data/pres_ch.csv"))
 
 #anchor
 dusky<-all_Cet%>%filter(Fiord == "DUSKY")%>%
@@ -326,6 +331,7 @@ dusky_ch<-dusky_dates%>%left_join(dusky, by = c("date" = "Date"))%>%
 dusky_ch[is.na(dusky_ch)] <- 0
 nrow(dusky_ch)
 saveRDS(dusky_ch, file = paste0("./data/dusky_ch.rds"))
+write.csv(dusky_ch, file = paste0("./data/Acoustic data/dusky_ch.csv"))
 
 #MR-1
 mr1<-all_Cet%>%filter(Fiord == "MARINE-RESERVE-1")%>%
@@ -340,6 +346,7 @@ mr1_ch<-mr1_dates%>%left_join(mr1, by = c("date" = "Date"))%>%
 mr1_ch[is.na(mr1_ch)] <- 0
 nrow(mr1_ch)
 saveRDS(mr1_ch, file = paste0("./data/mr1_ch.rds"))
+write.csv(mr1_ch, file = paste0("./data/Acoustic data/mr1_ch.csv"))
 
 #MR-2
 mr2<-all_Cet%>%filter(Fiord == "MARINE-RESERVE-2")%>%
@@ -354,4 +361,5 @@ mr2_ch<-mr2_dates%>%left_join(mr2, by = c("date" = "Date"))%>%
 mr2_ch[is.na(mr2_ch)] <- 0
 nrow(mr2_ch)
 saveRDS(mr2_ch, file = paste0("./data/mr2_ch.rds"))
+write.csv(mr2_ch, file = paste0("./data/Acoustic data/mr2_ch.csv"))
 ##
