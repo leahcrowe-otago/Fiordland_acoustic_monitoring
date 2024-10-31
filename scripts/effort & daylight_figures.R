@@ -12,7 +12,6 @@ nf_dates<-data_log%>%
   #this only works for this query because we were never in a neighbouring fiord on more than two separate days
   distinct(DATE)
 
-
 source('~/git-otago/Fiordland_reporting/scripts/connect to MySQL.R', local = TRUE)$value
 
 survey_data<-dbReadTable(con, "survey_data_calfyear")
@@ -321,7 +320,7 @@ sig_acou2<-ggplot()+
   geom_path(survey_plot, mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,EVENT), color = year_mo))+
   geom_path(sig_plot%>%filter(SPECIES == "Bottlenose"), mapping = aes(x = LONGITUDE, y = LATITUDE, group = paste0(DATE,SIGHTING_NUMBER), color = year_mo), linewidth = 3, alpha = 0.4)+
   coord_sf(xlim = c(166.45, 166.6), ylim = c(-45.8, -45.67))+
-  geom_point(deploy%>%filter(grepl("_01", Deployment_number)), mapping = aes(x = Longitude, y = Latitude), color = "red", size = 2, shape = 15)+
+  geom_point(deploy%>%filter(grepl("_01", Deployment_number)), mapping = aes(x = Longitude, y = Latitude), color = "red", size = 2, shape = 22)+
   geom_point(acou_dusky%>%filter(tod == "Night"), mapping = aes(x = Longitude, y = Latitude), color = "midnightblue", size = 2, shape = 15)+
   geom_point(acou_dusky%>%filter(tod == "Day"), mapping = aes(x = Longitude, y = Latitude), color = "yellow", size = 1, shape = 15)+
   theme_bw()+
@@ -331,7 +330,7 @@ sig_acou2<-ggplot()+
   scale_y_continuous(breaks = seq(-45.7,-45.8, by = -0.05))+
   scale_x_continuous(breaks = seq(166.5,166.6, by = 0.05))
 
-#sig_acou2
+sig_acou2
 
 ggplot2::ggsave(paste0("./figures/Supplement/sig_acou2.png"), sig_acou2, device = "png", dpi = 700, width = 200, height = 200, units = 'mm')
 
