@@ -23,6 +23,10 @@ ind_area<-photo_data%>%
   left_join(lifehist, by = c("ID_NAME" = "NAME"))%>%
   filter(LAST_YEAR >= 2010) # still includes spring 2009
 
+#ind per area
+ID_areas<-ind_area%>%
+  dplyr::select(SURVEY_AREA, DATE, POD, ID_NAME)
+
 # DOUBTFUL
 
 doubtfuldataquery<-ind_area%>%
