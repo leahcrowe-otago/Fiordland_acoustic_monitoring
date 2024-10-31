@@ -33,14 +33,13 @@ psi<-table1.occ[9:16,]
 #do wrangling in its own statement before kabling
 table1<-daily_det_rate_table%>%
   left_join(psi, by = "Fiord_recorder")%>%
-  #dplyr::rename("Total active listening days ($S_h$)" = "Device active days")%>%
   mutate(Median = round(Median, 2),
          `2.5%CI` = round(`2.5%CI`, 2),
          `97.5%CI` = round(`97.5%CI`, 2))
 
 
   kableExtra::kable(table1, booktabs = T, align = "c", escape = F,
-                    col.names = c(names(table1)[1:2],"Total active listening days (S_h)",names(table1)[4:7])) %>%
+                    col.names = c(names(table1)[1:2],"Total active listening days",names(table1)[4:7])) %>%
   column_spec(2:4, width = "2.2cm")%>% 
   add_header_above(c(" " = 4, "Occupancy ($\\\\psi$)" = 3), escape = FALSE)
 
@@ -83,25 +82,25 @@ pi_table%>%
 ```{r, map, echo = F, out.width='90%'}
 #source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/deployment_map_ms.R', local = TRUE, verbose = F)$value
 
-knitr::include_graphics(c('./figures/bathy_FMA_white.png'))
+knitr::include_graphics(c('./figures/bathy_FMA_white_slash.png'))
 
 ```
 
 \vspace{-15ex}
 
-Fig. 1. Map of the study area including the acoustic deployment sites within the Te Moana o Atawhenua-Fiordland Marine Area (all areas of the sea inshore of the teal line including all fiords). The neighbouring fiords are labeled in white text, all FMA marine reserves are in orange, and the two acoustic recorder sites within the Taumoana-Five Fingers Marine Reserve are numbered where 1. is the Cormorant Cove site, and 2. is the peninsula site. The 50m (grey) and 200m (dark blue) isobaths are provided on both maps. Ōtepoti-Dunedin is marked as the yellow dot on the small inset map.
+Fig. 1. Map of the study area including the acoustic deployment sites within the Fiordland (Te Moana o Atawhenua) Marine Area (FMA, all areas of the sea inshore of the teal line including all fiords). The neighbouring fiords are labeled in white text, all FMA marine reserves are in orange, and the two acoustic recorder sites within the Taumoana (Five Finger Peninsula) Marine Reserve are numbered. The 50m (grey) and 200m (dark blue) isobaths are provided on both maps. Ōtepoti/Dunedin is marked as the yellow dot on the small inset map.
 
 ```{r, Fig_daily_detections, echo = F, out.width = '100%'}
 knitr::include_graphics('./figures/allcet_v1_all.png')
 ```
 
-Fig. 2. Daily detected acoustic presence of bottlenose dolphins (green vertical lines) at each deployment site organized from north to south. The unshaded periods represent deployments when data were collected continuously; for SoundTraps, this also indicates data that were processed with the whistle detector. The blue shaded areas denote periods when recordings were duty cycled (15/30 min) and processed with the whistle detector. The orange shaded areas denote duty sampled data (15/30 min) manually browsed for all calls types due to sensitivity issues with the hydrophone. The grey shaded areas are times when the recorder was not active. The vertical red lines indicate when the gear was deployed/retrieved.
+Fig. 2. Daily detected acoustic presence of bottlenose dolphins (green vertical lines) at each deployment site organized from north to south. The unshaded periods represent deployments when data were collected continuously; for SoundTraps (ST), this also indicates data that were processed with the whistle detector. The blue shaded areas denote periods when recordings were duty cycled (15/30 min) and processed with the whistle detector. The orange shaded areas denote duty sampled data (15/30 min) manually browsed for all calls types due to sensitivity issues with the hydrophone. The grey shaded areas are times when the recorder was not active. The vertical red lines indicate when the gear was deployed/retrieved.
 
 ```{r, acou_sunglight, echo = F, out.width = '100%'}
 knitr::include_graphics('./figures/diel_ab.png')
 ```
 
-Fig. 3. Bottlenose dolphin acoustic detections at each site relative to the time of day where "Night" (blue) refers to the time between dusk and dawn. a) The timing of acoustic detections over the course of the entire study (black dots). The dark grey shaded rectangles indicate periods when the device was not actively listening, and the orange rectangles are the periods where the acoustic files were browsed manually for daily presence. b) Count of each hour when bottlenose dolphins were detected over the course of the entire deployment at each site. \newpage
+Fig. 3. Bottlenose dolphin acoustic detections at each site relative to the time of day where "Night" (blue) refers to the time between dusk and dawn. a) The timing of acoustic detections over the course of the entire study (black dots). The dark grey shaded rectangles indicate periods when the device was not actively listening, and the orange rectangles are the periods where the acoustic files were browsed manually for daily presence. b) Count of each hour when bottlenose dolphins were detected over the course of the entire study at each site. \newpage
 
 ```{r, Fig_venn_ID, echo = F, out.width = '100%'}
 #source('C:/Users/leahm/OneDrive - University of Otago/Documents/git-otago/Fiordland_acoustic_monitoring/scripts/sightings_venn.R', local = TRUE, verbose = F)$value
@@ -109,4 +108,4 @@ Fig. 3. Bottlenose dolphin acoustic detections at each site relative to the time
 knitr::include_graphics('./figures/venn.png')
 ```
 
-Fig. 4. Fiords/areas where individuals alive since 2009 from the two Fiordland resident bottlenose dolphin sub-populations have been sighted. 'DOUBTFUL' = Patea-Doubtful complex, 'DUSKY' = Tamatea-Dusky complex, 'NANCY' = Hinenui-Nancy Sound, 'DAGG' = Te Rā-Dagg Sound, 'PRESERVATION' = Rakitimu-Preservation Inlet, and 'BLUFF' refers to the stranding event at Motupōhue-Bluff. a) Individuals from the Doubtful pod ($n$ = 106). b) Individuals from the Dusky pod ($n$ = 178).
+Fig. 4. Areas where individuals alive since 2009 from the two Fiordland resident bottlenose dolphin sub-populations have been sighted. 'DOUBTFUL' = Patea/Doubtful complex, 'DUSKY' = Tamatea/Dusky complex, 'NANCY' = Hinenui/Nancy Sound, 'DAGG' = Te Rā/Dagg Sound, 'PRESERVATION' = Rakitimu/Preservation Inlet, and 'BLUFF' refers to the stranding event at Motupōhue/Bluff. a) Individuals from the Doubtful pod ($n$ = 106). b) Individuals from the Dusky pod ($n$ = 178).
