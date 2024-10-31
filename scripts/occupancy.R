@@ -32,7 +32,7 @@ model<-function(){
   for (i in 1:s[1]){
     zd[i]~dbern(psi[1])
     
-    logit(pd[i,1]) <- beta[1] # FPOD: not sure why I'm putting this on logit scale -- prob to be comparable to ST
+    logit(pd[i,1]) <- beta[1] # FPOD
     logit(pd[i,2]) <- beta[2] + beta[3] * sampd[i] + beta[4] * analysisd[i]   
     for(k in 1:K){
       yd[i,k]~dbern(pd[i,k]*zd[i]) 
@@ -134,12 +134,19 @@ mcmc.inits<-function() {list(zd=rep(1,s[1]), zn = rep(1,s[2]), zc = rep(1,s[3]),
                              zp = rep(1,s[5]), za = rep(1,s[6]), zm1 = rep(1,s[7]), zm2 = rep(1,s[8]))} # z has to be 0 or 1
 
 ## run model ----
-m1 = rjags::jags.model("FAM_model.txt", data = mcmc.data, inits = mcmc.inits, n.chains = 3, n.adapt = 5000)
+#norm for appendix
+#R2OpenBUGS::write.model(model,con="FAM_model_norm.txt") # write JAGS model code to file
+#m1 = rjags::jags.model("FAM_model_norm.txt", data = mcmc.data, inits = mcmc.inits, n.chains = 3, n.adapt = 5000)
+#student-t for main
+R2OpenBUGS::write.model(model,con="FAM_model_dt.txt") # write JAGS model code to file
+m1 = rjags::jags.model("FAM_model_dt.txt", data = mcmc.data, inits = mcmc.inits, n.chains = 3, n.adapt = 5000)
+##
+
 out1 = coda.samples(model = m1, variable.names = mcmc.params, n.iter = 50000)
 out1_df = posterior::as_draws_df(out1)
 
-saveRDS(out1_df, file = paste0("./data/FAM_samp_dt3_50k_",Sys.Date(),".rds"))
 #saveRDS(out1_df, file = paste0("./data/FAM_samp_n_50k_",Sys.Date(),".rds"))
+saveRDS(out1_df, file = paste0("./data/FAM_samp_dt3_50k_",Sys.Date(),".rds"))
 
 bayesplot::mcmc_trace(out1_df)
 summary(out1_df)
@@ -147,7 +154,7 @@ summary(out1_df)
 mean(out1_df$`beta[1]` > out1_df$`beta[2]`)
 
 ## Read results ----
-read.date = "2024-10-22"
+read.date = "2024-10-29"
 
 occ.results<-readRDS(paste0("./data/FAM_samp_dt3_50k_",read.date,".rds"))
 
@@ -268,3 +275,13 @@ nrow(dat$pres)+
 nrow(dat$dusky)+
 nrow(dat$mr1)+
 nrow(dat$mr2)
+
+head(dat$dagg)
+head(dat$nancy)
+head(dat$charles)
+head(dat$chalky)
+head(dat$pres)
+head(dat$dusky)
+head(dat$mr1)
+head(dat$mr2)
+
