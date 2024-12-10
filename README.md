@@ -13,4 +13,5 @@
     -   ./scripts/sightings_venn.R
 5.  Suppmat.qmd
 
-Acoustic detection data are available at 10.17632/hvb2gxv2zx.1
+Acoustic detection data are available at [![DOI](https://img.shields.io/badge/Mendeley-9D1620.svg?style=for-the-badge&logo=Mendeley&logoColor=white)](https://data.mendeley.com/datasets/hvb2gxv2zx/1) DOI:
+[10.17632/hvb2gxv2zx.1](https://data.mendeley.com/datasets/hvb2gxv2zx/1)
