@@ -368,8 +368,24 @@ acou_dusky<-acou_time%>%filter(DATE <= ymd("2023-01-01") & (Fiord == "MARINE-RES
   group_by(Fiord_recorder, DATE)%>%
   tally()
 
-mr1mr2<-ggplot(acou_dusky, aes(x = DATE, y = n, fill = Fiord_recorder))+
-  geom_col(alpha = 0.5)+
+summary(acou_dusky)
+
+
+date_list_dusky<-data.frame(dates = seq(min(acou_dusky$DATE), max(acou_dusky$DATE), by="days"))
+
+date_list_dusky_m1<-date_list_dusky%>%
+  mutate(Fiord_recorder = "MARINE-RESERVE-1_ST")
+
+date_list_dusky_m2<-date_list_dusky%>%
+  mutate(Fiord_recorder = "MARINE-RESERVE-2_ST")
+
+acou_dusky_dates<-date_list_dusky_m1%>%
+  bind_rows(date_list_dusky_m2)%>%
+  left_join(acou_dusky, by = c("dates" = "DATE", "Fiord_recorder"))%>%
+  replace(is.na(.), 0)
+
+mr1mr2<-ggplot(acou_dusky_dates, aes(x = dates, y = n, color = Fiord_recorder))+
+  geom_line(alpha = 0.5)+
   theme_bw()+
   theme(legend.title = element_blank(), 
         legend.position = "bottom")+
@@ -377,4 +393,5 @@ mr1mr2<-ggplot(acou_dusky, aes(x = DATE, y = n, fill = Fiord_recorder))+
   xlab("Day")+
   scale_x_date(date_breaks="1 month", date_labels="%b-%Y")
   
+mr1mr2
 ggplot2::ggsave(paste0("./figures/Supplement/mr1mr2.png"), mr1mr2, device = "png", dpi = 700, width = 200, height = 100, units = 'mm')
