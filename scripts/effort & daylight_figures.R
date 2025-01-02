@@ -364,34 +364,31 @@ ggplot2::ggsave(paste0("./figures/diel_ab.png"), diel_ab, device = "png", dpi = 
 
 # 
 
-acou_dusky<-acou_time%>%filter(DATE <= ymd("2023-01-01") & (Fiord == "MARINE-RESERVE-1" | Fiord == "MARINE-RESERVE-2"))%>%
-  group_by(Fiord_recorder, DATE)%>%
-  tally()
 
-summary(acou_dusky)
+mr1mr2min<-acou_time%>%filter(DATE <= ymd("2023-01-01") & (Fiord == "MARINE-RESERVE-1" | Fiord == "MARINE-RESERVE-2"))%>%
+  mutate(datemin = ymd_hm(format(as.POSIXct(Datetime), format = '%Y-%m-%d %H:%M')))%>%
+  distinct(Fiord_recorder,DATE,datemin)%>%
+  mutate(year_month = format(DATE, "%Y-%m"))
 
+nrow(mr1mr2min)
+same_min<-mr1mr2min%>%
+  group_by(datemin)%>%
+  tally()%>%
+  filter(n == 2)
 
-date_list_dusky<-data.frame(dates = seq(min(acou_dusky$DATE), max(acou_dusky$DATE), by="days"))
+same_min%>%
+  nrow()
 
-date_list_dusky_m1<-date_list_dusky%>%
-  mutate(Fiord_recorder = "MARINE-RESERVE-1_ST")
+102/5861
 
-date_list_dusky_m2<-date_list_dusky%>%
-  mutate(Fiord_recorder = "MARINE-RESERVE-2_ST")
-
-acou_dusky_dates<-date_list_dusky_m1%>%
-  bind_rows(date_list_dusky_m2)%>%
-  left_join(acou_dusky, by = c("dates" = "DATE", "Fiord_recorder"))%>%
-  replace(is.na(.), 0)
-
-mr1mr2<-ggplot(acou_dusky_dates, aes(x = dates, y = n, color = Fiord_recorder))+
-  geom_line(alpha = 0.5)+
+ggplot(acou_time%>%
+         filter(DATE <= ymd("2023-01-01") & (Fiord == "MARINE-RESERVE-1" | Fiord == "MARINE-RESERVE-2"))%>%
+         mutate(TIME = hm(format(as.POSIXct(Datetime), format = '%H:%M')))%>%
+         distinct(Fiord, DATE, TIME)%>%
+         filter(month(DATE) == 4))+
+  geom_point(aes(x = DATE, y = TIME, color = Fiord), size = 1, alpha = 0.7, position = position_dodge(width = 0.2))+
+  facet_wrap(~month(DATE), scales = "free" )+
+  scale_y_time()+
+  ylab("Time (HH:MM:SS)")+
   theme_bw()+
-  theme(legend.title = element_blank(), 
-        legend.position = "bottom")+
-  ylab("Number of positive detections")+
-  xlab("Day")+
-  scale_x_date(date_breaks="1 month", date_labels="%b-%Y")
-  
-mr1mr2
-ggplot2::ggsave(paste0("./figures/Supplement/mr1mr2.png"), mr1mr2, device = "png", dpi = 700, width = 200, height = 100, units = 'mm')
+  theme(legend.position = "bottom")
