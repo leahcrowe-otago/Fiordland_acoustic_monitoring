@@ -253,12 +253,4 @@ Fig. S5. Days when visual survey effort occurred in the Tamatea/Dusky Complex du
 
 \newpage
 
-```{r, mr1mr2, echo = F, out.width = '100%'}
-knitr::include_graphics('./figures/Supplement/mr1mr2.png')
-```
-
-Fig. S6. The number of validated positive detections per day at the two sites within the Taumoana (Five Finger Peninsula) Marine Reserve.
-
-\newpage
-
 # References
