@@ -1,5 +1,7 @@
 # Fiordland_acoustic_monitoring
 
+Deployment_map.R creates an [interactive Leaflet map](https://github.com/leahcrowe-otago/Fiordland_acoustic_monitoring/deployments/github-pages) of the most recent deployments available with git-hub pages
+
 # Workflow:
 
 1.  ./scripts/FAM.R: stands for Fiordland Acoustic Monitoring. This is where all acoustic detection data from all sources and deployments are collated. The data used for modeling is produced here.
