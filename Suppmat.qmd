@@ -21,7 +21,6 @@ header-includes:
 If these walls could talk: investigating bottlenose dolphin occupancy and range in fiord ecosystems using passive acoustic monitoring and visual surveys
 \end{center}
 ```
-
 ```{=tex}
 \begin{center}
 Leah M. Crowe*$^{\mathrm{a,b}}$, Chloe Corne$^{\mathrm{a,c}}$, Stephen M. Dawson$^{\mathrm{a}}$, Matt Pine$^{\mathrm{de}}$, William J. Rayment$^{\mathrm{a}}$, Matthew R. Schofield$^{\mathrm{b}}$, Jenni A. Stanley$^{\mathrm{f}}$
@@ -41,7 +40,6 @@ $^\mathrm{e}$Institute of Life and Earth Sciences, Heriot Watt University, Edinb
 $^\mathrm{f}$Coastal Marine Field Station, University of Waikato, 58 Cross Road, Sulphur Point, Tauranga 3110, New Zealand
 \end{center}
 ```
-
 # 1.1 Further deployment details
 
 Acoustic data in this study was collected between the start of the study (2022-Feb-15) and the latest date a recorder in a remote fiord was still active (Hinenui/Nancy Sound, 2023-Nov-20). PAM equipment was attached 10 m from the bottom in the remote fiords, and 2--3 m from the bottom in Tamatea/Dusky Sound. There were periods of no acoustic monitoring due to various reasons (e.g. battery lifespan and inability to access a site to service instruments). The equipment was deployed at the 'Marine Reserve-1' site in late December 2022 was not recovered/is missing. There was an acoustic release failure at the 'Marine Reserve-2', and there was no active recorder between January and the end of June 2023. Our chosen settings provided anticipated recording times of three months for SoundTrap 300s with the external battery pack (one month without it), up to five months for F-PODs deployed with all alkaline batteries, six months for SoundTrap 600s, and up to 8.5 months for F-PODs deployed with alkaline and lithium batteries. All equipment was calibrated before initial deployments.
