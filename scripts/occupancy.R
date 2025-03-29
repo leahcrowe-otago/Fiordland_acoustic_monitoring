@@ -172,11 +172,11 @@ table1.occ<-summ.occ%>%
               "CHALKY_ST", "PRESERVATION_F-POD","DUSKY_ST",
               "MARINE-RESERVE-1_ST", "MARINE-RESERVE-2_ST"
                    ))%>%
-  dplyr::select(Median,`2.5%CI` = q5,`97.5%CI` = q95, Fiord_recorder)
+  dplyr::select(Median,`5%CI` = q5,`95%CI` = q95, Fiord_recorder)
 
 table1.occ$Median<-round(table1.occ$Median, 3)
-table1.occ$`2.5%CI`<-round(table1.occ$`2.5%CI`, 3)
-table1.occ$`97.5%CI`<-round(table1.occ$`97.5%CI`, 3)
+table1.occ$`5%CI`<-round(table1.occ$`5%CI`, 3)
+table1.occ$`95%CI`<-round(table1.occ$`95%CI`, 3)
 
 saveRDS(table1.occ, file = paste0("./tables/table1.occ.rds"))
 
@@ -193,11 +193,11 @@ supp.occ_norm<-summ.occ_norm%>%
                             "$\\psi_{CHALKY}$", "$\\psi_{PRESERVATION}$","$\\psi_{DUSKY}$",
                             "$\\psi_{MARINE-RESERVE-1}$", "$\\psi_{MARINE-RESERVE-2}$"
                             ))%>%
-  dplyr::select(Median,`2.5%CI` = q5,`97.5%CI` = q95, Fiord_recorder, Rhat = rhat, ESS = ess_bulk)
+  dplyr::select(Median,`5%CI` = q5,`95%CI` = q95, Fiord_recorder, Rhat = rhat, ESS = ess_bulk)
 
 supp.occ_norm$Median<-round(supp.occ_norm$Median, 2)
-supp.occ_norm$`2.5%CI`<-round(supp.occ_norm$`2.5%CI`, 2)
-supp.occ_norm$`97.5%CI`<-round(supp.occ_norm$`97.5%CI`, 2)
+supp.occ_norm$`5%CI`<-round(supp.occ_norm$`5%CI`, 2)
+supp.occ_norm$`95%CI`<-round(supp.occ_norm$`95%CI`, 2)
 
 saveRDS(supp.occ_norm, file = paste0("./tables/supp.occ_norm.rds"))
 
