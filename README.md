@@ -1,6 +1,6 @@
 # Fiordland_acoustic_monitoring
 
-Deployment_map.R creates an [interactive Leaflet map](https://github.com/leahcrowe-otago/Fiordland_acoustic_monitoring/deployments/github-pages) of the most recent deployments available with git-hub pages
+Deployment_map.R creates an [interactive Leaflet map](https://leahcrowe-otago.github.io/Fiordland_acoustic_monitoring/) of the most recent deployments available through github-pages
 
 # Workflow:
 
