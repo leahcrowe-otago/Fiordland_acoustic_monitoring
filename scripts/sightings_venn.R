@@ -19,7 +19,7 @@ photo_data%>%
   distinct(SURVEY_AREA, DATE)
 
 ind_area<-photo_data%>%
-  filter(DATE <= "2023-11-30")%>%
+  filter(DATE >= "2009-01-01" & DATE <= "2023-12-31")%>%
   distinct(SURVEY_AREA, DATE, ID_NAME)%>%
   left_join(lifehist, by = c("ID_NAME" = "NAME"))%>%
   filter(LAST_YEAR >= 2010) # still includes spring 2009
